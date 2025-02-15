@@ -11,3 +11,9 @@
     margin-right: 5px;
     display: inline-block;
   }
+  .copyright {
+    position: fixed;
+    top: 50%; /* Adjust vertical position */
+    right: 20px; /* Adjust horizontal position */
+    transform: translateY(-50%); /* Center vertically */
+  }
