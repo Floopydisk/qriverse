@@ -1,14 +1,39 @@
+
 import { useCallback, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload } from "lucide-react";
+import { Camera, Upload, ExternalLink, Copy, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { BrowserMultiFormatReader } from "@zxing/browser";
+
+interface ScanResult {
+  text: string;
+  isURL: boolean;
+}
 
 const Scan = () => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const { toast } = useToast();
+
+  const isValidImageType = (file: File) => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    return validTypes.includes(file.type);
+  };
+
+  const isValidURL = (text: string) => {
+    try {
+      new URL(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -31,16 +56,112 @@ const Scan = () => {
     }
   }, []);
 
-  const handleFile = (file: File) => {
-    // QR code scanning logic will be implemented in future updates
-    toast({
-      title: "Success",
-      description: `File "${file.name}" uploaded successfully`,
-    });
+  const simulateProgress = () => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setUploadProgress(progress);
+      if (progress >= 100) {
+        clearInterval(interval);
+      }
+    }, 100);
+    return interval;
+  };
+
+  const handleFile = async (file: File) => {
+    setScanResult(null);
+    
+    if (!isValidImageType(file)) {
+      toast({
+        title: "Error",
+        description: "Invalid file type. Please upload a PNG, JPG, JPEG, or WebP image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    const progressInterval = simulateProgress();
+
+    try {
+      // Show upload progress toast
+      toast({
+        title: "Processing",
+        description: (
+          <div className="space-y-2">
+            <p>Uploading image...</p>
+            <Progress value={uploadProgress} className="h-2" />
+          </div>
+        ),
+      });
+
+      // Create image URL
+      const imageUrl = URL.createObjectURL(file);
+      
+      // Initialize ZXing reader
+      const reader = new BrowserMultiFormatReader();
+      
+      try {
+        const result = await reader.decodeFromImageUrl(imageUrl);
+        
+        // Clean up
+        URL.revokeObjectURL(imageUrl);
+        clearInterval(progressInterval);
+        setUploadProgress(0);
+        setIsProcessing(false);
+
+        // Show success toast
+        toast({
+          title: "Success",
+          description: "QR code scanned successfully",
+        });
+
+        // Set scan result
+        setScanResult({
+          text: result.getText(),
+          isURL: isValidURL(result.getText())
+        });
+
+      } catch (error) {
+        clearInterval(progressInterval);
+        setUploadProgress(0);
+        setIsProcessing(false);
+        toast({
+          title: "Error",
+          description: "No QR code found in the image",
+          variant: "destructive",
+        });
+      }
+
+    } catch (error) {
+      clearInterval(progressInterval);
+      setUploadProgress(0);
+      setIsProcessing(false);
+      toast({
+        title: "Error",
+        description: "Failed to process the image",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Success",
+        description: "Text copied to clipboard",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to copy text",
+        variant: "destructive",
+      });
+    }
   };
 
   const startCamera = () => {
-    // Camera scanning logic will be implemented in future updates
     toast({
       title: "Coming soon",
       description: "Camera scanning will be available in future updates",
@@ -94,11 +215,52 @@ const Scan = () => {
                     Drop your image here or click to upload
                   </p>
                   <p className="text-sm text-foreground/60">
-                    Supports PNG, JPG up to 10MB
+                    Supports PNG, JPG, JPEG, WebP up to 10MB
                   </p>
                 </div>
               </label>
             </div>
+
+            {scanResult && (
+              <div className="space-y-4 animate-fadeIn">
+                <div className="p-4 bg-muted rounded-lg">
+                  {scanResult.isURL ? (
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 flex items-center gap-2 bg-background p-2 rounded">
+                        <LinkIcon className="h-4 w-4 text-primary shrink-0" />
+                        <span className="truncate">{scanResult.text}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => copyToClipboard(scanResult.text)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button
+                        className="shrink-0"
+                        onClick={() => window.open(scanResult.text, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Open Link
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="flex-1">{scanResult.text}</p>
+                      <Button
+                        variant="outline"
+                        onClick={() => copyToClipboard(scanResult.text)}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy Text
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-center">
               <Button
@@ -106,6 +268,7 @@ const Scan = () => {
                 size="lg"
                 className="w-full max-w-xs"
                 onClick={startCamera}
+                disabled={isProcessing}
               >
                 <Camera className="mr-2 h-5 w-5" />
                 Open Camera
