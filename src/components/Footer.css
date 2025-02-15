@@ -1,10 +1,10 @@
 /* Your existing footer styles */
 .status-container {
     display: flex;
-    justify-content: flex-center;
+    /* justify-content: flex-center; */
     align-items: center;
     flex-direction: column;
-    /* justify-content: flex-end; Align to the bottom */
+    justify-content: flex-end; /* Align to the bottom */
     height: 400px;
   }
   .green-dot {
