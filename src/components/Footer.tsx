@@ -45,6 +45,9 @@ const Footer = () => {
             &copy; {currentYear} ibukunodunsi 
       </div> */}
     </footer>
+          <div className="status-container"> 
+          <span className="green-dot"></span> All systems are working
+        </div>
   );
 };
 
