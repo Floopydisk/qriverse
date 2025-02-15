@@ -2,6 +2,7 @@
 import { Github, Gitlab, Mail, User } from "lucide-react";
 
 const Footer = () => {
+  const currentYear = new Date().getFullYear(); // Get the current year
   return (
     <footer className="w-full py-6 bg-background/80 backdrop-blur-md border-t border-border mt-auto"> 
     <div className="container mx-auto px-4">
@@ -35,6 +36,10 @@ const Footer = () => {
             <User className="h-6 w-6" />
           </a>
         </div>
+        <div className="copyright">
+            &copy; {currentYear} ibukunodunsi 
+          </div>
+      </div>
       </div>
     </footer>
   );
