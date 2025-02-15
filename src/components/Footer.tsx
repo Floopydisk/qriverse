@@ -39,7 +39,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="status-container"> 
-              <span className="green-dot"> All systems are working</span>
+              <span className="green-dot"></span> All systems are working
             </div>
       {/* <div className="copyright">
             &copy; {currentYear} ibukunodunsi 
