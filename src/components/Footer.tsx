@@ -1,6 +1,6 @@
 
 import { Github, Gitlab, Mail, User } from "lucide-react";
-import styles from "./Footer.css";
+import "./Footer.css";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear(); // Get the current year
