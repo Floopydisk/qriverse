@@ -7,9 +7,6 @@ const Footer = () => {
   return (
     <footer className="w-full py-6 bg-background/80 backdrop-blur-md border-t border-border mt-auto"> 
     <div className="container mx-auto px-4">
-      <div className="status-container"> 
-              <span className="green-dot"></span> All systems are working
-            </div>
         <div className="flex justify-center space-x-6">
           <a
             href="https://github.com/Floopydisk"
@@ -41,6 +38,9 @@ const Footer = () => {
           </a>
         </div>
       </div>
+      <div className="status-container"> 
+              <span className="green-dot"></span> All systems are working
+            </div>
       {/* <div className="copyright">
             &copy; {currentYear} ibukunodunsi 
       </div> */}
