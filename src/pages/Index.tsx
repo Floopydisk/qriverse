@@ -78,7 +78,7 @@ const features = [
   {
     icon: Scan,
     title: "QR Scanner",
-    description: "Scan any QR code instantly using your device's camera or upload an image from your device",
+    description: "Scan any QR code instantly using your device's camera",
   },
   {
     icon: Wifi,
