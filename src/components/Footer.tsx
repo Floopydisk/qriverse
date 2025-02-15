@@ -4,10 +4,13 @@ import { Github, Gitlab, Mail, User } from "lucide-react";
 const Footer = () => {
   return (
     <footer className="w-full py-6 bg-background/80 backdrop-blur-md border-t border-border mt-auto">
+      <div className="status-container">
+        <span className="green-dot"></span> All systems are working
+      </div>
       <div className="container mx-auto px-4">
         <div className="flex justify-center space-x-6">
           <a
-            href="https://github.com"
+            href="https://github.com/Floopydisk"
             target="_blank"
             rel="noopener noreferrer"
             className="text-foreground/60 hover:text-primary transition-colors"
@@ -15,7 +18,7 @@ const Footer = () => {
             <Github className="h-6 w-6" />
           </a>
           <a
-            href="https://gitlab.com"
+            href="https://gitlab.com/Floopydisk"
             target="_blank"
             rel="noopener noreferrer"
             className="text-foreground/60 hover:text-primary transition-colors"
@@ -23,7 +26,7 @@ const Footer = () => {
             <Gitlab className="h-6 w-6" />
           </a>
           <a
-            href="mailto:contact@example.com"
+            href="mailto:sibukunodunsi@gmail.com"
             className="text-foreground/60 hover:text-primary transition-colors"
           >
             <Mail className="h-6 w-6" />
@@ -41,3 +44,18 @@ const Footer = () => {
 };
 
 export default Footer;
+
+
+.green-dot {
+  width: 10px;
+  height: 10px;
+  background-color: green;
+  border-radius: 50%; /* Make it a circle */
+  margin-right: 5px; /* Add some space between dot and text */
+  display: inline-block; /* Ensure it's inline */
+}
+.status-container {
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Vertically align items */
+  justify-content: center; /* Horizontally center if needed */
+}
