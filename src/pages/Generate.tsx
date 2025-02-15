@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -34,6 +33,10 @@ const Generate = () => {
         },
       });
       setQrDataUrl(dataUrl);
+      toast({
+        title: "Success",
+        description: "QR code generated successfully",
+      });
     } catch (err) {
       toast({
         title: "Error",

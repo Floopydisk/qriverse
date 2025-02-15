@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -35,8 +34,8 @@ const Scan = () => {
   const handleFile = (file: File) => {
     // QR code scanning logic will be implemented in future updates
     toast({
-      title: "File received",
-      description: `Processing ${file.name}...`,
+      title: "Success",
+      description: `File "${file.name}" uploaded successfully`,
     });
   };
 
@@ -45,6 +44,7 @@ const Scan = () => {
     toast({
       title: "Coming soon",
       description: "Camera scanning will be available in future updates",
+      variant: "destructive",
     });
   };
 

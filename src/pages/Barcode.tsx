@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -36,6 +35,7 @@ const Barcode = () => {
     toast({
       title: "Coming soon",
       description: "Barcode generation will be available in future updates",
+      variant: "destructive",
     });
   };
 

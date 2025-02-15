@@ -154,6 +154,7 @@ function toast({ ...props }: Toast) {
     toast: {
       ...props,
       id,
+      className: props.variant === "default" ? "bg-white text-black border border-border" : undefined,
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss()
