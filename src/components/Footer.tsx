@@ -41,9 +41,9 @@ const Footer = () => {
           </a>
         </div>
       </div>
-      <div className="copyright">
-            &copy; {currentYear} ibukunodunsi 
-      </div>
+      {/* <div className="copyright">
+            &copy; {currentYear} 
+      </div> */}
     </footer>
   );
 };

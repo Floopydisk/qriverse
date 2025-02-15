@@ -1,6 +1,7 @@
 /* Your existing footer styles */
 .status-container {
     display: flex;
+    justify-content: flex-end;
     align-items: center; 
   }
   .green-dot {
@@ -13,7 +14,7 @@
   }
   .copyright {
     position: fixed;
-    top: 50%; /* Adjust vertical position */
+    top: 90%; /* Adjust vertical position */
     right: 20px; /* Adjust horizontal position */
     transform: translateY(-50%); /* Center vertically */
   }
