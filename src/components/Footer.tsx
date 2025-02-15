@@ -44,18 +44,3 @@ const Footer = () => {
 };
 
 export default Footer;
-
-
-.green-dot {
-  width: 10px;
-  height: 10px;
-  background-color: green;
-  border-radius: 50%; /* Make it a circle */
-  margin-right: 5px; /* Add some space between dot and text */
-  display: inline-block; /* Ensure it's inline */
-}
-.status-container {
-  display: flex; /* Use flexbox for alignment */
-  align-items: center; /* Vertically align items */
-  justify-content: center; /* Horizontally center if needed */
-}
