@@ -36,10 +36,9 @@ const Footer = () => {
             <User className="h-6 w-6" />
           </a>
         </div>
-        <div className="copyright">
-            &copy; {currentYear} ibukunodunsi 
-          </div>
       </div>
+      <div className="copyright">
+            &copy; {currentYear} ibukunodunsi 
       </div>
     </footer>
   );
