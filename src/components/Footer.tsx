@@ -32,7 +32,7 @@ const Footer = () => {
             <Mail className="h-6 w-6" />
           </a>
           <a
-            href="/portfolio"
+            href="ibukunodunsi.vercel.app"
             className="text-foreground/60 hover:text-primary transition-colors"
           >
             <User className="h-6 w-6" />
