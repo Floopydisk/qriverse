@@ -1,7 +1,8 @@
 /* Your existing footer styles */
 .status-container {
     display: flex;
-    align-items: center; 
+    align-items: center;
+    justify-content: center;
   }
   .green-dot {
     width: 10px;

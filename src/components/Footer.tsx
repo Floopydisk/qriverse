@@ -39,15 +39,12 @@ const Footer = () => {
         </div>
       </div>
       <div className="status-container"> 
-              <span className="green-dot"></span> All systems are working
+              <span className="green-dot"> All systems are working</span>
             </div>
       {/* <div className="copyright">
             &copy; {currentYear} ibukunodunsi 
       </div> */}
     </footer>
-          <div className="status-container"> 
-          <span className="green-dot"></span> All systems are working
-        </div>
   );
 };
 
