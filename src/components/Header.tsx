@@ -32,22 +32,32 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isOpen && (
-        <div className="md:hidden">
-          <nav className="px-4 pt-2 pb-4 bg-background/95 backdrop-blur-md border-b border-border">
-            <div className="flex flex-col space-y-2">
-              <NavLinks />
-            </div>
+      {/* Mobile menu with slide animation */}
+      <div
+        className={`fixed inset-y-0 right-0 w-64 bg-background/95 backdrop-blur-md border-l border-border transform transition-transform duration-300 ease-in-out md:hidden ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="p-6">
+          <nav className="space-y-6">
+            <NavLinks />
           </nav>
         </div>
+      </div>
+
+      {/* Overlay for mobile menu */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm md:hidden"
+          onClick={toggleMenu}
+        />
       )}
     </header>
   );
 };
 
 const NavLinks = () => (
-  <>
+  <div className="flex md:flex-row flex-col md:items-center md:space-x-6 space-y-4 md:space-y-0">
     <Link
       to="/generate"
       className="text-foreground/80 hover:text-primary transition-colors"
@@ -72,7 +82,15 @@ const NavLinks = () => (
     >
       Barcode
     </Link>
-  </>
+    <a
+      href="https://wa.me"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-foreground/80 hover:text-primary transition-colors"
+    >
+      WhatsApp Link
+    </a>
+  </div>
 );
 
 export default Header;

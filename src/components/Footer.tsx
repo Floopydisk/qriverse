@@ -3,10 +3,10 @@ import { Github, Gitlab, Mail, User } from "lucide-react";
 import "./Footer.css";
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear(); // Get the current year
+  const currentYear = new Date().getFullYear();
   return (
-    <footer className="w-full py-6 bg-background/80 backdrop-blur-md border-t border-border mt-auto"> 
-    <div className="container mx-auto px-4">
+    <footer className="w-full py-6 bg-background/80 backdrop-blur-md border-t border-border mt-auto">
+      <div className="container mx-auto px-4">
         <div className="flex justify-center space-x-6">
           <a
             href="https://github.com/Floopydisk"
@@ -37,13 +37,11 @@ const Footer = () => {
             <User className="h-6 w-6" />
           </a>
         </div>
+        <div className="mt-4 flex justify-center items-center p-2 bg-card/50 backdrop-blur-sm rounded-full w-fit mx-auto border border-border/50">
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
+          <span className="text-sm text-foreground/80">All systems operational</span>
+        </div>
       </div>
-      <div className="status-container"> 
-              <span className="green-dot"></span> All systems are working
-            </div>
-      {/* <div className="copyright">
-            &copy; {currentYear} ibukunodunsi 
-      </div> */}
     </footer>
   );
 };

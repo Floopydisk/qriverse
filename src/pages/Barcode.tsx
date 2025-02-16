@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,30 +15,12 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import Barcode from "react-barcode";
 
-const Barcode = () => {
+const BarcodeGenerator = () => {
   const [text, setText] = useState("");
-  const [type, setType] = useState("code128");
-  const [barcodeUrl, setBarcodeUrl] = useState("");
+  const [type, setType] = useState("CODE128");
   const { toast } = useToast();
-
-  const generateBarcode = async () => {
-    if (!text) {
-      toast({
-        title: "Error",
-        description: "Please enter text to generate a barcode",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Barcode generation logic will be implemented in future updates
-    toast({
-      title: "Coming soon",
-      description: "Barcode generation will be available in future updates",
-      variant: "destructive",
-    });
-  };
 
   const copyText = async () => {
     try {
@@ -56,19 +39,34 @@ const Barcode = () => {
   };
 
   const downloadBarcode = () => {
-    if (!barcodeUrl) return;
-    
-    const link = document.createElement("a");
-    link.href = barcodeUrl;
-    link.download = "barcode.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "Success",
-      description: "Barcode downloaded successfully",
-    });
+    const svg = document.querySelector("#barcode svg");
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.fillStyle = "white";
+      ctx?.fillRect(0, 0, canvas.width, canvas.height);
+      ctx?.drawImage(img, 0, 0);
+      
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = "barcode.png";
+      downloadLink.href = pngFile;
+      downloadLink.click();
+      
+      toast({
+        title: "Success",
+        description: "Barcode downloaded successfully",
+      });
+    };
+
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
   return (
@@ -92,44 +90,37 @@ const Barcode = () => {
                       <SelectValue placeholder="Select barcode type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="code128">Code 128</SelectItem>
-                      <SelectItem value="ean13">EAN-13</SelectItem>
-                      <SelectItem value="ean8">EAN-8</SelectItem>
-                      <SelectItem value="upc">UPC</SelectItem>
+                      <SelectItem value="CODE128">Code 128</SelectItem>
+                      <SelectItem value="EAN13">EAN-13</SelectItem>
+                      <SelectItem value="EAN8">EAN-8</SelectItem>
+                      <SelectItem value="UPC">UPC</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="text">Text</Label>
-                  <div className="relative">
-                    <Input
-                      id="text"
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      placeholder="Enter text or number"
-                      className="pr-24"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
-                      onClick={generateBarcode}
-                    >
-                      Generate
-                    </Button>
-                  </div>
+                  <Input
+                    id="text"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Enter text or number"
+                  />
                 </div>
               </div>
             </div>
 
-            {barcodeUrl && (
+            {text && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white rounded-lg p-4 mx-auto w-fit">
-                  <img
-                    src={barcodeUrl}
-                    alt="Generated Barcode"
-                    className="w-64 h-32"
+                <div className="bg-white rounded-lg p-4 mx-auto w-fit" id="barcode">
+                  <Barcode
+                    value={text}
+                    format={type as any}
+                    width={2}
+                    height={100}
+                    displayValue={true}
+                    background="#FFFFFF"
+                    lineColor="#000000"
                   />
                 </div>
 
@@ -161,4 +152,4 @@ const Barcode = () => {
   );
 };
 
-export default Barcode;
+export default BarcodeGenerator;
