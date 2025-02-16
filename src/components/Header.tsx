@@ -32,25 +32,24 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile menu with slide animation and dark blur */}
-      <div
-        className={`fixed inset-y-0 right-0 w-64 bg-black/80 backdrop-blur-xl border-l border-white/10 transform transition-transform duration-300 ease-in-out md:hidden shadow-2xl ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="p-6">
-          <nav className="space-y-6">
-            <NavLinks />
-          </nav>
-        </div>
-      </div>
-
-      {/* Dark overlay for mobile menu */}
+      {/* Side Panel for Mobile */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={toggleMenu}
-        />
+        <>
+          {/* Dark Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/60 md:hidden" 
+            onClick={toggleMenu}
+          />
+          
+          {/* Side Panel */}
+          <div className="fixed inset-y-0 right-0 w-64 bg-black/80 backdrop-blur-xl border-l border-white/10 transform transition-transform duration-300 ease-in-out md:hidden">
+            <div className="p-6">
+              <nav className="space-y-6">
+                <NavLinks />
+              </nav>
+            </div>
+          </div>
+        </>
       )}
     </header>
   );
