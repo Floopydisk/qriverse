@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, Upload, ExternalLink, Copy, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import QrScanner from "react-qr-scanner";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 interface ScanResult {
   text: string;
@@ -15,6 +16,7 @@ interface ScanResult {
 
 const Scan = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const { toast } = useToast();
 
@@ -67,6 +69,69 @@ const Scan = () => {
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please upload an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const reader = new BrowserMultiFormatReader();
+      const imageUrl = URL.createObjectURL(file);
+      
+      try {
+        const result = await reader.decodeFromImageUrl(imageUrl);
+        setScanResult({
+          text: result.getText(),
+          isURL: isValidURL(result.getText())
+        });
+        toast({
+          title: "Success",
+          description: "QR code scanned successfully",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "No QR code found in the image",
+          variant: "destructive",
+        });
+      } finally {
+        URL.revokeObjectURL(imageUrl);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process the image",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragging(true);
+    } else if (e.type === "dragleave") {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <FloatingCircles />
@@ -81,9 +146,45 @@ const Scan = () => {
               </h1>
               
               <p className="text-foreground/80">
-                Use your camera to scan a QR code
+                Use your camera to scan a QR code or upload an image
               </p>
             </div>
+
+            {!isCameraActive && (
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center ${
+                  isDragging
+                    ? "border-primary bg-primary/10"
+                    : "border-border hover:border-primary/50"
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <input
+                  type="file"
+                  id="file-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer space-y-4 block"
+                >
+                  <Upload className="mx-auto h-12 w-12 text-primary" />
+                  <div className="space-y-2">
+                    <p className="text-lg font-medium">
+                      Drop your image here or click to upload
+                    </p>
+                    <p className="text-sm text-foreground/60">
+                      Supports PNG, JPG, JPEG, WebP
+                    </p>
+                  </div>
+                </label>
+              </div>
+            )}
 
             {isCameraActive ? (
               <div className="relative">
