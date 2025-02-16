@@ -10,7 +10,7 @@ const Header = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
@@ -34,7 +34,7 @@ const Header = () => {
 
       {/* Mobile menu with slide animation */}
       <div
-        className={`fixed inset-y-0 right-0 w-64 bg-background/95 backdrop-blur-md border-l border-border transform transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-y-0 right-0 w-64 bg-background/95 backdrop-blur-xl border-l border-border transform transition-transform duration-300 ease-in-out md:hidden shadow-xl ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -48,7 +48,7 @@ const Header = () => {
       {/* Overlay for mobile menu */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm md:hidden"
           onClick={toggleMenu}
         />
       )}

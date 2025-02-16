@@ -36,7 +36,7 @@ const Scan = () => {
         text,
         isURL: isValidURL(text)
       });
-      setIsCameraActive(false);
+      setIsCameraActive(false); // Automatically close camera when QR code is detected
       toast({
         title: "Success",
         description: "QR code scanned successfully",
@@ -51,6 +51,7 @@ const Scan = () => {
       description: "Failed to access camera",
       variant: "destructive",
     });
+    setIsCameraActive(false);
   };
 
   const copyToClipboard = async (text: string) => {
