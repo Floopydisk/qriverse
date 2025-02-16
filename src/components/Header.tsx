@@ -82,12 +82,12 @@ const NavLinks = () => (
       Barcode
     </Link>
     <a
-      href="https://wa.me"
+      href="https://qrcode-and-link-generator.vercel.app/"
       target="_blank"
       rel="noopener noreferrer"
       className="text-foreground/80 hover:text-primary transition-colors"
     >
-      WhatsApp Link
+      Link Generator
     </a>
   </div>
 );
