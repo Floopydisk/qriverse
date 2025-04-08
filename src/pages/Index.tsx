@@ -3,11 +3,21 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Button } from "@/components/ui/button";
-import { QrCode, Scan, Wifi, Barcode } from "lucide-react";
+import { QrCode, Scan, Wifi, Barcode, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, loginWithRedirect } = useAuth0();
+
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    } else {
+      loginWithRedirect();
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -17,32 +27,24 @@ const Index = () => {
       <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
         <section className="max-w-4xl mx-auto text-center space-y-8 animate-fadeIn">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground">
-            Create and Scan QR Codes{" "}
-            <span className="text-primary">Instantly</span>
+            Create and Manage QR Codes{" "}
+            <span className="text-primary">With Ease</span>
           </h1>
           
           <p className="text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto">
-            Generate custom QR codes for your website, WiFi networks, or any text.
-            Scan QR codes instantly with your camera.
+            BarQR helps you create, organize, and track QR codes for all your needs. 
+            Generate custom QR codes for your website, WiFi networks, or any text, 
+            and manage them all in one place.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 pt-8">
             <Button
               size="lg"
               className="group"
-              onClick={() => navigate("/generate")}
+              onClick={handleGetStarted}
             >
-              <QrCode className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-              Generate QR Code
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="group"
-              onClick={() => navigate("/scan")}
-            >
-              <Scan className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-              Scan QR Code
+              Get Started
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
         </section>
@@ -78,7 +80,7 @@ const features = [
   {
     icon: Scan,
     title: "QR Scanner",
-    description: "Scan any QR code instantly using your device's camera or upload an image from your device",
+    description: "Scan any QR code instantly using your device's camera",
   },
   {
     icon: Wifi,
@@ -87,8 +89,8 @@ const features = [
   },
   {
     icon: Barcode,
-    title: "Barcode Generator",
-    description: "Create various types of barcodes for your products",
+    title: "Organization",
+    description: "Group your QR codes into folders and manage them easily",
   },
 ];
 
