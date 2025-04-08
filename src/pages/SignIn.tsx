@@ -33,7 +33,7 @@ const SignIn = () => {
           <div className="space-y-4">
             <Button 
               className="w-full flex items-center justify-center gap-2" 
-              onClick={() => loginWithRedirect({ screen_hint: "login" })}
+              onClick={() => loginWithRedirect({ authorizationParams: { ui_locales: 'login' } })}
             >
               <LogIn className="h-5 w-5" />
               Sign In
@@ -42,7 +42,7 @@ const SignIn = () => {
             <Button 
               variant="outline" 
               className="w-full flex items-center justify-center gap-2"
-              onClick={() => loginWithRedirect({ screen_hint: "signup" })}
+              onClick={() => loginWithRedirect({ authorizationParams: { ui_locales: 'signup' } })}
             >
               <UserPlus className="h-5 w-5" />
               Sign Up
