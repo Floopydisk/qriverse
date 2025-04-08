@@ -1,16 +1,23 @@
+
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Download } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Copy, Download, Upload, Trash } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import QRCode from "qrcode";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Generate = () => {
   const [text, setText] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
+  const [darkColor, setDarkColor] = useState("#10B981"); // Default green color
+  const [lightColor, setLightColor] = useState("#FFFFFF"); // Default white color
+  const [logo, setLogo] = useState<string | null>(null);
+  const [addLogo, setAddLogo] = useState(false);
   const { toast } = useToast();
 
   const generateQR = async () => {
@@ -28,15 +35,21 @@ const Generate = () => {
         width: 400,
         margin: 2,
         color: {
-          dark: "#10B981",
-          light: "#FFFFFF",
+          dark: darkColor,
+          light: lightColor,
         },
       });
       setQrDataUrl(dataUrl);
-      toast({
-        title: "Success",
-        description: "QR code generated successfully",
-      });
+      
+      // If user wants to add logo and has uploaded one
+      if (addLogo && logo) {
+        addLogoToQR(dataUrl);
+      } else {
+        toast({
+          title: "Success",
+          description: "QR code generated successfully",
+        });
+      }
     } catch (err) {
       toast({
         title: "Error",
@@ -46,10 +59,78 @@ const Generate = () => {
     }
   };
 
+  const addLogoToQR = (qrDataUrl: string) => {
+    if (!logo) return;
+    
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const qrImage = new Image();
+    
+    qrImage.onload = () => {
+      canvas.width = qrImage.width;
+      canvas.height = qrImage.height;
+      
+      // Draw QR code
+      ctx?.drawImage(qrImage, 0, 0);
+      
+      // Draw logo in center
+      const logoImg = new Image();
+      logoImg.onload = () => {
+        // Calculate logo size (25% of QR code)
+        const logoSize = qrImage.width * 0.25;
+        const logoX = (qrImage.width - logoSize) / 2;
+        const logoY = (qrImage.height - logoSize) / 2;
+        
+        // Draw logo with white background
+        ctx?.fillStyle = "#FFFFFF";
+        ctx?.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+        
+        // Draw the logo
+        ctx?.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+        
+        // Convert to data URL
+        const finalQR = canvas.toDataURL("image/png");
+        setQrDataUrl(finalQR);
+        
+        toast({
+          title: "Success",
+          description: "QR code with logo generated successfully",
+        });
+      };
+      logoImg.src = logo;
+    };
+    qrImage.src = qrDataUrl;
+  };
+
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
     if (e.target.value === "") {
       setQrDataUrl("");
+    }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === "string") {
+          setLogo(event.target.result);
+          setAddLogo(true);
+          toast({
+            title: "Logo uploaded",
+            description: "Your logo has been uploaded successfully",
+          });
+        }
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+
+  const removeLogo = () => {
+    setLogo(null);
+    setAddLogo(false);
+    if (qrDataUrl) {
+      generateQR();
     }
   };
 
@@ -115,6 +196,106 @@ const Generate = () => {
                 >
                   Generate
                 </Button>
+              </div>
+              
+              {/* Color and Logo Options */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="darkColor">QR Code Color</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      id="darkColor"
+                      value={darkColor}
+                      onChange={(e) => setDarkColor(e.target.value)}
+                      className="w-10 h-10 rounded cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={darkColor}
+                      onChange={(e) => setDarkColor(e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="lightColor">Background Color</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      id="lightColor"
+                      value={lightColor}
+                      onChange={(e) => setLightColor(e.target.value)}
+                      className="w-10 h-10 rounded cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={lightColor}
+                      onChange={(e) => setLightColor(e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="addLogo" 
+                    checked={addLogo} 
+                    onCheckedChange={(checked) => {
+                      setAddLogo(checked === true);
+                      if (checked === false) {
+                        setLogo(null);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="addLogo">Add Logo to Center</Label>
+                </div>
+                
+                {addLogo && (
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => document.getElementById('logo-upload')?.click()}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        {logo ? "Change Logo" : "Upload Logo"}
+                      </Button>
+                      
+                      {logo && (
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={removeLogo}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <input
+                      id="logo-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleLogoUpload}
+                    />
+                    
+                    {logo && (
+                      <div className="flex justify-center">
+                        <img
+                          src={logo}
+                          alt="Logo preview"
+                          className="h-16 w-16 object-contain border rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
