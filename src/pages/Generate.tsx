@@ -71,7 +71,7 @@ const Generate = () => {
       canvas.height = qrImage.height;
       
       // Draw QR code
-      ctx?.drawImage(qrImage, 0, 0);
+      if (ctx) ctx.drawImage(qrImage, 0, 0);
       
       // Draw logo in center
       const logoImg = new Image();
@@ -81,21 +81,23 @@ const Generate = () => {
         const logoX = (qrImage.width - logoSize) / 2;
         const logoY = (qrImage.height - logoSize) / 2;
         
-        // Draw logo with white background
-        ctx?.fillStyle = "#FFFFFF";
-        ctx?.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
-        
-        // Draw the logo
-        ctx?.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-        
-        // Convert to data URL
-        const finalQR = canvas.toDataURL("image/png");
-        setQrDataUrl(finalQR);
-        
-        toast({
-          title: "Success",
-          description: "QR code with logo generated successfully",
-        });
+        // Draw logo with white background - fixed assignments
+        if (ctx) {
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+          
+          // Draw the logo
+          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+          
+          // Convert to data URL
+          const finalQR = canvas.toDataURL("image/png");
+          setQrDataUrl(finalQR);
+          
+          toast({
+            title: "Success",
+            description: "QR code with logo generated successfully",
+          });
+        }
       };
       logoImg.src = logo;
     };
