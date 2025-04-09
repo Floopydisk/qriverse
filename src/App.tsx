@@ -7,13 +7,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Generate from "./pages/Generate";
-import Scan from "./pages/Scan";
-import Wifi from "./pages/Wifi";
-import Barcode from "./pages/Barcode";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import AuthGuard from "./components/AuthGuard";
 import SignIn from "./pages/SignIn";
+import Barcode from "./pages/Barcode";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,16 +47,6 @@ const App = () => (
             <Route path="/generate" element={
               <AuthGuard>
                 <Generate />
-              </AuthGuard>
-            } />
-            <Route path="/scan" element={
-              <AuthGuard>
-                <Scan />
-              </AuthGuard>
-            } />
-            <Route path="/wifi" element={
-              <AuthGuard>
-                <Wifi />
               </AuthGuard>
             } />
             <Route path="/barcode" element={

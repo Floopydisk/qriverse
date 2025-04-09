@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut } from "lucide-react";
@@ -81,16 +80,13 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Side Panel for Mobile */}
       {isOpen && (
         <>
-          {/* Dark Overlay */}
           <div 
             className="fixed inset-0 bg-black/60 md:hidden" 
             onClick={toggleMenu}
           />
           
-          {/* Side Panel */}
           <div className="fixed inset-y-0 right-0 w-64 bg-black/80 backdrop-blur-xl border-l border-white/10 transform transition-transform duration-300 ease-in-out md:hidden">
             <div className="p-6">
               <nav className="space-y-6">
@@ -153,18 +149,6 @@ const AuthenticatedNav = () => (
       Generate QR
     </Link>
     <Link
-      to="/scan"
-      className="text-foreground/80 hover:text-primary transition-colors"
-    >
-      Scan QR
-    </Link>
-    <Link
-      to="/wifi"
-      className="text-foreground/80 hover:text-primary transition-colors"
-    >
-      WiFi QR
-    </Link>
-    <Link
       to="/barcode"
       className="text-foreground/80 hover:text-primary transition-colors"
     >
@@ -197,18 +181,6 @@ const MobileAuthenticatedNav = () => (
       className="text-foreground/80 hover:text-primary transition-colors"
     >
       Generate QR
-    </Link>
-    <Link
-      to="/scan"
-      className="text-foreground/80 hover:text-primary transition-colors"
-    >
-      Scan QR
-    </Link>
-    <Link
-      to="/wifi"
-      className="text-foreground/80 hover:text-primary transition-colors"
-    >
-      WiFi QR
     </Link>
     <Link
       to="/barcode"

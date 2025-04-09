@@ -1,15 +1,23 @@
 
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Button } from "@/components/ui/button";
 import { QrCode, Scan, Wifi, Barcode, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (user && !isLoading) {
+      navigate("/dashboard");
+    }
+  }, [user, isLoading, navigate]);
 
   const handleGetStarted = () => {
     if (user) {
@@ -18,6 +26,19 @@ const Index = () => {
       navigate("/signin");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  // Only show the landing page for non-authenticated users
+  if (user) {
+    return null; // Will be redirected by the useEffect
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -1,13 +1,13 @@
-
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, ExternalLink, Copy, Link as LinkIcon } from "lucide-react";
+import { Camera, Upload, ExternalLink, Copy, Link as LinkIcon, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import QrScanner from "react-qr-scanner";
 import { BrowserMultiFormatReader } from "@zxing/browser";
+import { useNavigate } from "react-router-dom";
 
 interface ScanResult {
   text: string;
@@ -19,6 +19,7 @@ const Scan = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const isValidURL = (text: string) => {
     try {
@@ -141,10 +142,16 @@ const Scan = () => {
       <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
         <div className="max-w-2xl mx-auto">
           <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-8">
-            <div className="space-y-4 text-center">
-              <h1 className="text-2xl font-bold text-foreground">
-                Scan <span className="text-primary">QR Code</span>
-              </h1>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-foreground">
+                  <span className="text-primary">Scan</span> QR Code
+                </h1>
+                <Button variant="outline" onClick={() => navigate("/generate")}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Generate
+                </Button>
+              </div>
               
               <p className="text-foreground/80">
                 Use your camera to scan a QR code or upload an image
