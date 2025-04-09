@@ -16,8 +16,8 @@ import AuthGuard from "./components/AuthGuard";
 import SignIn from "./pages/SignIn";
 
 // Get Auth0 domain and client ID from environment variables
-const auth0Domain = "dev-yohuf48bgbyo0rx2.us.auth0.com";
-const auth0ClientId = "DWdp8DmmIFo7Gf5bEWhwCTzS5fMbX7sz";
+const auth0Domain = "barqr.uk.auth0.com";
+const auth0ClientId = "cMRroZbMB3j2Izpe71AWAh7cVECy2HpO";
 const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE || "";
 
 const queryClient = new QueryClient();
