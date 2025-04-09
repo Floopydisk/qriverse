@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -422,16 +421,8 @@ const Generate = () => {
                         placeholder="Enter text or URL"
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        className="mt-1 pr-24"
+                        className="mt-1"
                       />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 mt-1"
-                        onClick={generateTextQR}
-                      >
-                        Generate
-                      </Button>
                     </div>
                   </TabsContent>
                   

@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2, Edit, Link, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { fetchUserQRCodes, deleteQRCode, QRCode } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 
 const QRCodeList = () => {
   const { toast } = useToast();
@@ -102,12 +102,16 @@ const QRCodeList = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {qrCodes.map((qrCode: QRCode) => (
-        <div key={qrCode.id} className="border rounded-lg overflow-hidden bg-white">
-          <div className="flex items-start p-4 gap-4">
+        <div 
+          key={qrCode.id} 
+          className="bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors rounded-lg overflow-hidden"
+        >
+          <div className="p-6 flex gap-4">
+            {/* QR Code Image */}
             <div className="flex-shrink-0">
-              <div className="bg-white p-2 border rounded-lg">
+              <div className="bg-white p-2 rounded-md border shadow-sm">
                 <img
                   src={generateQRDataUrl(qrCode.content)}
                   alt={qrCode.name}
@@ -116,55 +120,53 @@ const QRCodeList = () => {
               </div>
             </div>
             
+            {/* QR Code Info */}
             <div className="flex flex-col flex-grow min-w-0">
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-lg font-semibold truncate mr-2">{qrCode.name}</h3>
-                <div className="text-sm font-medium text-primary">
-                  {qrCode.type === "url" ? "Website" : qrCode.type}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold truncate">{qrCode.name}</h3>
+                  
+                  <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                    {qrCode.type === "url" && <Link className="h-3.5 w-3.5 flex-shrink-0" />}
+                    <span className="truncate">{qrCode.content}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
+                      {qrCode.type.charAt(0).toUpperCase() + qrCode.type.slice(1)}
+                    </Badge>
+                    <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
+                      0 Scans
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(qrCode.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                {qrCode.type === "url" && <Link className="h-3.5 w-3.5" />}
-                <span className="truncate">{qrCode.content}</span>
-              </div>
-              
-              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                <span>Created on {new Date(qrCode.created_at).toLocaleDateString()}</span>
-                {qrCode.folder_id && <span>• In folder: {qrCode.folder_id}</span>}
-              </div>
-
-              <div className="mt-2 flex items-center gap-2">
-                <div className="bg-muted/50 rounded-full text-xs px-3 py-1">
-                  0 Scans
-                </div>
-                <Button variant="link" size="sm" className="p-0 h-auto text-xs text-primary">
-                  Details <ExternalLink className="ml-1 h-3 w-3" />
+              {/* Actions */}
+              <div className="flex items-center gap-2 mt-auto pt-3">
+                <Button variant="outline" size="sm" onClick={() => handleEdit(qrCode.id)} className="h-8">
+                  <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-8"
+                  onClick={() => handleDownload(qrCode.id, qrCode.name, generateQRDataUrl(qrCode.content))}
+                >
+                  <Download className="h-3.5 w-3.5 mr-1" /> Download
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 ml-auto text-destructive hover:text-destructive hover:bg-destructive/10" 
+                  onClick={() => handleDelete(qrCode.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
-            </div>
-            
-            <div className="flex gap-2 flex-shrink-0">
-              <Button variant="outline" size="sm" onClick={() => handleEdit(qrCode.id)} className="flex-shrink-0">
-                <Edit className="h-4 w-4 mr-1" /> Edit
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleDownload(qrCode.id, qrCode.name, generateQRDataUrl(qrCode.content))}
-              >
-                Download
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-destructive hover:text-destructive" 
-                onClick={() => handleDelete(qrCode.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </div>
