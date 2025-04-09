@@ -1,61 +1,46 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Edit, Link } from "lucide-react";
+import { Download, Trash2, Edit, Link, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock data - in a real app, this would come from your backend
-const mockQRCodes = [
-  {
-    id: "1",
-    name: "Company Website",
-    url: "https://example.com",
-    createdAt: "2025-04-01T10:00:00Z",
-    imageUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkAQMAAAAjexcCAAAAA1BMVEX///+nxBvIAAAAGElEQVRIx+3BMQEAAADCIPunXg0PAAAA3wHGvgABT9RYrwAAAABJRU5ErkJggg==",
-    color: "#10B981",
-    bgColor: "#FFFFFF"
-  },
-  {
-    id: "2",
-    name: "WiFi Network",
-    url: "WiFi:T:WPA;S:MyWiFi;P:password123;;",
-    createdAt: "2025-04-02T14:30:00Z",
-    imageUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkAQMAAAAjexcCAAAAA1BMVEX///+nxBvIAAAAGElEQVRIx+3BMQEAAADCIPunXg0PAAAA3wHGvgABT9RYrwAAAABJRU5ErkJggg==",
-    color: "#3B82F6",
-    bgColor: "#F3F4F6"
-  },
-  {
-    id: "3",
-    name: "Contact Information",
-    url: "tel:+11234567890",
-    createdAt: "2025-04-03T09:15:00Z",
-    imageUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkAQMAAAAjexcCAAAAA1BMVEX///+nxBvIAAAAGElEQVRIx+3BMQEAAADCIPunXg0PAAAA3wHGvgABT9RYrwAAAABJRU5ErkJggg==",
-    color: "#EC4899",
-    bgColor: "#FFFFFF"
-  }
-];
+import { fetchUserQRCodes, deleteQRCode, QRCode } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const QRCodeList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [qrCodes, setQrCodes] = useState(mockQRCodes);
+  const queryClient = useQueryClient();
+  
+  const { data: qrCodes = [], isLoading, error } = useQuery({
+    queryKey: ['qrCodes'],
+    queryFn: fetchUserQRCodes
+  });
 
   const handleEdit = (id: string) => {
     navigate(`/generate?edit=${id}`);
   };
 
-  const handleDelete = (id: string) => {
-    setQrCodes(qrCodes.filter(qr => qr.id !== id));
-    toast({
-      title: "QR Code Deleted",
-      description: "The QR code has been deleted successfully"
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteQRCode(id);
+      queryClient.invalidateQueries({ queryKey: ['qrCodes'] });
+      toast({
+        title: "QR Code Deleted",
+        description: "The QR code has been deleted successfully"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete QR code",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDownload = (id: string, name: string, imageUrl: string) => {
-    // Create a temporary link element and trigger the download
+    // In a real app with real QR codes, this would use the actual QR code image
     const link = document.createElement("a");
     link.href = imageUrl;
     link.download = `${name.replace(/\s+/g, "_")}_qrcode.png`;
@@ -68,6 +53,30 @@ const QRCodeList = () => {
       description: "Your QR code has been downloaded successfully"
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="bg-destructive/10 border border-destructive rounded-xl p-8 max-w-md mx-auto">
+          <h3 className="text-xl font-medium mb-2">Error Loading QR Codes</h3>
+          <p className="text-muted-foreground mb-6">
+            {error instanceof Error ? error.message : "Failed to load QR codes"}
+          </p>
+          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['qrCodes'] })}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (qrCodes.length === 0) {
     return (
@@ -85,41 +94,80 @@ const QRCodeList = () => {
     );
   }
 
+  // Generate QR code data URLs for display
+  const generateQRDataUrl = (content: string) => {
+    // This is a placeholder for demonstration purposes
+    // In a real app, we would generate a real QR code image
+    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkAQMAAAAjexcCAAAAA1BMVEX///+nxBvIAAAAGElEQVRIx+3BMQEAAADCIPunXg0PAAAA3wHGvgABT9RYrwAAAABJRU5ErkJggg==";
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-      {qrCodes.map((qrCode) => (
-        <Card key={qrCode.id} className="overflow-hidden">
-          <div className="bg-white p-6 flex items-center justify-center">
-            <img
-              src={qrCode.imageUrl}
-              alt={qrCode.name}
-              className="w-36 h-36 object-contain"
-            />
-          </div>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold truncate">{qrCode.name}</h3>
-            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-              <Link className="h-3.5 w-3.5" />
-              <span className="truncate">{qrCode.url}</span>
+    <div className="space-y-4">
+      {qrCodes.map((qrCode: QRCode) => (
+        <div key={qrCode.id} className="border rounded-lg overflow-hidden bg-white">
+          <div className="flex items-start p-4 gap-4">
+            <div className="flex-shrink-0">
+              <div className="bg-white p-2 border rounded-lg">
+                <img
+                  src={generateQRDataUrl(qrCode.content)}
+                  alt={qrCode.name}
+                  className="w-24 h-24 object-contain"
+                />
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Created on {new Date(qrCode.createdAt).toLocaleDateString()}
-            </p>
-          </CardContent>
-          <CardFooter className="flex justify-between border-t p-4">
-            <Button variant="ghost" size="sm" onClick={() => handleEdit(qrCode.id)}>
-              <Edit className="h-4 w-4 mr-1" /> Edit
-            </Button>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="icon" onClick={() => handleDownload(qrCode.id, qrCode.name, qrCode.imageUrl)}>
-                <Download className="h-4 w-4" />
+            
+            <div className="flex flex-col flex-grow min-w-0">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-semibold truncate mr-2">{qrCode.name}</h3>
+                <div className="text-sm font-medium text-primary">
+                  {qrCode.type === "url" ? "Website" : qrCode.type}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                {qrCode.type === "url" && <Link className="h-3.5 w-3.5" />}
+                <span className="truncate">{qrCode.content}</span>
+              </div>
+              
+              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                <span>Created on {new Date(qrCode.created_at).toLocaleDateString()}</span>
+                {qrCode.folder_id && <span>• In folder: {qrCode.folder_id}</span>}
+              </div>
+
+              <div className="mt-2 flex items-center gap-2">
+                <div className="bg-muted/50 rounded-full text-xs px-3 py-1">
+                  0 Scans
+                </div>
+                <Button variant="link" size="sm" className="p-0 h-auto text-xs text-primary">
+                  Details <ExternalLink className="ml-1 h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 flex-shrink-0">
+              <Button variant="outline" size="sm" onClick={() => handleEdit(qrCode.id)} className="flex-shrink-0">
+                <Edit className="h-4 w-4 mr-1" /> Edit
               </Button>
-              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(qrCode.id)}>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDownload(qrCode.id, qrCode.name, generateQRDataUrl(qrCode.content))}
+              >
+                Download
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-destructive hover:text-destructive" 
+                onClick={() => handleDelete(qrCode.id)}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       ))}
     </div>
   );

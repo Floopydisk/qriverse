@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth as useAuthContext } from '@/contexts/AuthContext';
 
-// Re-export the hook for convenience
-export { useAuth };
+// Export both default and named export for backwards compatibility
+export const useAuth = useAuthContext;
+export default useAuth;
