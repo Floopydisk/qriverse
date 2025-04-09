@@ -1,9 +1,8 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FolderOpen, Trash2, Edit, QrCode } from "lucide-react";
+import { FolderOpen, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -14,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { fetchUserFolders, deleteFolder, updateFolder, createFolder, Folder } from "@/lib/api";
+import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 const FolderList = () => {
   const { toast } = useToast();
@@ -86,73 +86,66 @@ const FolderList = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      <div className="py-2 px-1 text-sm text-muted-foreground">
+        Loading folders...
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <div className="bg-destructive/10 border border-destructive rounded-xl p-8 max-w-md mx-auto">
-          <h3 className="text-xl font-medium mb-2">Error Loading Folders</h3>
-          <p className="text-muted-foreground mb-6">
-            {error instanceof Error ? error.message : "Failed to load folders"}
-          </p>
-          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['folders'] })}>
-            Try Again
-          </Button>
-        </div>
+      <div className="py-2 px-1 text-sm text-destructive">
+        Error loading folders
       </div>
     );
   }
 
   if (folders.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8 max-w-md mx-auto">
-          <h3 className="text-xl font-medium mb-2">No Folders Found</h3>
-          <p className="text-muted-foreground mb-6">
-            Create folders to organize your QR codes efficiently
-          </p>
-          <Button>
-            Create Folder
-          </Button>
-        </div>
+      <div className="py-2 px-1 text-sm text-muted-foreground">
+        No folders yet
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <>
       {folders.map((folder: Folder) => (
-        <div 
-          key={folder.id} 
-          className="border rounded-lg p-4 bg-white hover:border-primary/50 transition-colors flex items-center gap-4 cursor-pointer"
-          onClick={() => handleOpenFolder(folder.id)}
-        >
-          <div className="bg-muted/30 p-2 rounded-lg">
-            <FolderOpen className="h-6 w-6 text-primary/60" />
-          </div>
-          
-          <div className="flex-grow min-w-0">
-            <h3 className="text-lg font-medium truncate">{folder.name}</h3>
-            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-              <QrCode className="h-3.5 w-3.5" />
-              <span>0 QR codes</span>
+        <SidebarMenuItem key={folder.id}>
+          <SidebarMenuButton 
+            onClick={() => handleOpenFolder(folder.id)}
+            className="group relative"
+          >
+            <FolderOpen className="h-4 w-4" />
+            <span>{folder.name}</span>
+            
+            {/* Edit and Delete buttons positioned absolutely */}
+            <div className="absolute right-0 top-0 h-full flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(folder.id, folder.name);
+                }}
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 text-destructive hover:text-destructive" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(folder.id);
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
             </div>
-          </div>
-          
-          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(folder.id, folder.name)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(folder.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       ))}
 
       {/* Edit Folder Dialog */}
@@ -173,7 +166,7 @@ const FolderList = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 

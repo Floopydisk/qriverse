@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -37,7 +36,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import QRCodeList from "@/components/QRCodeList";
 import FolderList from "@/components/FolderList";
@@ -107,15 +105,16 @@ const Dashboard = () => {
         <Header />
 
         <div className="flex-1 flex">
-          {/* Left Sidebar */}
           <Sidebar variant="sidebar" collapsible="icon">
             <SidebarHeader className="px-4 py-6">
               <div className="flex items-center gap-2">
-                <Input 
-                  placeholder="Search QR Codes..." 
-                  className="h-9"
-                  prefixIcon={<Search className="h-4 w-4" />}
-                />
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search QR Codes..." 
+                    className="h-9 pl-9"
+                  />
+                </div>
               </div>
             </SidebarHeader>
             <SidebarContent>
@@ -152,25 +151,9 @@ const Dashboard = () => {
                 </SidebarMenu>
               </SidebarGroup>
               <SidebarGroup>
-                <SidebarGroupLabel className="flex justify-between items-center">
-                  MY FOLDERS
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-5 w-5" 
-                    onClick={() => setShowFolderDialog(true)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </SidebarGroupLabel>
+                <SidebarGroupLabel>MY FOLDERS</SidebarGroupLabel>
                 <SidebarMenu>
-                  {/* Folder items would go here */}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <Folder className="h-4 w-4" />
-                      <span>Guests profile</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <FolderList />
                 </SidebarMenu>
               </SidebarGroup>
             </SidebarContent>
@@ -178,7 +161,6 @@ const Dashboard = () => {
 
           <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
             <div className="max-w-7xl mx-auto space-y-8">
-              {/* Dashboard Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
@@ -214,7 +196,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Main Content with conditionally displayed list */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -228,13 +209,11 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                {/* List content */}
                 <QRCodeList />
               </div>
             </div>
           </main>
 
-          {/* New Folder Dialog */}
           <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
             <DialogContent>
               <DialogHeader>
