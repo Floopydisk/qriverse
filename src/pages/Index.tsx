@@ -5,17 +5,17 @@ import FloatingCircles from "@/components/FloatingCircles";
 import { Button } from "@/components/ui/button";
 import { QrCode, Scan, Wifi, Barcode, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, loginWithRedirect } = useAuth0();
+  const { user } = useAuth();
 
   const handleGetStarted = () => {
-    if (isAuthenticated) {
+    if (user) {
       navigate("/dashboard");
     } else {
-      loginWithRedirect();
+      navigate("/signin");
     }
   };
 

@@ -10,26 +10,26 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, user, logout, loginWithRedirect } = useAuth0();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   
   const handleLogout = () => {
-    logout({ logoutParams: { returnTo: window.location.origin } });
+    signOut();
   };
 
-  const userInitials = user?.name
-    ? user.name
+  const userInitials = user?.user_metadata?.full_name
+    ? user.user_metadata.full_name
         .split(" ")
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join("")
         .toUpperCase()
-    : "U";
+    : user?.email?.charAt(0).toUpperCase() || "U";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
@@ -49,15 +49,15 @@ const Header = () => {
           </Button>
 
           <nav className="hidden md:flex items-center space-x-6">
-            {isAuthenticated ? <AuthenticatedNav /> : <UnauthenticatedNav />}
+            {user ? <AuthenticatedNav /> : <UnauthenticatedNav />}
             
             <div className="flex items-center space-x-4">
-              {isAuthenticated ? (
+              {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">
                       <Avatar>
-                        <AvatarImage src={user?.picture} alt={user?.name} />
+                        <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name || user?.email} />
                         <AvatarFallback>{userInitials}</AvatarFallback>
                       </Avatar>
                     </Button>
@@ -74,7 +74,7 @@ const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button onClick={() => loginWithRedirect()}>Sign In</Button>
+                <Button onClick={() => navigate('/signin')}>Sign In</Button>
               )}
             </div>
           </nav>
@@ -94,18 +94,20 @@ const Header = () => {
           <div className="fixed inset-y-0 right-0 w-64 bg-black/80 backdrop-blur-xl border-l border-white/10 transform transition-transform duration-300 ease-in-out md:hidden">
             <div className="p-6">
               <nav className="space-y-6">
-                {isAuthenticated ? <MobileAuthenticatedNav /> : <MobileUnauthenticatedNav />}
+                {user ? <MobileAuthenticatedNav /> : <MobileUnauthenticatedNav />}
                 
                 <div className="pt-4 border-t border-white/10">
-                  {isAuthenticated ? (
+                  {user ? (
                     <>
                       <div className="flex items-center space-x-3 mb-4">
                         <Avatar>
-                          <AvatarImage src={user?.picture} alt={user?.name} />
+                          <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name || user?.email} />
                           <AvatarFallback>{userInitials}</AvatarFallback>
                         </Avatar>
                         <div className="overflow-hidden">
-                          <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {user?.user_metadata?.full_name || user?.email}
+                          </p>
                           <p className="text-xs text-foreground/70 truncate">{user?.email}</p>
                         </div>
                       </div>
@@ -121,7 +123,7 @@ const Header = () => {
                   ) : (
                     <Button 
                       className="w-full"
-                      onClick={() => loginWithRedirect()}
+                      onClick={() => navigate('/signin')}
                     >
                       Sign In
                     </Button>

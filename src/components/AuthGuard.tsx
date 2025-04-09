@@ -1,5 +1,5 @@
 
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth } from '@/hooks/use-auth';
 import { Navigate } from "react-router-dom";
 
 interface AuthGuardProps {
@@ -7,7 +7,7 @@ interface AuthGuardProps {
 }
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -17,7 +17,7 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/signin" replace />;
   }
 
