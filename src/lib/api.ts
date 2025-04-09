@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 export interface QRCode {
   id: string;
@@ -10,6 +11,7 @@ export interface QRCode {
   updated_at: string;
   options: any;
   folder_id: string | null;
+  user_id: string;
 }
 
 export interface Folder {
@@ -17,13 +19,18 @@ export interface Folder {
   name: string;
   created_at: string;
   updated_at: string;
+  user_id: string;
 }
 
 // QR Code functions
 export const fetchUserQRCodes = async () => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('User not authenticated');
+  
   const { data, error } = await supabase
     .from('qr_codes')
     .select('*')
+    .eq('user_id', user.user.id)
     .order('created_at', { ascending: false });
   
   if (error) throw error;
@@ -42,6 +49,9 @@ export const fetchQRCode = async (id: string) => {
 };
 
 export const createQRCode = async (qrCode: Omit<QRCode, 'id' | 'created_at' | 'updated_at'>) => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('User not authenticated');
+  
   const { data, error } = await supabase
     .from('qr_codes')
     .insert([qrCode])
@@ -75,9 +85,13 @@ export const deleteQRCode = async (id: string) => {
 
 // Folder functions
 export const fetchUserFolders = async () => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('User not authenticated');
+  
   const { data, error } = await supabase
     .from('folders')
     .select('*')
+    .eq('user_id', user.user.id)
     .order('name');
   
   if (error) throw error;
@@ -85,9 +99,15 @@ export const fetchUserFolders = async () => {
 };
 
 export const createFolder = async (name: string) => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('User not authenticated');
+  
   const { data, error } = await supabase
     .from('folders')
-    .insert([{ name }])
+    .insert([{ 
+      name, 
+      user_id: user.user.id 
+    }])
     .select()
     .single();
   
@@ -117,10 +137,14 @@ export const deleteFolder = async (id: string) => {
 };
 
 export const fetchQRCodesInFolder = async (folderId: string) => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('User not authenticated');
+  
   const { data, error } = await supabase
     .from('qr_codes')
     .select('*')
     .eq('folder_id', folderId)
+    .eq('user_id', user.user.id)
     .order('created_at', { ascending: false });
   
   if (error) throw error;
