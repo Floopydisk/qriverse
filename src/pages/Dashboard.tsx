@@ -151,7 +151,17 @@ const Dashboard = () => {
                 </SidebarMenu>
               </SidebarGroup>
               <SidebarGroup>
-                <SidebarGroupLabel>MY FOLDERS</SidebarGroupLabel>
+                <SidebarGroupLabel className="flex justify-between items-center">
+                  MY FOLDERS
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-5 w-5" 
+                    onClick={() => setShowFolderDialog(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </SidebarGroupLabel>
                 <SidebarMenu>
                   <FolderList />
                 </SidebarMenu>
