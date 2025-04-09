@@ -15,7 +15,14 @@ import Dashboard from "./pages/Dashboard";
 import AuthGuard from "./components/AuthGuard";
 import SignIn from "./pages/SignIn";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <BrowserRouter>
@@ -30,6 +37,11 @@ const App = () => (
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
+              <AuthGuard>
+                <Dashboard />
+              </AuthGuard>
+            } />
+            <Route path="/dashboard/folder/:folderId" element={
               <AuthGuard>
                 <Dashboard />
               </AuthGuard>
