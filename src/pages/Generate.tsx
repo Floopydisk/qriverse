@@ -10,15 +10,38 @@ import { useToast } from "@/hooks/use-toast";
 import QRCode from "qrcode";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
+import { createQRCode } from "@/lib/api";
+import { useMutation } from "@tanstack/react-query";
 
 const Generate = () => {
   const [text, setText] = useState("");
+  const [name, setName] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [darkColor, setDarkColor] = useState("#10B981"); // Default green color
   const [lightColor, setLightColor] = useState("#FFFFFF"); // Default white color
   const [logo, setLogo] = useState<string | null>(null);
   const [addLogo, setAddLogo] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Create QR code mutation
+  const createQRCodeMutation = useMutation({
+    mutationFn: createQRCode,
+    onSuccess: () => {
+      toast({
+        title: "QR Code Saved",
+        description: "Your QR code has been saved to your dashboard"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save QR code",
+        variant: "destructive",
+      });
+    }
+  });
 
   const generateQR = async () => {
     if (!text) {
@@ -49,6 +72,9 @@ const Generate = () => {
           title: "Success",
           description: "QR code generated successfully",
         });
+        
+        // Auto-save the QR code to the database
+        saveQRCodeToDatabase(dataUrl);
       }
     } catch (err) {
       toast({
@@ -81,7 +107,7 @@ const Generate = () => {
         const logoX = (qrImage.width - logoSize) / 2;
         const logoY = (qrImage.height - logoSize) / 2;
         
-        // Draw logo with white background - fixed assignments
+        // Draw logo with white background
         if (ctx) {
           ctx.fillStyle = "#FFFFFF";
           ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
@@ -97,11 +123,40 @@ const Generate = () => {
             title: "Success",
             description: "QR code with logo generated successfully",
           });
+          
+          // Auto-save the QR code to the database
+          saveQRCodeToDatabase(finalQR);
         }
       };
       logoImg.src = logo;
     };
     qrImage.src = qrDataUrl;
+  };
+
+  const saveQRCodeToDatabase = (dataUrl: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save QR codes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const qrName = name || `QR Code - ${new Date().toLocaleString()}`;
+    
+    createQRCodeMutation.mutate({
+      name: qrName,
+      content: text,
+      type: text.startsWith("http") ? "url" : "text",
+      options: {
+        darkColor,
+        lightColor,
+        hasLogo: addLogo,
+        dataUrl: dataUrl
+      },
+      user_id: user.id
+    });
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,23 +236,39 @@ const Generate = () => {
                 Generate <span className="text-primary">QR Code</span>
               </h1>
               
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="Enter text or URL"
-                  value={text}
-                  onChange={handleTextChange}
-                  onKeyUp={(e) => e.key === "Enter" && generateQR()}
-                  className="pr-24"
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2"
-                  onClick={generateQR}
-                >
-                  Generate
-                </Button>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Label htmlFor="qrName">QR Code Name</Label>
+                  <Input
+                    id="qrName"
+                    type="text"
+                    placeholder="Enter a name for your QR code"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div className="relative">
+                  <Label htmlFor="qrContent">Content</Label>
+                  <Input
+                    id="qrContent"
+                    type="text"
+                    placeholder="Enter text or URL"
+                    value={text}
+                    onChange={handleTextChange}
+                    onKeyUp={(e) => e.key === "Enter" && generateQR()}
+                    className="mt-1 pr-24"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 mt-1"
+                    onClick={generateQR}
+                  >
+                    Generate
+                  </Button>
+                </div>
               </div>
               
               {/* Color and Logo Options */}
