@@ -174,3 +174,23 @@ export const updateUserProfile = async (userId: string, updates: { username?: st
   if (error) throw error;
   return data;
 };
+
+// Create storage bucket for QR code images if it doesn't exist
+export const ensureQRCodeStorageBucket = async () => {
+  try {
+    const { error: getBucketError } = await supabase.storage.getBucket('qrcodes');
+    
+    if (getBucketError && getBucketError.message.includes('does not exist')) {
+      const { error: createBucketError } = await supabase.storage.createBucket('qrcodes', {
+        public: true
+      });
+      
+      if (createBucketError) throw createBucketError;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error ensuring QR code storage bucket:", error);
+    return false;
+  }
+};

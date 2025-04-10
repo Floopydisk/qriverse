@@ -12,6 +12,8 @@ import Dashboard from "./pages/Dashboard";
 import AuthGuard from "./components/AuthGuard";
 import SignIn from "./pages/SignIn";
 import Barcode from "./pages/Barcode";
+import Profile from "./pages/Profile";
+import Scan from "./pages/Scan";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +34,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/scan" element={<Scan />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
@@ -52,6 +55,11 @@ const App = () => (
             <Route path="/barcode" element={
               <AuthGuard>
                 <Barcode />
+              </AuthGuard>
+            } />
+            <Route path="/profile" element={
+              <AuthGuard>
+                <Profile />
               </AuthGuard>
             } />
             <Route path="*" element={<NotFound />} />

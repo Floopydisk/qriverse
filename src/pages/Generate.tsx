@@ -1,4 +1,6 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
@@ -10,8 +12,8 @@ import QRCode from "qrcode";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/use-auth";
-import { createQRCode } from "@/lib/api";
-import { useMutation } from "@tanstack/react-query";
+import { createQRCode, fetchQRCode, updateQRCode } from "@/lib/api";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -21,9 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 const Generate = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -55,19 +60,165 @@ const Generate = () => {
   // Current tab state
   const [activeTab, setActiveTab] = useState("text");
   
+  // Fetch QR code data if in edit mode
+  const { data: qrCodeData, isLoading: isLoadingQrCode } = useQuery({
+    queryKey: ['qrCode', editId],
+    queryFn: () => editId ? fetchQRCode(editId) : null,
+    enabled: !!editId,
+    onSuccess: (data) => {
+      if (data) {
+        setName(data.name || "");
+        setQrDataUrl(data.options?.dataUrl || "");
+        setDarkColor(data.options?.darkColor || "#10B981");
+        setLightColor(data.options?.lightColor || "#FFFFFF");
+        setAddLogo(data.options?.hasLogo || false);
+
+        // Set active tab based on type
+        if (data.type === "url" || data.type === "text") {
+          setActiveTab("text");
+          setText(data.content || "");
+        } else if (data.type === "wifi") {
+          setActiveTab("wifi");
+          try {
+            // Parse WIFI string
+            const wifiString = data.content;
+            const ssidMatch = wifiString.match(/S:(.*?);/);
+            const passwordMatch = wifiString.match(/P:(.*?);/);
+            const encryptionMatch = wifiString.match(/T:(.*?);/);
+            const hiddenMatch = wifiString.match(/H:(.*?);/);
+            
+            if (ssidMatch) setSsid(ssidMatch[1]);
+            if (passwordMatch) setPassword(passwordMatch[1]);
+            if (encryptionMatch) setEncryption(encryptionMatch[1]);
+            if (hiddenMatch) setHidden(hiddenMatch[1] === "true");
+          } catch (err) {
+            console.error("Failed to parse WiFi QR code:", err);
+          }
+        } else if (data.type === "contact") {
+          setActiveTab("contact");
+          try {
+            // Parse vCard
+            const vCardString = data.content;
+            const fnMatch = vCardString.match(/FN:(.*?)(?:\r?\n|$)/);
+            const emailMatch = vCardString.match(/EMAIL:(.*?)(?:\r?\n|$)/);
+            const telMatch = vCardString.match(/TEL:(.*?)(?:\r?\n|$)/);
+            const orgMatch = vCardString.match(/ORG:(.*?)(?:\r?\n|$)/);
+            const titleMatch = vCardString.match(/TITLE:(.*?)(?:\r?\n|$)/);
+            const urlMatch = vCardString.match(/URL:(.*?)(?:\r?\n|$)/);
+            
+            if (fnMatch) setFullName(fnMatch[1]);
+            if (emailMatch) setEmail(emailMatch[1]);
+            if (telMatch) setPhone(telMatch[1]);
+            if (orgMatch) setOrganization(orgMatch[1]);
+            if (titleMatch) setTitle(titleMatch[1]);
+            if (urlMatch) setWebsite(urlMatch[1]);
+          } catch (err) {
+            console.error("Failed to parse contact QR code:", err);
+          }
+        }
+      }
+    }
+  });
+
   // Create QR code mutation
   const createQRCodeMutation = useMutation({
     mutationFn: createQRCode,
-    onSuccess: () => {
-      toast({
-        title: "QR Code Saved",
-        description: "Your QR code has been saved to your dashboard"
-      });
+    onSuccess: async (data) => {
+      if (qrDataUrl) {
+        try {
+          // Upload QR code image to storage
+          const filename = `${data.id}.png`;
+          const { error: folderError } = await supabase.storage.from('qrcodes').list(`user_${user?.id}`);
+          
+          if (folderError && folderError.message.includes('Not found')) {
+            // Create user folder if it doesn't exist
+            await supabase.storage.from('qrcodes').upload(`user_${user?.id}/.folder_metadata`, '');
+          }
+          
+          // Convert dataURL to Blob
+          const response = await fetch(qrDataUrl);
+          const blob = await response.blob();
+          
+          // Upload to storage
+          const { error } = await supabase.storage
+            .from('qrcodes')
+            .upload(`user_${user?.id}/${filename}`, blob, {
+              contentType: 'image/png',
+              upsert: true
+            });
+            
+          if (error) throw error;
+          
+          // Update QR code with storage path
+          await updateQRCode(data.id, {
+            options: {
+              ...data.options,
+              storagePath: `user_${user?.id}/${filename}`
+            }
+          });
+          
+          toast({
+            title: "QR Code Saved",
+            description: "Your QR code has been saved to your dashboard"
+          });
+          
+        } catch (error) {
+          console.error("Error uploading QR code:", error);
+          toast({
+            title: "QR Code Saved",
+            description: "Your QR code was saved but the image upload failed"
+          });
+        }
+      }
     },
     onError: (error) => {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save QR code",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Update QR code mutation
+  const updateQRCodeMutation = useMutation({
+    mutationFn: ({id, updates}: {id: string, updates: any}) => updateQRCode(id, updates),
+    onSuccess: async (data) => {
+      if (qrDataUrl && editId) {
+        try {
+          // Convert dataURL to Blob
+          const response = await fetch(qrDataUrl);
+          const blob = await response.blob();
+          
+          // Upload to storage
+          const filename = `${editId}.png`;
+          const { error } = await supabase.storage
+            .from('qrcodes')
+            .upload(`user_${user?.id}/${filename}`, blob, {
+              contentType: 'image/png',
+              upsert: true
+            });
+            
+          if (error) throw error;
+          
+          toast({
+            title: "QR Code Updated",
+            description: "Your QR code has been updated successfully"
+          });
+          
+        } catch (error) {
+          console.error("Error uploading QR code:", error);
+          toast({
+            title: "QR Code Updated",
+            description: "Your QR code was updated but the image upload failed"
+          });
+        }
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update QR code",
         variant: "destructive",
       });
     }
@@ -103,7 +254,7 @@ const Generate = () => {
           description: "QR code generated successfully",
         });
         
-        // Auto-save the QR code to the database
+        // Save the QR code to the database
         saveQRCodeToDatabase(dataUrl, text, text.startsWith("http") ? "url" : "text");
       }
     } catch (err) {
@@ -148,7 +299,7 @@ const Generate = () => {
           description: "WiFi QR code generated successfully",
         });
         
-        // Auto-save the QR code to the database
+        // Save the QR code to the database
         saveQRCodeToDatabase(dataUrl, wifiString, "wifi");
       }
     } catch (err) {
@@ -202,7 +353,7 @@ const Generate = () => {
           description: "Contact QR code generated successfully",
         });
         
-        // Auto-save the QR code to the database
+        // Save the QR code to the database
         saveQRCodeToDatabase(dataUrl, vCardString, "contact");
       }
     } catch (err) {
@@ -253,7 +404,7 @@ const Generate = () => {
             description: "QR code with logo generated successfully",
           });
           
-          // Auto-save the QR code to the database
+          // Save the QR code to the database
           saveQRCodeToDatabase(finalQR, content, determineType(content));
         }
       };
@@ -281,19 +432,38 @@ const Generate = () => {
 
     const qrName = name || `${type.toUpperCase()} QR - ${new Date().toLocaleString()}`;
     
-    createQRCodeMutation.mutate({
-      name: qrName,
-      content: content,
-      type: type,
-      options: {
-        darkColor,
-        lightColor,
-        hasLogo: addLogo,
-        dataUrl: dataUrl
-      },
-      user_id: user.id,
-      folder_id: null
-    });
+    if (editId) {
+      // Update existing QR code
+      updateQRCodeMutation.mutate({
+        id: editId,
+        updates: {
+          name: qrName,
+          content: content,
+          type: type,
+          options: {
+            darkColor,
+            lightColor,
+            hasLogo: addLogo,
+            dataUrl: dataUrl
+          }
+        }
+      });
+    } else {
+      // Create new QR code
+      createQRCodeMutation.mutate({
+        name: qrName,
+        content: content,
+        type: type,
+        options: {
+          darkColor,
+          lightColor,
+          hasLogo: addLogo,
+          dataUrl: dataUrl
+        },
+        user_id: user.id,
+        folder_id: null
+      });
+    }
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -641,7 +811,7 @@ const Generate = () => {
                     onClick={handleGenerate}
                   >
                     <QrCode className="mr-2 h-4 w-4" />
-                    Generate QR Code
+                    {editId ? "Update QR Code" : "Generate QR Code"}
                   </Button>
                 </div>
               </Tabs>

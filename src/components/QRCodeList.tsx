@@ -7,16 +7,54 @@ import { useToast } from "@/hooks/use-toast";
 import { fetchUserQRCodes, deleteQRCode, QRCode } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 const QRCodeList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [qrImageUrls, setQrImageUrls] = useState<Record<string, string>>({});
   
   const { data: qrCodes = [], isLoading, error } = useQuery({
     queryKey: ['qrCodes'],
     queryFn: fetchUserQRCodes
   });
+
+  useEffect(() => {
+    const fetchQrImages = async () => {
+      const urls: Record<string, string> = {};
+      
+      for (const qrCode of qrCodes) {
+        if (qrCode.options?.storagePath) {
+          try {
+            const { data, error } = await supabase.storage
+              .from('qrcodes')
+              .download(qrCode.options.storagePath);
+            
+            if (data && !error) {
+              const url = URL.createObjectURL(data);
+              urls[qrCode.id] = url;
+            }
+          } catch (err) {
+            console.error(`Error fetching QR code image for ${qrCode.id}:`, err);
+          }
+        }
+      }
+      
+      setQrImageUrls(urls);
+    };
+    
+    if (qrCodes.length > 0) {
+      fetchQrImages();
+    }
+    
+    // Cleanup function to revoke object URLs
+    return () => {
+      Object.values(qrImageUrls).forEach(url => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [qrCodes]);
 
   const handleEdit = (id: string) => {
     navigate(`/generate?edit=${id}`);
@@ -24,7 +62,27 @@ const QRCodeList = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      // Get QR code to get storage path
+      const qrCode = qrCodes.find(qr => qr.id === id);
+      
+      // Delete from storage if it exists
+      if (qrCode?.options?.storagePath) {
+        await supabase.storage
+          .from('qrcodes')
+          .remove([qrCode.options.storagePath]);
+      }
+      
+      // Delete from database
       await deleteQRCode(id);
+      
+      // Cleanup object URL
+      if (qrImageUrls[id]) {
+        URL.revokeObjectURL(qrImageUrls[id]);
+        const newUrls = { ...qrImageUrls };
+        delete newUrls[id];
+        setQrImageUrls(newUrls);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['qrCodes'] });
       toast({
         title: "QR Code Deleted",
@@ -39,8 +97,18 @@ const QRCodeList = () => {
     }
   };
 
-  const handleDownload = (id: string, name: string, imageUrl: string) => {
-    // In a real app with real QR codes, this would use the actual QR code image
+  const handleDownload = (id: string, name: string) => {
+    const imageUrl = qrImageUrls[id];
+    
+    if (!imageUrl) {
+      toast({
+        title: "Error",
+        description: "QR code image not available",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const link = document.createElement("a");
     link.href = imageUrl;
     link.download = `${name.replace(/\s+/g, "_")}_qrcode.png`;
@@ -94,13 +162,6 @@ const QRCodeList = () => {
     );
   }
 
-  // Generate QR code data URLs for display
-  const generateQRDataUrl = (content: string) => {
-    // This is a placeholder for demonstration purposes
-    // In a real app, we would generate a real QR code image
-    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkAQMAAAAjexcCAAAAA1BMVEX///+nxBvIAAAAGElEQVRIx+3BMQEAAADCIPunXg0PAAAA3wHGvgABT9RYrwAAAABJRU5ErkJggg==";
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {qrCodes.map((qrCode: QRCode) => (
@@ -112,11 +173,17 @@ const QRCodeList = () => {
             {/* QR Code Image */}
             <div className="flex-shrink-0">
               <div className="bg-white p-2 rounded-md border shadow-sm">
-                <img
-                  src={generateQRDataUrl(qrCode.content)}
-                  alt={qrCode.name}
-                  className="w-24 h-24 object-contain"
-                />
+                {qrImageUrls[qrCode.id] ? (
+                  <img
+                    src={qrImageUrls[qrCode.id]}
+                    alt={qrCode.name}
+                    className="w-24 h-24 object-contain"
+                  />
+                ) : (
+                  <div className="w-24 h-24 flex items-center justify-center bg-muted/30">
+                    <QrCode className="h-10 w-10 text-muted-foreground/50" />
+                  </div>
+                )}
               </div>
             </div>
             
@@ -154,7 +221,8 @@ const QRCodeList = () => {
                   variant="outline" 
                   size="sm"
                   className="h-8"
-                  onClick={() => handleDownload(qrCode.id, qrCode.name, generateQRDataUrl(qrCode.content))}
+                  onClick={() => handleDownload(qrCode.id, qrCode.name)}
+                  disabled={!qrImageUrls[qrCode.id]}
                 >
                   <Download className="h-3.5 w-3.5 mr-1" /> Download
                 </Button>
