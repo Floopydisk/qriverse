@@ -1,6 +1,8 @@
 
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -8,6 +10,31 @@ interface AuthGuardProps {
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const { toast } = useToast();
+  
+  // Show welcome toast when user logs in
+  useEffect(() => {
+    if (user && !loading) {
+      // Check localStorage to see if this is a new sign up or returning user
+      const isNewUser = localStorage.getItem('isNewUser');
+      
+      if (isNewUser === 'true') {
+        toast({
+          title: "Welcome to QRGen!",
+          description: "Thank you for signing up. We're excited to have you on board!",
+          variant: "default",
+        });
+        localStorage.removeItem('isNewUser');
+      } else {
+        toast({
+          title: "Welcome Back!",
+          description: `Great to see you again${user.user_metadata?.name ? ', ' + user.user_metadata.name : ''}!`,
+          variant: "default",
+        });
+      }
+    }
+  }, [user, loading, toast]);
 
   if (loading) {
     return (

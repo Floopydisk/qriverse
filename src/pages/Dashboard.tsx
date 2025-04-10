@@ -104,7 +104,7 @@ const Dashboard = () => {
         <FloatingCircles />
         <Header />
 
-        <div className="flex-1 flex">
+        <div className="flex-1 flex pt-16">
           <Sidebar variant="sidebar" collapsible="icon">
             <SidebarHeader className="px-4 py-6">
               <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ const Dashboard = () => {
             </SidebarContent>
           </Sidebar>
 
-          <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
+          <main className="flex-1 container mx-auto px-4 pt-8 pb-12">
             <div className="max-w-7xl mx-auto space-y-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>

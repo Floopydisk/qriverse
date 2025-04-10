@@ -169,7 +169,7 @@ const QRCodeList = () => {
           key={qrCode.id} 
           className="bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors rounded-lg overflow-hidden"
         >
-          <div className="p-6 flex gap-4">
+          <div className="p-6 flex flex-col md:flex-row gap-4">
             {/* QR Code Image */}
             <div className="flex-shrink-0">
               <div className="bg-white p-2 rounded-md border shadow-sm">
@@ -189,8 +189,8 @@ const QRCodeList = () => {
             
             {/* QR Code Info */}
             <div className="flex flex-col flex-grow min-w-0">
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex flex-col md:flex-row md:items-start justify-between">
+                <div className="w-full">
                   <h3 className="text-lg font-semibold truncate">{qrCode.name}</h3>
                   
                   <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
@@ -198,7 +198,7 @@ const QRCodeList = () => {
                     <span className="truncate">{qrCode.content}</span>
                   </div>
                   
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
                       {qrCode.type.charAt(0).toUpperCase() + qrCode.type.slice(1)}
                     </Badge>
@@ -213,7 +213,7 @@ const QRCodeList = () => {
               </div>
               
               {/* Actions */}
-              <div className="flex items-center gap-2 mt-auto pt-3">
+              <div className="flex items-center gap-2 mt-auto pt-3 flex-wrap">
                 <Button variant="outline" size="sm" onClick={() => handleEdit(qrCode.id)} className="h-8">
                   <Edit className="h-3.5 w-3.5 mr-1" /> Edit
                 </Button>
