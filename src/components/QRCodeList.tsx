@@ -8,6 +8,7 @@ import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType } from "@/lib/api"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { downloadQRCode } from "@/lib/supabaseUtils";
 
 const QRCodeList = () => {
   const { toast } = useToast();
@@ -97,7 +98,52 @@ const QRCodeList = () => {
     }
   };
 
-  const handleDownload = (id: string, name: string) => {
+  const handleDownload = async (id: string, name: string) => {
+    // First try to get the QR code from the database
+    const qrCode = qrCodes.find(qr => qr.id === id);
+    
+    if (!qrCode) {
+      toast({
+        title: "Error",
+        description: "QR code not found",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if we have a storage path in options
+    if (qrCode.options && 
+        typeof qrCode.options === 'object' && 
+        'storagePath' in qrCode.options) {
+      
+      const storagePath = qrCode.options.storagePath as string;
+      const fileName = `${name.replace(/\s+/g, "_")}_qrcode.png`;
+      
+      try {
+        const success = await downloadQRCode(storagePath, fileName);
+        
+        if (success) {
+          toast({
+            title: "QR Code Downloaded",
+            description: "Your QR code has been downloaded successfully"
+          });
+        } else {
+          // Fallback to URL object if storage download fails
+          downloadFromUrlObject(id, name);
+        }
+      } catch (error) {
+        console.error("Error downloading from storage:", error);
+        // Fallback to URL object
+        downloadFromUrlObject(id, name);
+      }
+    } else {
+      // No storage path, use URL object method
+      downloadFromUrlObject(id, name);
+    }
+  };
+  
+  // Fallback download method using URL objects
+  const downloadFromUrlObject = (id: string, name: string) => {
     const imageUrl = qrImageUrls[id];
     
     if (!imageUrl) {
@@ -222,7 +268,6 @@ const QRCodeList = () => {
                   size="sm"
                   className="h-8"
                   onClick={() => handleDownload(qrCode.id, qrCode.name)}
-                  disabled={!qrImageUrls[qrCode.id]}
                 >
                   <Download className="h-3.5 w-3.5 mr-1" /> Download
                 </Button>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -104,10 +105,10 @@ const Dashboard = () => {
         <FloatingCircles />
         <Header />
 
-        <div className="flex-1 flex pt-16">
+        <div className="flex-1 flex pt-20">
           <Sidebar variant="sidebar" collapsible="icon">
             <SidebarHeader className="px-4 py-6">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-4">
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
