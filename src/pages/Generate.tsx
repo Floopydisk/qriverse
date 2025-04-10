@@ -141,7 +141,7 @@ const Generate = () => {
           
           await updateQRCode(data.id, {
             options: {
-              ...data.options,
+              ...(typeof data.options === 'object' && data.options !== null ? data.options : {}),
               storagePath: `user_${user?.id}/${filename}`
             }
           });
