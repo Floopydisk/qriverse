@@ -13,6 +13,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, metadata?: object) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
+  isLoading: boolean; // Add isLoading property
+  signInWithGoogle: () => Promise<void>; // Add signInWithGoogle method
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -22,6 +24,8 @@ export const AuthContext = createContext<AuthContextType>({
   signUp: async () => {},
   signOut: async () => {},
   loading: true,
+  isLoading: true, // Initialize isLoading
+  signInWithGoogle: async () => {}, // Initialize signInWithGoogle
 });
 
 // Add useAuth hook here
@@ -113,6 +117,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Authentication error",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -127,7 +151,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, signIn, signUp, signOut, loading }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      user, 
+      signIn, 
+      signUp, 
+      signOut, 
+      loading, 
+      isLoading: loading, // Map loading to isLoading for backward compatibility
+      signInWithGoogle 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -30,7 +30,6 @@ const Generate = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Common state
   const [name, setName] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [darkColor, setDarkColor] = useState("#10B981");
@@ -38,16 +37,12 @@ const Generate = () => {
   const [logo, setLogo] = useState<string | null>(null);
   const [addLogo, setAddLogo] = useState(false);
   
-  // Text/URL tab state
   const [text, setText] = useState("");
-
-  // WiFi tab state
   const [ssid, setSsid] = useState("");
   const [password, setPassword] = useState("");
   const [encryption, setEncryption] = useState("WPA");
   const [hidden, setHidden] = useState(false);
   
-  // Contact tab state
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -55,35 +50,31 @@ const Generate = () => {
   const [title, setTitle] = useState("");
   const [website, setWebsite] = useState("");
 
-  // Current tab state
   const [activeTab, setActiveTab] = useState("text");
   
-  // Fetch QR code data if in edit mode
   const { data: qrCodeData, isLoading: isLoadingQrCode } = useQuery({
     queryKey: ['qrCode', editId],
     queryFn: () => editId ? fetchQRCode(editId) : null,
     enabled: !!editId
   });
 
-  // Handle QR code data loading
   useEffect(() => {
     if (qrCodeData) {
       setName(qrCodeData.name || "");
       if (qrCodeData.options && typeof qrCodeData.options === 'object') {
-        setQrDataUrl(qrCodeData.options.dataUrl || "");
-        setDarkColor(qrCodeData.options.darkColor || "#10B981");
-        setLightColor(qrCodeData.options.lightColor || "#FFFFFF");
-        setAddLogo(qrCodeData.options.hasLogo || false);
+        const options = qrCodeData.options as Record<string, any>;
+        setQrDataUrl(options.dataUrl || "");
+        setDarkColor(options.darkColor || "#10B981");
+        setLightColor(options.lightColor || "#FFFFFF");
+        setAddLogo(options.hasLogo || false);
       }
 
-      // Set active tab based on type
       if (qrCodeData.type === "url" || qrCodeData.type === "text") {
         setActiveTab("text");
         setText(qrCodeData.content || "");
       } else if (qrCodeData.type === "wifi") {
         setActiveTab("wifi");
         try {
-          // Parse WIFI string
           const wifiString = qrCodeData.content;
           const ssidMatch = wifiString.match(/S:(.*?);/);
           const passwordMatch = wifiString.match(/P:(.*?);/);
@@ -100,7 +91,6 @@ const Generate = () => {
       } else if (qrCodeData.type === "contact") {
         setActiveTab("contact");
         try {
-          // Parse vCard
           const vCardString = qrCodeData.content;
           const fnMatch = vCardString.match(/FN:(.*?)(?:\r?\n|$)/);
           const emailMatch = vCardString.match(/EMAIL:(.*?)(?:\r?\n|$)/);
@@ -122,26 +112,21 @@ const Generate = () => {
     }
   }, [qrCodeData]);
 
-  // Create QR code mutation
   const createQRCodeMutation = useMutation({
     mutationFn: createQRCode,
     onSuccess: async (data) => {
       if (qrDataUrl) {
         try {
-          // Upload QR code image to storage
           const filename = `${data.id}.png`;
           const { error: folderError } = await supabase.storage.from('qrcodes').list(`user_${user?.id}`);
           
           if (folderError && folderError.message.includes('Not found')) {
-            // Create user folder if it doesn't exist
             await supabase.storage.from('qrcodes').upload(`user_${user?.id}/.folder_metadata`, '');
           }
           
-          // Convert dataURL to Blob
           const response = await fetch(qrDataUrl);
           const blob = await response.blob();
           
-          // Upload to storage
           const { error } = await supabase.storage
             .from('qrcodes')
             .upload(`user_${user?.id}/${filename}`, blob, {
@@ -151,7 +136,6 @@ const Generate = () => {
             
           if (error) throw error;
           
-          // Update QR code with storage path
           await updateQRCode(data.id, {
             options: {
               ...data.options,
@@ -163,7 +147,6 @@ const Generate = () => {
             title: "QR Code Saved",
             description: "Your QR code has been saved to your dashboard"
           });
-          
         } catch (error) {
           console.error("Error uploading QR code:", error);
           toast({
@@ -182,17 +165,14 @@ const Generate = () => {
     }
   });
 
-  // Update QR code mutation
   const updateQRCodeMutation = useMutation({
     mutationFn: ({id, updates}: {id: string, updates: any}) => updateQRCode(id, updates),
     onSuccess: async (data) => {
       if (qrDataUrl && editId) {
         try {
-          // Convert dataURL to Blob
           const response = await fetch(qrDataUrl);
           const blob = await response.blob();
           
-          // Upload to storage
           const filename = `${editId}.png`;
           const { error } = await supabase.storage
             .from('qrcodes')
@@ -207,7 +187,6 @@ const Generate = () => {
             title: "QR Code Updated",
             description: "Your QR code has been updated successfully"
           });
-          
         } catch (error) {
           console.error("Error uploading QR code:", error);
           toast({
@@ -247,7 +226,6 @@ const Generate = () => {
       });
       setQrDataUrl(dataUrl);
       
-      // If user wants to add logo and has uploaded one
       if (addLogo && logo) {
         addLogoToQR(dataUrl, text);
       } else {
@@ -256,7 +234,6 @@ const Generate = () => {
           description: "QR code generated successfully",
         });
         
-        // Save the QR code to the database
         saveQRCodeToDatabase(dataUrl, text, text.startsWith("http") ? "url" : "text");
       }
     } catch (err) {
@@ -301,7 +278,6 @@ const Generate = () => {
           description: "WiFi QR code generated successfully",
         });
         
-        // Save the QR code to the database
         saveQRCodeToDatabase(dataUrl, wifiString, "wifi");
       }
     } catch (err) {
@@ -324,7 +300,6 @@ const Generate = () => {
     }
 
     try {
-      // Create vCard format string
       const vCardString = [
         "BEGIN:VCARD",
         "VERSION:3.0",
@@ -355,7 +330,6 @@ const Generate = () => {
           description: "Contact QR code generated successfully",
         });
         
-        // Save the QR code to the database
         saveQRCodeToDatabase(dataUrl, vCardString, "contact");
       }
     } catch (err) {
@@ -378,26 +352,20 @@ const Generate = () => {
       canvas.width = qrImage.width;
       canvas.height = qrImage.height;
       
-      // Draw QR code
       if (ctx) ctx.drawImage(qrImage, 0, 0);
       
-      // Draw logo in center
       const logoImg = new Image();
       logoImg.onload = () => {
-        // Calculate logo size (25% of QR code)
         const logoSize = qrImage.width * 0.25;
         const logoX = (qrImage.width - logoSize) / 2;
         const logoY = (qrImage.height - logoSize) / 2;
         
-        // Draw logo with white background
         if (ctx) {
           ctx.fillStyle = "#FFFFFF";
           ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
           
-          // Draw the logo
           ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
           
-          // Convert to data URL
           const finalQR = canvas.toDataURL("image/png");
           setQrDataUrl(finalQR);
           
@@ -406,7 +374,6 @@ const Generate = () => {
             description: "QR code with logo generated successfully",
           });
           
-          // Save the QR code to the database
           saveQRCodeToDatabase(finalQR, content, determineType(content));
         }
       };
@@ -435,7 +402,6 @@ const Generate = () => {
     const qrName = name || `${type.toUpperCase()} QR - ${new Date().toLocaleString()}`;
     
     if (editId) {
-      // Update existing QR code
       updateQRCodeMutation.mutate({
         id: editId,
         updates: {
@@ -451,7 +417,6 @@ const Generate = () => {
         }
       });
     } else {
-      // Create new QR code
       createQRCodeMutation.mutate({
         name: qrName,
         content: content,
@@ -536,6 +501,10 @@ const Generate = () => {
     }
   };
 
+  const handleScanQRClick = () => {
+    navigate("/scan");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <FloatingCircles />
@@ -549,7 +518,7 @@ const Generate = () => {
                 <h1 className="text-2xl font-bold text-foreground">
                   <span className="text-primary">QR Code</span> Generator
                 </h1>
-                <Button variant="outline" onClick={() => navigate("/scan")}>
+                <Button variant="outline" onClick={handleScanQRClick}>
                   <Scan className="mr-2 h-4 w-4" />
                   Scan QR
                 </Button>
@@ -708,7 +677,6 @@ const Generate = () => {
                     </div>
                   </TabsContent>
                   
-                  {/* Color and Logo Options */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div className="space-y-2">
                       <Label htmlFor="darkColor">QR Code Color</Label>

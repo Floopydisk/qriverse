@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SignIn = () => {
-  const { signIn, signUp, signInWithGoogle, user, isLoading } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, loading } = useAuth();
   const navigate = useNavigate();
   
   const [email, setEmail] = useState("");
@@ -23,10 +22,10 @@ const SignIn = () => {
   const [isSigningIn, setIsSigningIn] = useState(false);
   
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !loading) {
       navigate("/dashboard");
     }
-  }, [user, isLoading, navigate]);
+  }, [user, loading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

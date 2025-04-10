@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -10,14 +9,14 @@ import { useAuth } from "@/hooks/use-auth";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !loading) {
       navigate("/dashboard");
     }
-  }, [user, isLoading, navigate]);
+  }, [user, loading, navigate]);
 
   const handleGetStarted = () => {
     if (user) {
@@ -27,7 +26,7 @@ const Index = () => {
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
