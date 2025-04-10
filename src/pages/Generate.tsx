@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 const Generate = () => {
   const navigate = useNavigate();
@@ -62,6 +64,7 @@ const Generate = () => {
     if (qrCodeData) {
       setName(qrCodeData.name || "");
       if (qrCodeData.options && typeof qrCodeData.options === 'object') {
+        // Fix: Type guard to ensure we're working with an object
         const options = qrCodeData.options as Record<string, any>;
         setQrDataUrl(options.dataUrl || "");
         setDarkColor(options.darkColor || "#10B981");
@@ -417,6 +420,7 @@ const Generate = () => {
         }
       });
     } else {
+      // Fix: Rather than spread undefined data.options, create a new object
       createQRCodeMutation.mutate({
         name: qrName,
         content: content,
