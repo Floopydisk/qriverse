@@ -114,8 +114,8 @@ const Dashboard = () => {
 
         <div className="flex-1 flex">
           <Sidebar variant="sidebar" collapsible={sidebarCollapsed ? "icon" : "none"}>
-            <SidebarHeader className="px-4 py-6 mt-16">
-              <div className="flex items-center gap-2 pt-4">
+            <SidebarHeader className="px-4 py-6 mt-24">
+              <div className="flex items-center gap-2">
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -178,17 +178,17 @@ const Dashboard = () => {
           </Sidebar>
 
           <main className="flex-1 container mx-auto px-4 pt-8 pb-12">
-            {/* Sidebar toggle button */}
+            {/* Sidebar toggle button - moved it to not overlap with search */}
             <Button 
               onClick={toggleSidebar} 
               variant="outline" 
               size="icon"
-              className="fixed left-4 top-20 z-40 rounded-full h-8 w-8 bg-background shadow-md"
+              className="fixed left-4 top-28 z-40 rounded-full h-8 w-8 bg-background shadow-md"
             >
               {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </Button>
             
-            <div className="max-w-7xl mx-auto space-y-8 mt-12">
+            <div className="max-w-7xl mx-auto space-y-8 mt-24">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
