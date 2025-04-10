@@ -1,25 +1,22 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Menu, X, QrCode, BarCode, LayoutDashboard, User } from "lucide-react";
+import { Menu, X, QrCode, Barcode, LayoutDashboard, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Logo from "./Logo";
 
 const Header = () => {
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user } = useAuth();
@@ -32,7 +29,6 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu when navigating
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
@@ -52,7 +48,6 @@ const Header = () => {
           <span className="text-xl font-bold">QRGen</span>
         </Link>
 
-        {/* Desktop Navigation */}
         {!isMobile && (
           <NavigationMenu className="hidden md:block">
             <NavigationMenuList>
@@ -85,7 +80,7 @@ const Header = () => {
                       <NavigationMenuLink
                         className={navigationMenuTriggerStyle()}
                       >
-                        <BarCode className="h-4 w-4 mr-1" />
+                        <Barcode className="h-4 w-4 mr-1" />
                         Barcode
                       </NavigationMenuLink>
                     </Link>
@@ -117,7 +112,6 @@ const Header = () => {
           </NavigationMenu>
         )}
 
-        {/* Right side buttons */}
         <div className="flex items-center gap-2">
           {user ? (
             <>
@@ -158,7 +152,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation Menu */}
       {isMobile && isMenuOpen && (
         <div className="fixed inset-0 top-[72px] bg-background/95 backdrop-blur-sm z-20 flex flex-col p-6 pt-10 space-y-6 md:hidden">
           {user ? (
@@ -181,7 +174,7 @@ const Header = () => {
                 to="/barcode"
                 className="flex items-center px-4 py-3 text-lg font-medium"
               >
-                <BarCode className="h-5 w-5 mr-3" />
+                <Barcode className="h-5 w-5 mr-3" />
                 Barcode
               </Link>
               <Link

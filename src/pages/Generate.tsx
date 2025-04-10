@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
@@ -14,7 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/use-auth";
 import { createQRCode, fetchQRCode, updateQRCode } from "@/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -64,61 +62,65 @@ const Generate = () => {
   const { data: qrCodeData, isLoading: isLoadingQrCode } = useQuery({
     queryKey: ['qrCode', editId],
     queryFn: () => editId ? fetchQRCode(editId) : null,
-    enabled: !!editId,
-    onSuccess: (data) => {
-      if (data) {
-        setName(data.name || "");
-        setQrDataUrl(data.options?.dataUrl || "");
-        setDarkColor(data.options?.darkColor || "#10B981");
-        setLightColor(data.options?.lightColor || "#FFFFFF");
-        setAddLogo(data.options?.hasLogo || false);
+    enabled: !!editId
+  });
 
-        // Set active tab based on type
-        if (data.type === "url" || data.type === "text") {
-          setActiveTab("text");
-          setText(data.content || "");
-        } else if (data.type === "wifi") {
-          setActiveTab("wifi");
-          try {
-            // Parse WIFI string
-            const wifiString = data.content;
-            const ssidMatch = wifiString.match(/S:(.*?);/);
-            const passwordMatch = wifiString.match(/P:(.*?);/);
-            const encryptionMatch = wifiString.match(/T:(.*?);/);
-            const hiddenMatch = wifiString.match(/H:(.*?);/);
-            
-            if (ssidMatch) setSsid(ssidMatch[1]);
-            if (passwordMatch) setPassword(passwordMatch[1]);
-            if (encryptionMatch) setEncryption(encryptionMatch[1]);
-            if (hiddenMatch) setHidden(hiddenMatch[1] === "true");
-          } catch (err) {
-            console.error("Failed to parse WiFi QR code:", err);
-          }
-        } else if (data.type === "contact") {
-          setActiveTab("contact");
-          try {
-            // Parse vCard
-            const vCardString = data.content;
-            const fnMatch = vCardString.match(/FN:(.*?)(?:\r?\n|$)/);
-            const emailMatch = vCardString.match(/EMAIL:(.*?)(?:\r?\n|$)/);
-            const telMatch = vCardString.match(/TEL:(.*?)(?:\r?\n|$)/);
-            const orgMatch = vCardString.match(/ORG:(.*?)(?:\r?\n|$)/);
-            const titleMatch = vCardString.match(/TITLE:(.*?)(?:\r?\n|$)/);
-            const urlMatch = vCardString.match(/URL:(.*?)(?:\r?\n|$)/);
-            
-            if (fnMatch) setFullName(fnMatch[1]);
-            if (emailMatch) setEmail(emailMatch[1]);
-            if (telMatch) setPhone(telMatch[1]);
-            if (orgMatch) setOrganization(orgMatch[1]);
-            if (titleMatch) setTitle(titleMatch[1]);
-            if (urlMatch) setWebsite(urlMatch[1]);
-          } catch (err) {
-            console.error("Failed to parse contact QR code:", err);
-          }
+  // Handle QR code data loading
+  useEffect(() => {
+    if (qrCodeData) {
+      setName(qrCodeData.name || "");
+      if (qrCodeData.options && typeof qrCodeData.options === 'object') {
+        setQrDataUrl(qrCodeData.options.dataUrl || "");
+        setDarkColor(qrCodeData.options.darkColor || "#10B981");
+        setLightColor(qrCodeData.options.lightColor || "#FFFFFF");
+        setAddLogo(qrCodeData.options.hasLogo || false);
+      }
+
+      // Set active tab based on type
+      if (qrCodeData.type === "url" || qrCodeData.type === "text") {
+        setActiveTab("text");
+        setText(qrCodeData.content || "");
+      } else if (qrCodeData.type === "wifi") {
+        setActiveTab("wifi");
+        try {
+          // Parse WIFI string
+          const wifiString = qrCodeData.content;
+          const ssidMatch = wifiString.match(/S:(.*?);/);
+          const passwordMatch = wifiString.match(/P:(.*?);/);
+          const encryptionMatch = wifiString.match(/T:(.*?);/);
+          const hiddenMatch = wifiString.match(/H:(.*?);/);
+          
+          if (ssidMatch) setSsid(ssidMatch[1]);
+          if (passwordMatch) setPassword(passwordMatch[1]);
+          if (encryptionMatch) setEncryption(encryptionMatch[1]);
+          if (hiddenMatch) setHidden(hiddenMatch[1] === "true");
+        } catch (err) {
+          console.error("Failed to parse WiFi QR code:", err);
+        }
+      } else if (qrCodeData.type === "contact") {
+        setActiveTab("contact");
+        try {
+          // Parse vCard
+          const vCardString = qrCodeData.content;
+          const fnMatch = vCardString.match(/FN:(.*?)(?:\r?\n|$)/);
+          const emailMatch = vCardString.match(/EMAIL:(.*?)(?:\r?\n|$)/);
+          const telMatch = vCardString.match(/TEL:(.*?)(?:\r?\n|$)/);
+          const orgMatch = vCardString.match(/ORG:(.*?)(?:\r?\n|$)/);
+          const titleMatch = vCardString.match(/TITLE:(.*?)(?:\r?\n|$)/);
+          const urlMatch = vCardString.match(/URL:(.*?)(?:\r?\n|$)/);
+          
+          if (fnMatch) setFullName(fnMatch[1]);
+          if (emailMatch) setEmail(emailMatch[1]);
+          if (telMatch) setPhone(telMatch[1]);
+          if (orgMatch) setOrganization(orgMatch[1]);
+          if (titleMatch) setTitle(titleMatch[1]);
+          if (urlMatch) setWebsite(urlMatch[1]);
+        } catch (err) {
+          console.error("Failed to parse contact QR code:", err);
         }
       }
     }
-  });
+  }, [qrCodeData]);
 
   // Create QR code mutation
   const createQRCodeMutation = useMutation({

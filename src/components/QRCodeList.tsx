@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Edit, Link, ExternalLink } from "lucide-react";
+import { Download, Trash2, Edit, Link, ExternalLink, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchUserQRCodes, deleteQRCode, QRCode } from "@/lib/api";
+import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,11 +25,11 @@ const QRCodeList = () => {
       const urls: Record<string, string> = {};
       
       for (const qrCode of qrCodes) {
-        if (qrCode.options?.storagePath) {
+        if (qrCode.options && typeof qrCode.options === 'object' && 'storagePath' in qrCode.options) {
           try {
             const { data, error } = await supabase.storage
               .from('qrcodes')
-              .download(qrCode.options.storagePath);
+              .download(qrCode.options.storagePath as string);
             
             if (data && !error) {
               const url = URL.createObjectURL(data);
@@ -66,10 +66,10 @@ const QRCodeList = () => {
       const qrCode = qrCodes.find(qr => qr.id === id);
       
       // Delete from storage if it exists
-      if (qrCode?.options?.storagePath) {
+      if (qrCode?.options && typeof qrCode.options === 'object' && 'storagePath' in qrCode.options) {
         await supabase.storage
           .from('qrcodes')
-          .remove([qrCode.options.storagePath]);
+          .remove([qrCode.options.storagePath as string]);
       }
       
       // Delete from database
@@ -164,7 +164,7 @@ const QRCodeList = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {qrCodes.map((qrCode: QRCode) => (
+      {qrCodes.map((qrCode: QRCodeType) => (
         <div 
           key={qrCode.id} 
           className="bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors rounded-lg overflow-hidden"

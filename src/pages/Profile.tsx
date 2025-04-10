@@ -1,12 +1,21 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
-import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -17,16 +26,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Download, Trash2, Upload, User, Mail, KeyRound } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useQueryClient } from "@tanstack/react-query";
-import { fetchUserProfile, updateUserProfile } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchUserProfile, updateUserProfile, fetchUserQRCodes, QRCode } from "@/lib/api";
+import { User, Mail, Key, Trash2, Upload, LogOut, AlertCircle } from "lucide-react";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -59,7 +66,6 @@ const Profile = () => {
         setUsername(profile?.username || "");
         setEmail(user.email || "");
         
-        // Get avatar URL if exists
         if (profile?.avatar_url) {
           const { data, error } = await supabase.storage
             .from('avatars')
@@ -84,7 +90,6 @@ const Profile = () => {
     
     fetchProfile();
     
-    // Cleanup function to revoke object URL
     return () => {
       if (avatarUrl) {
         URL.revokeObjectURL(avatarUrl);
@@ -98,17 +103,14 @@ const Profile = () => {
     try {
       setUploading(true);
       
-      // Check if avatars bucket exists, create if not
       const { error: bucketError } = await supabase.storage.getBucket('avatars');
       
       if (bucketError && bucketError.message.includes('does not exist')) {
-        // Create avatars bucket
         await supabase.storage.createBucket('avatars', {
           public: true
         });
       }
       
-      // Upload file
       const file = e.target.files[0];
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}.${fileExt}`;
@@ -121,12 +123,10 @@ const Profile = () => {
       
       if (error) throw error;
       
-      // Update profile
       await updateUserProfile(user.id, {
         avatar_url: filePath
       });
       
-      // Update UI
       const url = URL.createObjectURL(file);
       if (avatarUrl) URL.revokeObjectURL(avatarUrl);
       setAvatarUrl(url);
@@ -136,7 +136,6 @@ const Profile = () => {
         description: "Your profile picture has been updated successfully"
       });
       
-      // Refresh profile data
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       
     } catch (error) {
@@ -155,7 +154,6 @@ const Profile = () => {
     if (!user) return;
     
     try {
-      // Update profile information
       await updateUserProfile(user.id, {
         full_name: fullName,
         username: username
@@ -166,7 +164,6 @@ const Profile = () => {
         description: "Your profile has been updated successfully"
       });
       
-      // Refresh profile data
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       
     } catch (error) {
@@ -228,7 +225,6 @@ const Profile = () => {
         description: "Your password has been updated successfully"
       });
       
-      // Clear password fields
       setNewPassword("");
       setConfirmPassword("");
       
@@ -246,7 +242,6 @@ const Profile = () => {
     if (!user) return;
     
     try {
-      // First, verify the user's password
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email || "",
         password: deletionConfirmPassword,
@@ -261,54 +256,28 @@ const Profile = () => {
         return;
       }
       
-      // Delete all user's QR codes
-      const { data: qrCodes } = await supabase
-        .from('qr_codes')
-        .select('id, options')
-        .eq('user_id', user.id);
+      await handleDeleteUserQRCodes(user.id);
       
-      if (qrCodes) {
-        // Delete QR code images from storage
-        for (const qrCode of qrCodes) {
-          if (qrCode.options?.storagePath) {
-            await supabase.storage
-              .from('qrcodes')
-              .remove([qrCode.options.storagePath]);
-          }
-        }
-        
-        // Delete QR codes from database
-        await supabase
-          .from('qr_codes')
-          .delete()
-          .eq('user_id', user.id);
-      }
-      
-      // Delete user's folders
       await supabase
         .from('folders')
         .delete()
         .eq('user_id', user.id);
       
-      // Delete user avatar if exists
       if (profile?.avatar_url) {
         await supabase.storage
           .from('avatars')
           .remove([profile.avatar_url]);
       }
       
-      // Delete profile data
       await supabase
         .from('profiles')
         .delete()
         .eq('id', user.id);
       
-      // Delete user account
       const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
       
       if (deleteError) throw deleteError;
       
-      // Sign out and redirect to home
       await signOut();
       navigate('/');
       
@@ -327,6 +296,33 @@ const Profile = () => {
     } finally {
       setShowDeleteDialog(false);
       setDeletionConfirmPassword("");
+    }
+  };
+
+  const handleDeleteUserQRCodes = async (userId: string) => {
+    try {
+      const qrCodes = await fetchUserQRCodes();
+      
+      for (const qrCode of qrCodes) {
+        if (qrCode.options && typeof qrCode.options === 'object' && 'storagePath' in qrCode.options) {
+          await supabase.storage
+            .from('qrcodes')
+            .remove([qrCode.options.storagePath as string]);
+        }
+      }
+      
+      const { data: files } = await supabase.storage
+        .from('qrcodes')
+        .list(`user_${userId}`);
+        
+      if (files && files.length > 0) {
+        const filePaths = files.map(file => `user_${userId}/${file.name}`);
+        await supabase.storage.from('qrcodes').remove(filePaths);
+      }
+      
+    } catch (error) {
+      console.error("Error deleting user QR codes:", error);
+      throw error;
     }
   };
 
@@ -358,14 +354,12 @@ const Profile = () => {
           <h1 className="text-2xl font-bold mb-8">Account Settings</h1>
           
           <div className="space-y-8">
-            {/* Profile Section */}
             <Card>
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
                 <CardDescription>Update your profile information and avatar</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Avatar */}
                 <div className="flex flex-col sm:flex-row items-center gap-6">
                   <Avatar className="h-24 w-24">
                     {avatarUrl ? (
@@ -426,7 +420,6 @@ const Profile = () => {
               </CardFooter>
             </Card>
             
-            {/* Email Section */}
             <Card>
               <CardHeader>
                 <CardTitle>Email Address</CardTitle>
@@ -448,7 +441,6 @@ const Profile = () => {
               </CardFooter>
             </Card>
             
-            {/* Password Section */}
             <Card>
               <CardHeader>
                 <CardTitle>Change Password</CardTitle>
@@ -482,7 +474,6 @@ const Profile = () => {
               </CardFooter>
             </Card>
             
-            {/* Danger Zone */}
             <Card className="border-destructive/50">
               <CardHeader className="text-destructive">
                 <CardTitle>Delete Account</CardTitle>
