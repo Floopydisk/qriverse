@@ -1,20 +1,22 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Edit, Link, ExternalLink, QrCode } from "lucide-react";
+import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadQRCode } from "@/lib/supabaseUtils";
+import MoveQRCodeDialog from "@/components/MoveQRCodeDialog";
 
 const QRCodeList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [qrImageUrls, setQrImageUrls] = useState<Record<string, string>>({});
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [selectedQRCode, setSelectedQRCode] = useState<{id: string, folderId: string | null} | null>(null);
   
   const { data: qrCodes = [], isLoading, error } = useQuery({
     queryKey: ['qrCodes'],
@@ -49,7 +51,6 @@ const QRCodeList = () => {
       fetchQrImages();
     }
     
-    // Cleanup function to revoke object URLs
     return () => {
       Object.values(qrImageUrls).forEach(url => {
         URL.revokeObjectURL(url);
@@ -63,20 +64,16 @@ const QRCodeList = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      // Get QR code to get storage path
       const qrCode = qrCodes.find(qr => qr.id === id);
       
-      // Delete from storage if it exists
       if (qrCode?.options && typeof qrCode.options === 'object' && 'storagePath' in qrCode.options) {
         await supabase.storage
           .from('qrcodes')
           .remove([qrCode.options.storagePath as string]);
       }
       
-      // Delete from database
       await deleteQRCode(id);
       
-      // Cleanup object URL
       if (qrImageUrls[id]) {
         URL.revokeObjectURL(qrImageUrls[id]);
         const newUrls = { ...qrImageUrls };
@@ -99,7 +96,6 @@ const QRCodeList = () => {
   };
 
   const handleDownload = async (id: string, name: string) => {
-    // First try to get the QR code from the database
     const qrCode = qrCodes.find(qr => qr.id === id);
     
     if (!qrCode) {
@@ -111,7 +107,6 @@ const QRCodeList = () => {
       return;
     }
 
-    // Check if we have a storage path in options
     if (qrCode.options && 
         typeof qrCode.options === 'object' && 
         'storagePath' in qrCode.options) {
@@ -128,21 +123,17 @@ const QRCodeList = () => {
             description: "Your QR code has been downloaded successfully"
           });
         } else {
-          // Fallback to URL object if storage download fails
           downloadFromUrlObject(id, name);
         }
       } catch (error) {
         console.error("Error downloading from storage:", error);
-        // Fallback to URL object
         downloadFromUrlObject(id, name);
       }
     } else {
-      // No storage path, use URL object method
       downloadFromUrlObject(id, name);
     }
   };
   
-  // Fallback download method using URL objects
   const downloadFromUrlObject = (id: string, name: string) => {
     const imageUrl = qrImageUrls[id];
     
@@ -166,6 +157,11 @@ const QRCodeList = () => {
       title: "QR Code Downloaded",
       description: "Your QR code has been downloaded successfully"
     });
+  };
+
+  const handleMoveQRCode = (id: string, folderId: string | null) => {
+    setSelectedQRCode({ id, folderId });
+    setMoveDialogOpen(true);
   };
 
   if (isLoading) {
@@ -209,82 +205,98 @@ const QRCodeList = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {qrCodes.map((qrCode: QRCodeType) => (
-        <div 
-          key={qrCode.id} 
-          className="bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors rounded-lg overflow-hidden"
-        >
-          <div className="p-6 flex flex-col md:flex-row gap-4">
-            {/* QR Code Image */}
-            <div className="flex-shrink-0">
-              <div className="bg-white p-2 rounded-md border shadow-sm">
-                {qrImageUrls[qrCode.id] ? (
-                  <img
-                    src={qrImageUrls[qrCode.id]}
-                    alt={qrCode.name}
-                    className="w-24 h-24 object-contain"
-                  />
-                ) : (
-                  <div className="w-24 h-24 flex items-center justify-center bg-muted/30">
-                    <QrCode className="h-10 w-10 text-muted-foreground/50" />
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* QR Code Info */}
-            <div className="flex flex-col flex-grow min-w-0">
-              <div className="flex flex-col md:flex-row md:items-start justify-between">
-                <div className="w-full">
-                  <h3 className="text-lg font-semibold truncate">{qrCode.name}</h3>
-                  
-                  <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
-                    {qrCode.type === "url" && <Link className="h-3.5 w-3.5 flex-shrink-0" />}
-                    <span className="truncate">{qrCode.content}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
-                      {qrCode.type.charAt(0).toUpperCase() + qrCode.type.slice(1)}
-                    </Badge>
-                    <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
-                      0 Scans
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(qrCode.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {qrCodes.map((qrCode: QRCodeType) => (
+          <div 
+            key={qrCode.id} 
+            className="bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors rounded-lg overflow-hidden"
+          >
+            <div className="p-6 flex flex-col md:flex-row gap-4">
+              <div className="flex-shrink-0">
+                <div className="bg-white p-2 rounded-md border shadow-sm">
+                  {qrImageUrls[qrCode.id] ? (
+                    <img
+                      src={qrImageUrls[qrCode.id]}
+                      alt={qrCode.name}
+                      className="w-24 h-24 object-contain"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 flex items-center justify-center bg-muted/30">
+                      <QrCode className="h-10 w-10 text-muted-foreground/50" />
+                    </div>
+                  )}
                 </div>
               </div>
               
-              {/* Actions */}
-              <div className="flex items-center gap-2 mt-auto pt-3 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(qrCode.id)} className="h-8">
-                  <Edit className="h-3.5 w-3.5 mr-1" /> Edit
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-8"
-                  onClick={() => handleDownload(qrCode.id, qrCode.name)}
-                >
-                  <Download className="h-3.5 w-3.5 mr-1" /> Download
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 ml-auto text-destructive hover:text-destructive hover:bg-destructive/10" 
-                  onClick={() => handleDelete(qrCode.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+              <div className="flex flex-col flex-grow min-w-0">
+                <div className="flex flex-col md:flex-row md:items-start justify-between">
+                  <div className="w-full">
+                    <h3 className="text-lg font-semibold truncate">{qrCode.name}</h3>
+                    
+                    <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                      {qrCode.type === "url" && <Link className="h-3.5 w-3.5 flex-shrink-0" />}
+                      <span className="truncate">{qrCode.content}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
+                        {qrCode.type.charAt(0).toUpperCase() + qrCode.type.slice(1)}
+                      </Badge>
+                      <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
+                        0 Scans
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(qrCode.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 mt-auto pt-3 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(qrCode.id)} className="h-8">
+                    <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="h-8"
+                    onClick={() => handleDownload(qrCode.id, qrCode.name)}
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1" /> Download
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => handleMoveQRCode(qrCode.id, qrCode.folder_id)}
+                  >
+                    <Folder className="h-3.5 w-3.5 mr-1" /> Move
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 ml-auto text-destructive hover:text-destructive hover:bg-destructive/10" 
+                    onClick={() => handleDelete(qrCode.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+
+      {selectedQRCode && (
+        <MoveQRCodeDialog
+          isOpen={moveDialogOpen}
+          onClose={() => setMoveDialogOpen(false)}
+          qrCodeId={selectedQRCode.id}
+          currentFolderId={selectedQRCode.folderId}
+        />
+      )}
+    </>
   );
 };
 

@@ -54,6 +54,7 @@ const Profile = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [deletionConfirmPassword, setDeletionConfirmPassword] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -242,6 +243,9 @@ const Profile = () => {
     if (!user) return;
     
     try {
+      setIsDeleting(true);
+      
+      // Verify password first
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email || "",
         password: deletionConfirmPassword,
@@ -253,56 +257,14 @@ const Profile = () => {
           description: "Incorrect password. Please try again.",
           variant: "destructive",
         });
+        setIsDeleting(false);
         return;
       }
       
-      await handleDeleteUserQRCodes(user.id);
-      
-      await supabase
-        .from('folders')
-        .delete()
-        .eq('user_id', user.id);
-      
-      if (profile?.avatar_url) {
-        await supabase.storage
-          .from('avatars')
-          .remove([profile.avatar_url]);
-      }
-      
-      await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id);
-      
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
-      
-      if (deleteError) throw deleteError;
-      
-      await signOut();
-      navigate('/');
-      
-      toast({
-        title: "Account Deleted",
-        description: "Your account and all associated data have been permanently deleted",
-      });
-      
-    } catch (error: any) {
-      console.error("Error deleting account:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete account",
-        variant: "destructive",
-      });
-    } finally {
-      setShowDeleteDialog(false);
-      setDeletionConfirmPassword("");
-    }
-  };
-
-  const handleDeleteUserQRCodes = async (userId: string) => {
-    try {
+      // Step 1: Delete QR codes from database and storage
       const qrCodes = await fetchUserQRCodes();
       
+      // Delete QR code files from storage
       for (const qrCode of qrCodes) {
         if (qrCode.options && typeof qrCode.options === 'object' && 'storagePath' in qrCode.options) {
           await supabase.storage
@@ -311,18 +273,68 @@ const Profile = () => {
         }
       }
       
+      // Delete all files in the user's folder
       const { data: files } = await supabase.storage
         .from('qrcodes')
-        .list(`user_${userId}`);
+        .list(`user_${user.id}`);
         
       if (files && files.length > 0) {
-        const filePaths = files.map(file => `user_${userId}/${file.name}`);
+        const filePaths = files.map(file => `user_${user.id}/${file.name}`);
         await supabase.storage.from('qrcodes').remove(filePaths);
       }
       
-    } catch (error) {
-      console.error("Error deleting user QR codes:", error);
-      throw error;
+      // Step 2: Delete folders
+      await supabase
+        .from('folders')
+        .delete()
+        .eq('user_id', user.id);
+      
+      // Step 3: Delete QR codes
+      await supabase
+        .from('qr_codes')
+        .delete()
+        .eq('user_id', user.id);
+      
+      // Step 4: Delete avatar if exists
+      if (profile?.avatar_url) {
+        await supabase.storage
+          .from('avatars')
+          .remove([profile.avatar_url]);
+      }
+      
+      // Step 5: Delete user profile
+      await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+      
+      // Step 6: Delete the actual user account
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+      
+      if (deleteError) {
+        // If admin delete fails, try to delete via regular auth
+        await supabase.auth.deleteUser();
+      }
+      
+      // Step 7: Sign out and redirect
+      await signOut();
+      toast({
+        title: "Account Deleted",
+        description: "Your account and all associated data have been permanently deleted",
+      });
+      navigate('/');
+      
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account. Please contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setShowDeleteDialog(false);
+      setDeletionConfirmPassword("");
+      setIsDeleting(false);
     }
   };
 
@@ -515,9 +527,16 @@ const Profile = () => {
                           e.preventDefault();
                           handleDeleteAccount();
                         }}
-                        disabled={!deletionConfirmPassword}
+                        disabled={!deletionConfirmPassword || isDeleting}
                       >
-                        Delete Account
+                        {isDeleting ? (
+                          <>
+                            <span className="mr-2">Deleting</span>
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                          </>
+                        ) : (
+                          "Delete Account"
+                        )}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
