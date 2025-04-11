@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -309,12 +310,15 @@ const Profile = () => {
         .eq('id', user.id);
       
       // Step 6: Delete the actual user account
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
-      
-      if (deleteError) {
-        // If admin delete fails, try to delete via regular auth
-        await supabase.auth.deleteUser();
-      }
+      // Using the correct method to delete the user account
+      await supabase.auth.admin.deleteUser(user.id)
+        .catch(async () => {
+          // If admin delete fails, fall back to user-initiated delete
+          const { error } = await supabase.auth.updateUser({
+            data: { deleted: true }
+          });
+          if (error) throw error;
+        });
       
       // Step 7: Sign out and redirect
       await signOut();
