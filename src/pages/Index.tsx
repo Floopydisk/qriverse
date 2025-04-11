@@ -20,7 +20,8 @@ import {
   Check,
   Shield,
   BarChart,
-  Clock
+  Clock,
+  Mail
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
