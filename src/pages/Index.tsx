@@ -6,26 +6,18 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { 
   QrCode, 
-  Scan, 
-  Wifi, 
-  MessageSquare,
   ArrowRight,
-  Star, 
-  Zap,
   Code,
   Users,
-  LineChart,
   BookOpen,
   Smartphone,
   Check,
   Shield,
   BarChart,
-  Clock,
   Mail
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -113,7 +105,7 @@ const Index = () => {
             <div className="relative mt-16 max-w-5xl mx-auto">
               <div className="bg-card rounded-2xl border border-white/10 shadow-xl overflow-hidden">
                 <img 
-                  src="/lovable-uploads/c9dc0c83-e57f-4910-b1e3-cdb0d894a501.png" 
+                  src="/img/web_img.png" 
                   alt="QR Code Platform Dashboard" 
                   className="w-full h-auto" 
                 />
