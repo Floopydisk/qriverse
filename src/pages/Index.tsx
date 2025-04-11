@@ -67,11 +67,11 @@ const Index = () => {
           
           <div className="container mx-auto px-4 relative z-10">
             {/* Announcement badge */}
-            <div className="max-w-lg mx-auto mb-8 md:mb-12">
+            {/* <div className="max-w-lg mx-auto mb-8 md:mb-12">
               <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-full py-2 px-4 text-sm text-center w-fit mx-auto">
                 <span className="text-purple-300">Announcing our Private Beta</span>
               </div>
-            </div>
+            </div> */}
             
             <div className="max-w-4xl mx-auto text-center space-y-6 mb-12">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
@@ -79,186 +79,13 @@ const Index = () => {
                 <span className="block mt-2">
                   <span className="text-purple-400">standard</span>
                   <span className="text-white"> for </span>
-                  <span className="text-orange-400">collaboration</span>
+                  <span className="text-orange-400">2D barcodes</span>
                 </span>
               </h1>
               
               <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-                Chat, code, cloud, deployments, and more.
+                Scan, edit, share, generate, and more.
               </p>
-            </div>
-            
-            {/* Email signup */}
-            <div className="max-w-md mx-auto flex gap-2 mb-16">
-              <Input 
-                placeholder="Email address..." 
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-400"
-              />
-              <Button 
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6"
-                onClick={handleGetStarted}
-              >
-                Join waitlist
-              </Button>
-            </div>
-            
-            {/* App Preview */}
-            <div className="max-w-6xl mx-auto rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-              <div className="bg-[#13131c] p-3 flex items-center gap-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center bg-gradient-to-br from-purple-500 to-pink-500 w-8 h-8 rounded-lg justify-center">
-                    <QrCode className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium">BarQR</span>
-                </div>
-                <div className="text-xs text-gray-400 px-2 py-1 rounded-full bg-white/5">
-                  Core Team
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-12 bg-[#13131c]">
-                {/* Sidebar */}
-                <div className="col-span-2 border-r border-white/10 py-4 px-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-white/5 text-sm">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>Chat</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-2 py-1.5 text-gray-400 text-sm">
-                      <Code className="h-4 w-4" />
-                      <span>Code</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-2 py-1.5 text-gray-400 text-sm">
-                      <LineChart className="h-4 w-4" />
-                      <span>Analytics</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-8 space-y-2">
-                    <div className="text-xs font-medium text-gray-400 px-2">
-                      Direct Messages
-                    </div>
-                    {['Tejas', 'Ari', 'Landon'].map((name) => (
-                      <div key={name} className="flex items-center gap-2 px-2 py-1 text-gray-300 text-sm">
-                        <div className="w-5 h-5 rounded-full bg-gray-700"></div>
-                        <span>{name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Main content */}
-                <div className="col-span-7 p-4 max-h-[400px] overflow-y-auto">
-                  <div className="space-y-8">
-                    <div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex-shrink-0 mt-1"></div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">Tejas</span>
-                            <span className="text-xs text-gray-400">11:04 PM</span>
-                          </div>
-                          <div className="mt-1 space-y-2">
-                            <p className="text-sm text-gray-300">
-                              Hey Ari! I wanted to check in with you on the next release and bug list. Do you think we'll be on track to share the latest with the team on Friday?
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-600 flex-shrink-0 mt-1"></div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">Ari</span>
-                            <span className="text-xs text-gray-400">11:12 PM</span>
-                          </div>
-                          <div className="mt-1 space-y-2">
-                            <p className="text-sm text-gray-300">
-                              There are a few items on the tasklist that needs to be addressed on iOS.
-                            </p>
-                            <div className="bg-white/5 rounded-md p-3 text-sm">
-                              <span className="text-gray-400">// Linear</span>
-                              <p className="mt-1">Follow up on highlights in the block at the 2nd level.</p>
-                              <p className="mt-1">Also add improvements here's how to handle the kinds of errors.</p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="bg-gray-700 text-xs px-2 py-0.5 rounded">iOS-21</span>
-                                <span className="text-xs text-gray-400">In Progress</span>
-                                <div className="flex -space-x-1 ml-auto">
-                                  <div className="w-5 h-5 rounded-full bg-gray-600 border border-gray-800"></div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex-shrink-0 mt-1"></div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">Tejas</span>
-                            <span className="text-xs text-gray-400">11:23 PM</span>
-                          </div>
-                          <div className="mt-1 space-y-2">
-                            <p className="text-sm text-gray-300">
-                              Awesome! Make sure it's moving as close to the target as possible :)
-                            </p>
-                            <p className="text-sm text-gray-300">
-                              Here's a link to wait if you don't have access yet!
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Right sidebar */}
-                <div className="col-span-3 border-l border-white/10 p-4 bg-[#11111a]">
-                  <div>
-                    <div className="text-sm font-medium mb-2">Members - 3</div>
-                    <div className="space-y-2">
-                      {['Tejas', 'Ari', 'Landon'].map((name) => (
-                        <div key={name} className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-gray-700"></div>
-                          <span className="text-sm">{name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <div className="text-sm font-medium mb-2">Quick Access</div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-md text-xs">
-                        <div className="w-2 h-2 bg-purple-500 rounded-sm"></div>
-                        <span>Release Schedule</span>
-                      </div>
-                      <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-md text-xs">
-                        <div className="w-2 h-2 bg-blue-500 rounded-sm"></div>
-                        <span>API Documentation</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <div className="text-sm font-medium mb-2">Tasks</div>
-                    <div className="space-y-2">
-                      <div className="px-3 py-2 bg-white/5 rounded-md text-xs">
-                        Complete UI redesign
-                      </div>
-                      <div className="px-3 py-2 bg-white/5 rounded-md text-xs">
-                        Fix navigation bugs
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
