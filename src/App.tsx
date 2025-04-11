@@ -14,6 +14,7 @@ import SignIn from "./pages/SignIn";
 import Barcode from "./pages/Barcode";
 import Profile from "./pages/Profile";
 import Scan from "./pages/Scan";
+import Guides from "./pages/Guides";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/scan" element={<Scan />} />
+            <Route path="/guides" element={<Guides />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={

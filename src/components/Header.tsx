@@ -10,7 +10,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Menu, X, QrCode, Barcode, LayoutDashboard, User, LogOut, Settings } from "lucide-react";
+import { Menu, X, QrCode, Barcode, LayoutDashboard, User, LogOut, Settings, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Logo from "./Logo";
@@ -133,6 +133,16 @@ const Header = () => {
                       </NavigationMenuLink>
                     </Link>
                   </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <Link to="/guides">
+                      <NavigationMenuLink
+                        className={navigationMenuTriggerStyle()}
+                      >
+                        <BookOpen className="h-4 w-4 mr-1" />
+                        Guides
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
                 </>
               )}
             </NavigationMenuList>
@@ -245,6 +255,13 @@ const Header = () => {
                 className="flex items-center px-4 py-3 text-lg font-medium"
               >
                 Generate QR
+              </Link>
+              <Link
+                to="/guides"
+                className="flex items-center px-4 py-3 text-lg font-medium"
+              >
+                <BookOpen className="h-5 w-5 mr-3" />
+                Guides
               </Link>
               <Link
                 to="/signin"

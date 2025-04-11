@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,12 @@ import {
   Code,
   Users,
   LineChart,
+  BookOpen,
+  Smartphone,
+  Check,
+  Shield,
+  BarChart,
+  Clock
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
@@ -62,178 +68,274 @@ const Index = () => {
         {/* Hero Section */}
         <section className="min-h-screen pt-24 pb-12 relative flex items-center">
           {/* Background gradients */}
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-purple-800/30 blur-[120px] pointer-events-none"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-pink-600/20 blur-[150px] pointer-events-none"></div>
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-green-800/20 blur-[120px] pointer-events-none"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-green-600/10 blur-[150px] pointer-events-none"></div>
           
           <div className="container mx-auto px-4 relative z-10">
-            {/* Announcement badge */}
-            {/* <div className="max-w-lg mx-auto mb-8 md:mb-12">
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-full py-2 px-4 text-sm text-center w-fit mx-auto">
-                <span className="text-purple-300">Announcing our Private Beta</span>
-              </div>
-            </div> */}
-            
-            <div className="max-w-4xl mx-auto text-center space-y-6 mb-12">
+            <div className="max-w-4xl mx-auto text-center space-y-8 mb-12">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
-                BarQR is the new
+                Create, Share, Track
                 <span className="block mt-2">
-                  <span className="text-purple-400">standard</span>
-                  <span className="text-white"> for </span>
-                  <span className="text-orange-400">2D barcodes</span>
+                  <span className="text-primary">QR Codes </span>
+                  <span className="text-white">That </span>
+                  <span className="text-primary">Work</span>
                 </span>
               </h1>
               
               <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-                Scan, edit, share, generate, and more.
+                Create dynamic QR codes for all your business needs with our easy-to-use platform.
+                Track scans, customize designs, and manage all your QR codes in one place.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  onClick={handleGetStarted}
+                  className="bg-primary hover:bg-primary/90 text-white"
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Link to="/guides">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="bg-transparent border-white/20 hover:bg-white/10 text-white"
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Learn More
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="relative mt-16 max-w-5xl mx-auto">
+              <div className="bg-card rounded-2xl border border-white/10 shadow-xl overflow-hidden">
+                <img 
+                  src="/lovable-uploads/c9dc0c83-e57f-4910-b1e3-cdb0d894a501.png" 
+                  alt="QR Code Platform Dashboard" 
+                  className="w-full h-auto" 
+                />
+              </div>
+              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-card/80 backdrop-blur-lg border border-white/10 rounded-full px-8 py-3 flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                  <span className="text-sm">Live tracking</span>
+                </div>
+                <div className="w-px h-6 bg-white/10"></div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span className="text-sm">100% Scannable</span>
+                </div>
+                <div className="w-px h-6 bg-white/10 hidden md:block"></div>
+                <div className="hidden md:flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <span className="text-sm">Secure & Private</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Features Grid */}
+        <section className="py-24 relative">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold mb-4">Everything you need for QR success</h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Our comprehensive platform provides all the tools you need to create, manage, and track your QR codes effectively.
               </p>
             </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-card/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-primary/50 transition-colors">
+                <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
+                  <QrCode className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Dynamic QR Codes</h3>
+                <p className="text-gray-400 mb-4">
+                  Create QR codes that you can edit anytime without reprinting. Change destinations, update content, and fix typos instantly.
+                </p>
+                <Button variant="link" className="px-0 text-primary hover:text-primary/80" onClick={() => navigate("/generate")}>
+                  Create now <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="bg-card/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-primary/50 transition-colors">
+                <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
+                  <BarChart className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Advanced Analytics</h3>
+                <p className="text-gray-400 mb-4">
+                  Track scans in real-time. Get insights on when, where, and how often your QR codes are being scanned to optimize your campaigns.
+                </p>
+                <Button variant="link" className="px-0 text-primary hover:text-primary/80" onClick={() => navigate("/guides")}>
+                  Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="bg-card/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-primary/50 transition-colors">
+                <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
+                  <Smartphone className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Custom Design</h3>
+                <p className="text-gray-400 mb-4">
+                  Personalize your QR codes with colors, logos, and frames that match your brand identity while ensuring optimal scannability.
+                </p>
+                <Button variant="link" className="px-0 text-primary hover:text-primary/80" onClick={() => navigate("/signin")}>
+                  Try it now <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </section>
         
-        {/* Features section */}
-        <section className="py-20 relative">
-          <div className="container mx-auto px-4 grid md:grid-cols-2 gap-10 items-center">
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Collaborate on everything.</h2>
-              <p className="text-gray-400 mb-6">From deployments to tasks, work with your team every step of the way.</p>
-              
-              <div className="bg-[#13131c] rounded-lg border border-white/10 p-4">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 flex-shrink-0"></div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Tejas</span>
-                      <span className="text-xs text-gray-400">11:04 PM</span>
-                    </div>
-                    <p className="text-sm text-gray-300 mt-1">Cool - have a few improvements in mind - here's a link!</p>
+        {/* How It Works */}
+        <section className="py-20 bg-card/20">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Create, customize, and track your QR codes in just a few simple steps
+              </p>
+            </div>
+            
+            <div className="flex flex-col md:flex-row justify-between items-center gap-12 mb-12">
+              <div className="flex-1 md:pr-10">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-medium text-sm">
+                    1
+                  </div>
+                  <h3 className="text-xl font-bold">Choose your QR code type</h3>
+                </div>
+                <p className="text-gray-400 ml-12">
+                  Select from URL, vCard, plain text, email, WiFi credentials, and more. Each type is optimized for its specific purpose.
+                </p>
+              </div>
+              <div className="flex-1 bg-card rounded-xl border border-white/10 p-6 max-w-md">
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="bg-background p-3 rounded-lg flex flex-col items-center gap-2 border border-white/10">
+                    <QrCode className="h-6 w-6 text-primary" />
+                    <span className="text-xs">URL</span>
+                  </div>
+                  <div className="bg-background p-3 rounded-lg flex flex-col items-center gap-2 border border-white/10">
+                    <Users className="h-6 w-6 text-primary" />
+                    <span className="text-xs">vCard</span>
+                  </div>
+                  <div className="bg-background p-3 rounded-lg flex flex-col items-center gap-2 border border-white/10">
+                    <Code className="h-6 w-6 text-primary" />
+                    <span className="text-xs">Text</span>
+                  </div>
+                  <div className="bg-background p-3 rounded-lg flex flex-col items-center gap-2 border border-white/10">
+                    <Mail className="h-6 w-6 text-primary" />
+                    <span className="text-xs">Email</span>
                   </div>
                 </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-green-600 flex-shrink-0"></div>
-                  <div className="w-full">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Ari</span>
-                      <span className="text-xs text-gray-400">11:12 PM</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col md:flex-row justify-between items-center gap-12 mb-12">
+              <div className="flex-1 order-2 md:order-1 bg-card rounded-xl border border-white/10 p-6 max-w-md">
+                <div className="flex flex-col gap-4">
+                  <div className="p-4 bg-background rounded-lg border border-white/10">
+                    <p className="text-sm mb-1">Enter your URL:</p>
+                    <div className="flex gap-2">
+                      <Input placeholder="https://example.com" />
+                      <Button size="sm">Create</Button>
                     </div>
-                    <p className="text-sm text-gray-300 mt-1">There are a few items on the tasklist that needs to be addressed on iOS.</p>
-                    <div className="bg-[#0d0d14] rounded-md p-3 mt-2 text-sm">
-                      <span className="text-gray-400">// Linear</span>
-                      <p className="text-xs text-gray-300 mt-1">Follow up on highlights in the block at the 2nd level.</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="bg-gray-700 text-xs px-2 py-0.5 rounded">iOS-21</span>
-                        <span className="text-xs text-gray-400">In Review</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2 bg-background p-3 rounded-lg border border-white/10">
+                      <Check className="h-4 w-4 text-primary" />
+                      <span className="text-xs">SEO friendly</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-background p-3 rounded-lg border border-white/10">
+                      <Check className="h-4 w-4 text-primary" />
+                      <span className="text-xs">High resolution</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 order-1 md:order-2 md:pl-10">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-medium text-sm">
+                    2
+                  </div>
+                  <h3 className="text-xl font-bold">Input your content</h3>
+                </div>
+                <p className="text-gray-400 ml-12">
+                  Enter the specific information for your QR code, such as your URL, contact information, or WiFi credentials. Our system validates your input to ensure it works correctly.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col md:flex-row justify-between items-center gap-12">
+              <div className="flex-1 md:pr-10">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-medium text-sm">
+                    3
+                  </div>
+                  <h3 className="text-xl font-bold">Customize and download</h3>
+                </div>
+                <p className="text-gray-400 ml-12">
+                  Add your logo, change colors, or apply a frame to your QR code. Make it your own while ensuring it remains scannable. Download in multiple formats and start using it right away.
+                </p>
+              </div>
+              <div className="flex-1 bg-card rounded-xl border border-white/10 p-6 max-w-md">
+                <div className="flex gap-4">
+                  <QrCode className="h-28 w-28 text-primary bg-white p-3 rounded-lg" />
+                  <div className="flex flex-col gap-3 flex-1">
+                    <div className="p-2 bg-background rounded-lg border border-white/10 flex items-center justify-between">
+                      <span className="text-xs">Colors</span>
+                      <div className="flex gap-1">
+                        <div className="w-4 h-4 rounded-full bg-primary"></div>
+                        <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                        <div className="w-4 h-4 rounded-full bg-red-500"></div>
                       </div>
                     </div>
+                    <div className="p-2 bg-background rounded-lg border border-white/10 flex items-center justify-between">
+                      <span className="text-xs">Format</span>
+                      <div className="flex gap-1">
+                        <span className="text-xs bg-primary/20 text-primary px-2 rounded">PNG</span>
+                        <span className="text-xs bg-primary/10 text-primary/60 px-2 rounded">SVG</span>
+                      </div>
+                    </div>
+                    <Button size="sm" className="mt-1">Download</Button>
                   </div>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Crafted for your favorite tools</h2>
-              <p className="text-gray-400 mb-6">Connect your tools - we'll handle the rest. Many integrations, with more to come.</p>
-              
-              <div className="bg-[#13131c] rounded-lg border border-white/10 p-10 flex items-center justify-center">
-                <div className="relative w-full h-[200px]">
-                  {/* Center circle */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-purple-500 to-pink-500 w-16 h-16 rounded-full flex items-center justify-center z-20">
-                    <QrCode className="w-8 h-8 text-white" />
-                  </div>
-                  
-                  {/* Orbiting circles */}
-                  <div className="absolute top-1/2 left-1/4 transform -translate-y-1/2 bg-white w-8 h-8 rounded-full flex items-center justify-center">
-                    <span className="text-black text-xl font-bold">G</span>
-                  </div>
-                  <div className="absolute top-1/4 right-1/3 transform -translate-y-1/2 bg-white w-8 h-8 rounded-full flex items-center justify-center">
-                    <span className="text-black text-sm">gh</span>
-                  </div>
-                  <div className="absolute bottom-1/4 right-1/4 transform -translate-y-1/2 bg-white w-8 h-8 rounded-full flex items-center justify-center">
-                    <span className="text-black text-xl">F</span>
-                  </div>
-                  <div className="absolute bottom-1/4 left-1/3 transform -translate-y-1/2 bg-white w-8 h-8 rounded-full flex items-center justify-center">
-                    <span className="text-black text-xl">S</span>
-                  </div>
-                  
-                  {/* Orbit paths */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full border border-white/10"></div>
                 </div>
               </div>
             </div>
           </div>
         </section>
         
-        {/* Everything you need section */}
-        <section className="py-20 relative">
-          <div className="container mx-auto px-4 text-center">
-            <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 mb-6">
-              <Code className="w-5 h-5 text-primary" />
-            </div>
-            <h2 className="text-3xl font-bold mb-4">Everything you need - all in one platform.</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto mb-16">From prototyping to production - develop without switching tabs.</p>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-left">
-                <div className="flex mb-3 items-center">
-                  <MessageSquare className="w-5 h-5 mr-2 text-primary" />
-                  <h3 className="font-medium">Chat</h3>
-                </div>
-                <p className="text-sm text-gray-400">Communicate with team members using our powerful AI-assisted integrations.</p>
-              </div>
-              
-              <div className="text-left">
-                <div className="flex mb-3 items-center">
-                  <Code className="w-5 h-5 mr-2 text-primary" />
-                  <h3 className="font-medium">Deployments</h3>
-                </div>
-                <p className="text-sm text-gray-400">Ship and deploy your applications directly from Dimension.</p>
-              </div>
-              
-              <div className="text-left">
-                <div className="flex mb-3 items-center">
-                  <Scan className="w-5 h-5 mr-2 text-primary" />
-                  <h3 className="font-medium">Code Explorer</h3>
-                </div>
-                <p className="text-sm text-gray-400">View and edit your repository directly from Dimension.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        {/* Partners */}
-        <section className="pb-20">
-          <div className="container mx-auto px-4 text-center">
-            <p className="text-gray-400 mb-10">Join the maintainers and contributors to the largest open-source projects on our waitlist.</p>
-            
-            <div className="flex justify-center items-center flex-wrap gap-12">
-              <div className="text-white/60 hover:text-white transition-colors">
-                <svg width="120" height="28" viewBox="0 0 120 28" fill="currentColor">
-                  <path d="M14 0C6.3 0 0 6.3 0 14s6.3 14 14 14 14-6.3 14-14S21.7 0 14 0zm0 26C7.4 26 2 20.6 2 14S7.4 2 14 2s12 5.4 12 12-5.4 12-12 12z" />
-                  <circle cx="14" cy="14" r="7" />
-                </svg>
-              </div>
-              
-              <div className="text-white/60 hover:text-white transition-colors">
-                <svg width="80" height="28" viewBox="0 0 80 28" fill="none" stroke="currentColor">
-                  <rect x="2" y="6" width="76" height="16" rx="3" strokeWidth="2"/>
-                  <line x1="20" y1="6" x2="20" y2="22" strokeWidth="2"/>
-                  <line x1="40" y1="6" x2="40" y2="22" strokeWidth="2"/>
-                  <line x1="60" y1="6" x2="60" y2="22" strokeWidth="2"/>
-                </svg>
-              </div>
-              
-              <div className="text-white/60 hover:text-white transition-colors">
-                <svg width="100" height="28" viewBox="0 0 100 28" fill="none" stroke="currentColor">
-                  <path d="M10 14h80M50 4v20" strokeWidth="2" strokeLinecap="round"/>
-                  <circle cx="50" cy="14" r="10" strokeWidth="2"/>
-                </svg>
-              </div>
-              
-              <div className="text-white/60 hover:text-white transition-colors">
-                <svg width="120" height="28" viewBox="0 0 120 28" fill="none" stroke="currentColor">
-                  <path d="M20 4L40 24M60 4L80 24M100 4L120 24" strokeWidth="2"/>
-                  <path d="M20 24L40 4M60 24L80 4M100 24L120 4" strokeWidth="2"/>
-                </svg>
+        {/* CTA Section */}
+        <section className="py-24 relative">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto bg-gradient-to-r from-primary/20 to-green-900/20 p-12 rounded-2xl border border-primary/30 text-center">
+              <h2 className="text-3xl font-bold mb-4">Ready to create your first QR code?</h2>
+              <p className="text-gray-300 mb-8 max-w-xl mx-auto">
+                Get started for free today and experience the full power of dynamic QR codes.
+                No credit card required.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  onClick={handleGetStarted}
+                  className="bg-primary hover:bg-primary/90 text-white"
+                >
+                  Create Free QR Code
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Link to="/guides">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="bg-transparent border-white/20 hover:bg-white/10 text-white"
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    View Guides
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
