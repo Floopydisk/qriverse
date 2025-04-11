@@ -6,7 +6,22 @@ import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Download, Upload, Trash, Scan, Wifi, Contact, LinkIcon, Text, QrCode } from "lucide-react";
+import { 
+  Copy, 
+  Download, 
+  Upload, 
+  Trash, 
+  Scan, 
+  Wifi, 
+  Contact, 
+  LinkIcon, 
+  Text, 
+  QrCode,
+  MessageSquare,
+  Mail,
+  Twitter,
+  Bitcoin
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import QRCode from "qrcode";
 import { Label } from "@/components/ui/label";
@@ -23,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
 import { Json } from "@/integrations/supabase/types";
 
 const Generate = () => {
@@ -39,18 +55,42 @@ const Generate = () => {
   const [logo, setLogo] = useState<string | null>(null);
   const [addLogo, setAddLogo] = useState(false);
   
+  // Text/URL
   const [text, setText] = useState("");
+  
+  // Wifi
   const [ssid, setSsid] = useState("");
   const [password, setPassword] = useState("");
   const [encryption, setEncryption] = useState("WPA");
   const [hidden, setHidden] = useState(false);
   
+  // Contact
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [organization, setOrganization] = useState("");
   const [title, setTitle] = useState("");
   const [website, setWebsite] = useState("");
+  
+  // SMS
+  const [smsPhone, setSmsPhone] = useState("");
+  const [smsMessage, setSmsMessage] = useState("");
+  
+  // Email
+  const [emailTo, setEmailTo] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  
+  // Twitter
+  const [twitterText, setTwitterText] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [twitterHashtags, setTwitterHashtags] = useState("");
+  
+  // Bitcoin
+  const [bitcoinAddress, setBitcoinAddress] = useState("");
+  const [bitcoinAmount, setBitcoinAmount] = useState("");
+  const [bitcoinLabel, setBitcoinLabel] = useState("");
+  const [bitcoinMessage, setBitcoinMessage] = useState("");
 
   const [activeTab, setActiveTab] = useState("text");
   
@@ -110,6 +150,62 @@ const Generate = () => {
           if (urlMatch) setWebsite(urlMatch[1]);
         } catch (err) {
           console.error("Failed to parse contact QR code:", err);
+        }
+      } else if (qrCodeData.type === "sms") {
+        setActiveTab("sms");
+        try {
+          const smsString = qrCodeData.content;
+          const phoneMatch = smsString.match(/SMSTO:(.*?):/);
+          const messageMatch = smsString.match(/SMSTO:.*?:(.*)/);
+          
+          if (phoneMatch) setSmsPhone(phoneMatch[1]);
+          if (messageMatch) setSmsMessage(messageMatch[1]);
+        } catch (err) {
+          console.error("Failed to parse SMS QR code:", err);
+        }
+      } else if (qrCodeData.type === "email") {
+        setActiveTab("email");
+        try {
+          const emailString = qrCodeData.content;
+          const toMatch = emailString.match(/MAILTO:(.*?)(?:\?|$)/);
+          const subjectMatch = emailString.match(/[?&]subject=(.*?)(?:&|$)/);
+          const bodyMatch = emailString.match(/[?&]body=(.*?)(?:&|$)/);
+          
+          if (toMatch) setEmailTo(toMatch[1]);
+          if (subjectMatch) setEmailSubject(decodeURIComponent(subjectMatch[1]));
+          if (bodyMatch) setEmailBody(decodeURIComponent(bodyMatch[1]));
+        } catch (err) {
+          console.error("Failed to parse email QR code:", err);
+        }
+      } else if (qrCodeData.type === "twitter") {
+        setActiveTab("twitter");
+        try {
+          const twitterString = qrCodeData.content;
+          const textMatch = twitterString.match(/[?&]text=(.*?)(?:&|$)/);
+          const urlMatch = twitterString.match(/[?&]url=(.*?)(?:&|$)/);
+          const hashtagsMatch = twitterString.match(/[?&]hashtags=(.*?)(?:&|$)/);
+          
+          if (textMatch) setTwitterText(decodeURIComponent(textMatch[1]));
+          if (urlMatch) setTwitterUrl(decodeURIComponent(urlMatch[1]));
+          if (hashtagsMatch) setTwitterHashtags(decodeURIComponent(hashtagsMatch[1]));
+        } catch (err) {
+          console.error("Failed to parse Twitter QR code:", err);
+        }
+      } else if (qrCodeData.type === "bitcoin") {
+        setActiveTab("bitcoin");
+        try {
+          const bitcoinString = qrCodeData.content;
+          const addressMatch = bitcoinString.match(/bitcoin:(.*?)(?:\?|$)/);
+          const amountMatch = bitcoinString.match(/[?&]amount=(.*?)(?:&|$)/);
+          const labelMatch = bitcoinString.match(/[?&]label=(.*?)(?:&|$)/);
+          const messageMatch = bitcoinString.match(/[?&]message=(.*?)(?:&|$)/);
+          
+          if (addressMatch) setBitcoinAddress(addressMatch[1]);
+          if (amountMatch) setBitcoinAmount(amountMatch[1]);
+          if (labelMatch) setBitcoinLabel(decodeURIComponent(labelMatch[1]));
+          if (messageMatch) setBitcoinMessage(decodeURIComponent(messageMatch[1]));
+        } catch (err) {
+          console.error("Failed to parse Bitcoin QR code:", err);
         }
       }
     }
@@ -344,6 +440,196 @@ const Generate = () => {
     }
   };
 
+  const generateSmsQR = async () => {
+    if (!smsPhone) {
+      toast({
+        title: "Error",
+        description: "Please enter a phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const smsString = `SMSTO:${smsPhone}:${smsMessage}`;
+      
+      const dataUrl = await QRCode.toDataURL(smsString, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: darkColor,
+          light: lightColor,
+        },
+      });
+      setQrDataUrl(dataUrl);
+      
+      if (addLogo && logo) {
+        addLogoToQR(dataUrl, smsString);
+      } else {
+        toast({
+          title: "Success",
+          description: "SMS QR code generated successfully",
+        });
+        
+        saveQRCodeToDatabase(dataUrl, smsString, "sms");
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateEmailQR = async () => {
+    if (!emailTo) {
+      toast({
+        title: "Error",
+        description: "Please enter an email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let emailString = `MAILTO:${emailTo}`;
+      
+      if (emailSubject || emailBody) {
+        emailString += '?';
+        if (emailSubject) emailString += `subject=${encodeURIComponent(emailSubject)}`;
+        if (emailSubject && emailBody) emailString += '&';
+        if (emailBody) emailString += `body=${encodeURIComponent(emailBody)}`;
+      }
+      
+      const dataUrl = await QRCode.toDataURL(emailString, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: darkColor,
+          light: lightColor,
+        },
+      });
+      setQrDataUrl(dataUrl);
+      
+      if (addLogo && logo) {
+        addLogoToQR(dataUrl, emailString);
+      } else {
+        toast({
+          title: "Success",
+          description: "Email QR code generated successfully",
+        });
+        
+        saveQRCodeToDatabase(dataUrl, emailString, "email");
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateTwitterQR = async () => {
+    if (!twitterText && !twitterUrl && !twitterHashtags) {
+      toast({
+        title: "Error",
+        description: "Please enter at least one Twitter field",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let twitterString = "https://twitter.com/intent/tweet?";
+      
+      if (twitterText) twitterString += `text=${encodeURIComponent(twitterText)}`;
+      if (twitterText && twitterUrl) twitterString += '&';
+      if (twitterUrl) twitterString += `url=${encodeURIComponent(twitterUrl)}`;
+      if ((twitterText || twitterUrl) && twitterHashtags) twitterString += '&';
+      if (twitterHashtags) twitterString += `hashtags=${encodeURIComponent(twitterHashtags.replace(/#/g, '').replace(/\s+/g, ','))}`;
+      
+      const dataUrl = await QRCode.toDataURL(twitterString, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: darkColor,
+          light: lightColor,
+        },
+      });
+      setQrDataUrl(dataUrl);
+      
+      if (addLogo && logo) {
+        addLogoToQR(dataUrl, twitterString);
+      } else {
+        toast({
+          title: "Success",
+          description: "Twitter QR code generated successfully",
+        });
+        
+        saveQRCodeToDatabase(dataUrl, twitterString, "twitter");
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateBitcoinQR = async () => {
+    if (!bitcoinAddress) {
+      toast({
+        title: "Error",
+        description: "Please enter a Bitcoin address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let bitcoinString = `bitcoin:${bitcoinAddress}`;
+      
+      if (bitcoinAmount || bitcoinLabel || bitcoinMessage) {
+        bitcoinString += '?';
+        if (bitcoinAmount) bitcoinString += `amount=${bitcoinAmount}`;
+        if (bitcoinAmount && (bitcoinLabel || bitcoinMessage)) bitcoinString += '&';
+        if (bitcoinLabel) bitcoinString += `label=${encodeURIComponent(bitcoinLabel)}`;
+        if ((bitcoinAmount || bitcoinLabel) && bitcoinMessage) bitcoinString += '&';
+        if (bitcoinMessage) bitcoinString += `message=${encodeURIComponent(bitcoinMessage)}`;
+      }
+      
+      const dataUrl = await QRCode.toDataURL(bitcoinString, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: darkColor,
+          light: lightColor,
+        },
+      });
+      setQrDataUrl(dataUrl);
+      
+      if (addLogo && logo) {
+        addLogoToQR(dataUrl, bitcoinString);
+      } else {
+        toast({
+          title: "Success",
+          description: "Bitcoin QR code generated successfully",
+        });
+        
+        saveQRCodeToDatabase(dataUrl, bitcoinString, "bitcoin");
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+    }
+  };
+
   const addLogoToQR = (qrDataUrl: string, content: string) => {
     if (!logo) return;
     
@@ -388,6 +674,10 @@ const Generate = () => {
   const determineType = (content: string): string => {
     if (content.startsWith('WIFI:')) return 'wifi';
     if (content.startsWith('BEGIN:VCARD')) return 'contact';
+    if (content.startsWith('SMSTO:')) return 'sms';
+    if (content.startsWith('MAILTO:')) return 'email';
+    if (content.includes('twitter.com/intent/tweet')) return 'twitter';
+    if (content.startsWith('bitcoin:')) return 'bitcoin';
     if (content.startsWith('http')) return 'url';
     return 'text';
   };
@@ -502,6 +792,14 @@ const Generate = () => {
       generateWifiQR();
     } else if (activeTab === "contact") {
       generateContactQR();
+    } else if (activeTab === "sms") {
+      generateSmsQR();
+    } else if (activeTab === "email") {
+      generateEmailQR();
+    } else if (activeTab === "twitter") {
+      generateTwitterQR();
+    } else if (activeTab === "bitcoin") {
+      generateBitcoinQR();
     }
   };
 
@@ -529,7 +827,7 @@ const Generate = () => {
               </div>
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid grid-cols-3">
+                <TabsList className="grid grid-cols-4 mb-2">
                   <TabsTrigger value="text" className="flex items-center gap-1">
                     <Text className="h-4 w-4" />
                     <span className="hidden sm:inline">Text/URL</span>
@@ -542,7 +840,31 @@ const Generate = () => {
                     <Contact className="h-4 w-4" />
                     <span className="hidden sm:inline">Contact</span>
                   </TabsTrigger>
+                  <TabsTrigger value="more" className="flex items-center gap-1">
+                    <span>More</span>
+                  </TabsTrigger>
                 </TabsList>
+
+                {activeTab === "more" && (
+                  <TabsList className="grid grid-cols-4 mb-4">
+                    <TabsTrigger value="sms" className="flex items-center gap-1">
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="hidden sm:inline">SMS</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="email" className="flex items-center gap-1">
+                      <Mail className="h-4 w-4" />
+                      <span className="hidden sm:inline">Email</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="twitter" className="flex items-center gap-1">
+                      <Twitter className="h-4 w-4" />
+                      <span className="hidden sm:inline">Twitter</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="bitcoin" className="flex items-center gap-1">
+                      <Bitcoin className="h-4 w-4" />
+                      <span className="hidden sm:inline">Bitcoin</span>
+                    </TabsTrigger>
+                  </TabsList>
+                )}
                 
                 <div className="space-y-4">
                   <div className="relative">
@@ -676,6 +998,141 @@ const Generate = () => {
                           value={website}
                           onChange={(e) => setWebsite(e.target.value)}
                           placeholder="https://example.com"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="sms" className="space-y-4 mt-0">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="smsPhone">Phone Number</Label>
+                        <Input
+                          id="smsPhone"
+                          value={smsPhone}
+                          onChange={(e) => setSmsPhone(e.target.value)}
+                          placeholder="+1 234 567 8900"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="smsMessage">Message</Label>
+                        <Textarea
+                          id="smsMessage"
+                          value={smsMessage}
+                          onChange={(e) => setSmsMessage(e.target.value)}
+                          placeholder="Enter your message here"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="email" className="space-y-4 mt-0">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="emailTo">Email Address</Label>
+                        <Input
+                          id="emailTo"
+                          type="email"
+                          value={emailTo}
+                          onChange={(e) => setEmailTo(e.target.value)}
+                          placeholder="recipient@example.com"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="emailSubject">Subject</Label>
+                        <Input
+                          id="emailSubject"
+                          value={emailSubject}
+                          onChange={(e) => setEmailSubject(e.target.value)}
+                          placeholder="Email subject"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="emailBody">Message</Label>
+                        <Textarea
+                          id="emailBody"
+                          value={emailBody}
+                          onChange={(e) => setEmailBody(e.target.value)}
+                          placeholder="Enter your message here"
+                          rows={4}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="twitter" className="space-y-4 mt-0">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="twitterText">Tweet Text</Label>
+                        <Textarea
+                          id="twitterText"
+                          value={twitterText}
+                          onChange={(e) => setTwitterText(e.target.value)}
+                          placeholder="Enter your tweet text"
+                          rows={3}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="twitterUrl">URL (optional)</Label>
+                        <Input
+                          id="twitterUrl"
+                          value={twitterUrl}
+                          onChange={(e) => setTwitterUrl(e.target.value)}
+                          placeholder="https://example.com"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="twitterHashtags">Hashtags (separate with spaces)</Label>
+                        <Input
+                          id="twitterHashtags"
+                          value={twitterHashtags}
+                          onChange={(e) => setTwitterHashtags(e.target.value)}
+                          placeholder="#qrcode #twitter"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="bitcoin" className="space-y-4 mt-0">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="bitcoinAddress">Bitcoin Address</Label>
+                        <Input
+                          id="bitcoinAddress"
+                          value={bitcoinAddress}
+                          onChange={(e) => setBitcoinAddress(e.target.value)}
+                          placeholder="Enter Bitcoin address"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bitcoinAmount">Amount (BTC)</Label>
+                        <Input
+                          id="bitcoinAmount"
+                          type="number"
+                          step="0.00000001"
+                          value={bitcoinAmount}
+                          onChange={(e) => setBitcoinAmount(e.target.value)}
+                          placeholder="0.001"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bitcoinLabel">Label (optional)</Label>
+                        <Input
+                          id="bitcoinLabel"
+                          value={bitcoinLabel}
+                          onChange={(e) => setBitcoinLabel(e.target.value)}
+                          placeholder="Payment for services"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bitcoinMessage">Message (optional)</Label>
+                        <Textarea
+                          id="bitcoinMessage"
+                          value={bitcoinMessage}
+                          onChange={(e) => setBitcoinMessage(e.target.value)}
+                          placeholder="Thank you for your payment"
+                          rows={2}
                         />
                       </div>
                     </div>
