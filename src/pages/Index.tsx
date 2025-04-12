@@ -1,5 +1,4 @@
-
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -22,6 +21,12 @@ import { Input } from "@/components/ui/input";
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+
+  // Trigger scroll animation on mount
+  useEffect(() => {
+    setScrolled(true);
+  }, []);
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
@@ -59,13 +64,13 @@ const Index = () => {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="min-h-screen pt-24 pb-12 relative flex items-center">
+        <section className="min-h-screen pt-36 md:pt-40 lg:pt-44 pb-12 relative flex items-center">
           {/* Background gradients */}
           <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-green-800/20 blur-[120px] pointer-events-none"></div>
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-green-600/10 blur-[150px] pointer-events-none"></div>
           
           <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-4xl mx-auto text-center space-y-8 mb-12">
+            <div className={`max-w-4xl mx-auto text-center space-y-8 mb-12 transition-all duration-1000 transform ${scrolled ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
                 Create, Share, Track
                 <span className="block mt-2">
@@ -75,12 +80,12 @@ const Index = () => {
                 </span>
               </h1>
               
-              <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              <p className={`text-lg text-gray-300 max-w-2xl mx-auto transition-all delay-200 duration-1000 transform ${scrolled ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                 Create dynamic QR codes for all your business needs with our easy-to-use platform.
                 Track scans, customize designs, and manage all your QR codes in one place.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className={`flex flex-col sm:flex-row gap-4 justify-center transition-all delay-300 duration-1000 transform ${scrolled ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
                 <Button 
                   size="lg" 
                   onClick={handleGetStarted}
@@ -102,7 +107,7 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="relative mt-16 max-w-5xl mx-auto">
+            <div className={`relative mt-16 max-w-5xl mx-auto transition-all delay-500 duration-1000 transform ${scrolled ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0'}`}>
               <div className="bg-card rounded-2xl border border-white/10 shadow-xl overflow-hidden">
                 <img 
                   src="/img/web_img.png" 
@@ -131,7 +136,7 @@ const Index = () => {
         </section>
         
         {/* Features Grid */}
-        <section className="py-24 relative">
+        <section className={`py-24 relative transition-all delay-700 duration-1000 ${scrolled ? 'opacity-100' : 'opacity-0'}`}>
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold mb-4">Everything you need for QR success</h2>
@@ -184,7 +189,7 @@ const Index = () => {
         </section>
         
         {/* How It Works */}
-        <section className="py-20 bg-card/20">
+        <section className={`py-20 bg-card/20 transition-all delay-900 duration-1000 ${scrolled ? 'opacity-100' : 'opacity-0'}`}>
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold mb-4">How It Works</h2>
@@ -302,7 +307,7 @@ const Index = () => {
         </section>
         
         {/* CTA Section */}
-        <section className="py-24 relative">
+        <section className={`py-24 relative transition-all delay-1000 duration-1000 ${scrolled ? 'opacity-100' : 'opacity-0'}`}>
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto bg-gradient-to-r from-primary/20 to-green-900/20 p-12 rounded-2xl border border-primary/30 text-center">
               <h2 className="text-3xl font-bold mb-4">Ready to create your first QR code?</h2>
