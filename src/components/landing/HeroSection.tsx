@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const HeroSection = () => {
