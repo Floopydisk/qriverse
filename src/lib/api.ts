@@ -12,6 +12,15 @@ export interface QRCode {
   folder_id: string | null;
 }
 
+export interface UserProfile {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export async function fetchUserQRCodes(): Promise<QRCode[]> {
   try {
     const { data, error } = await supabase
@@ -229,5 +238,38 @@ export async function fetchQRCodesInFolder(folderId: string): Promise<QRCode[]> 
   } catch (error) {
     console.error('Error fetching QR codes in folder:', error);
     throw new Error('Failed to fetch QR codes');
+  }
+}
+
+export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+}
+
+export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return null;
   }
 }
