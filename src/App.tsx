@@ -15,6 +15,10 @@ import Barcode from "./pages/Barcode";
 import Profile from "./pages/Profile";
 import Scan from "./pages/Scan";
 import Guides from "./pages/Guides";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CookiePolicy from "./pages/CookiePolicy";
+import GdprPolicy from "./pages/GdprPolicy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +41,10 @@ const App = () => (
             <Route path="/signin" element={<SignIn />} />
             <Route path="/scan" element={<Scan />} />
             <Route path="/guides" element={<Guides />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
+            <Route path="/gdpr" element={<GdprPolicy />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
