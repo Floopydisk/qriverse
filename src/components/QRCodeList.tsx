@@ -1,16 +1,21 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder } from "lucide-react";
+import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType } from "@/lib/api";
+import { fetchUserQRCodes, fetchQRCodesInFolder, deleteQRCode, QRCode as QRCodeType } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadQRCode } from "@/lib/supabaseUtils";
 import MoveQRCodeDialog from "@/components/MoveQRCodeDialog";
 
-const QRCodeList = () => {
+interface QRCodeListProps {
+  folderId?: string;
+}
+
+const QRCodeList = ({ folderId }: QRCodeListProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -19,8 +24,8 @@ const QRCodeList = () => {
   const [selectedQRCode, setSelectedQRCode] = useState<{id: string, folderId: string | null} | null>(null);
   
   const { data: qrCodes = [], isLoading, error } = useQuery({
-    queryKey: ['qrCodes'],
-    queryFn: fetchUserQRCodes
+    queryKey: ['qrCodes', folderId],
+    queryFn: () => folderId ? fetchQRCodesInFolder(folderId) : fetchUserQRCodes()
   });
 
   useEffect(() => {
@@ -107,12 +112,15 @@ const QRCodeList = () => {
       return;
     }
 
+    // Use the QR code name for the filename
+    const sanitizedName = name.trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+    const fileName = `${sanitizedName}.png`;
+
     if (qrCode.options && 
         typeof qrCode.options === 'object' && 
         'storagePath' in qrCode.options) {
       
       const storagePath = qrCode.options.storagePath as string;
-      const fileName = `${name.replace(/\s+/g, "_")}_qrcode.png`;
       
       try {
         const success = await downloadQRCode(storagePath, fileName);
@@ -146,9 +154,13 @@ const QRCodeList = () => {
       return;
     }
     
+    // Use the QR code name for the filename
+    const sanitizedName = name.trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+    const fileName = `${sanitizedName}.png`;
+    
     const link = document.createElement("a");
     link.href = imageUrl;
-    link.download = `${name.replace(/\s+/g, "_")}_qrcode.png`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -162,6 +174,10 @@ const QRCodeList = () => {
   const handleMoveQRCode = (id: string, folderId: string | null) => {
     setSelectedQRCode({ id, folderId });
     setMoveDialogOpen(true);
+  };
+  
+  const handleBackToFolders = () => {
+    navigate('/dashboard');
   };
 
   if (isLoading) {
@@ -180,7 +196,7 @@ const QRCodeList = () => {
           <p className="text-muted-foreground mb-6">
             {error instanceof Error ? error.message : "Failed to load QR codes"}
           </p>
-          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['qrCodes'] })}>
+          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['qrCodes', folderId] })}>
             Try Again
           </Button>
         </div>
@@ -194,11 +210,22 @@ const QRCodeList = () => {
         <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8 max-w-md mx-auto">
           <h3 className="text-xl font-medium mb-2">No QR Codes Found</h3>
           <p className="text-muted-foreground mb-6">
-            You haven't created any QR codes yet. Get started by creating your first QR code!
+            {folderId 
+              ? "This folder is empty. Add QR codes to this folder by creating new ones or moving existing ones here."
+              : "You haven't created any QR codes yet. Get started by creating your first QR code!"
+            }
           </p>
-          <Button onClick={() => navigate("/generate")}>
-            Create QR Code
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button onClick={() => navigate("/generate")}>
+              Create QR Code
+            </Button>
+            {folderId && (
+              <Button variant="outline" onClick={handleBackToFolders}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -206,6 +233,15 @@ const QRCodeList = () => {
 
   return (
     <>
+      {folderId && (
+        <div className="mb-4">
+          <Button variant="outline" size="sm" onClick={handleBackToFolders} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {qrCodes.map((qrCode: QRCodeType) => (
           <div 

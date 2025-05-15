@@ -96,7 +96,7 @@ export async function downloadQRCode(
   }
 }
 
-// Helper to add padding around logo in QR code
+// Helper to add padding around logo in QR code while preserving aspect ratio
 export function createPaddedLogo(originalLogo: HTMLImageElement, paddingPercentage: number = 15): Promise<Blob> {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -118,11 +118,26 @@ export function createPaddedLogo(originalLogo: HTMLImageElement, paddingPercenta
     ctx.fillStyle = 'rgba(0, 0, 0, 0)';
     ctx.fillRect(0, 0, paddedSize, paddedSize);
     
-    // Center the logo with padding
-    const xOffset = (paddedSize - originalLogo.width) / 2;
-    const yOffset = (paddedSize - originalLogo.height) / 2;
+    // Calculate position to maintain aspect ratio
+    const aspectRatio = originalLogo.width / originalLogo.height;
+    let drawWidth, drawHeight;
     
-    ctx.drawImage(originalLogo, xOffset, yOffset);
+    // Determine dimensions while preserving aspect ratio
+    if (aspectRatio > 1) {
+      // Image is wider than tall
+      drawWidth = size;
+      drawHeight = size / aspectRatio;
+    } else {
+      // Image is taller than wide or square
+      drawHeight = size;
+      drawWidth = size * aspectRatio;
+    }
+    
+    // Center the logo with padding
+    const xOffset = (paddedSize - drawWidth) / 2;
+    const yOffset = (paddedSize - drawHeight) / 2;
+    
+    ctx.drawImage(originalLogo, xOffset, yOffset, drawWidth, drawHeight);
     
     canvas.toBlob((blob) => {
       if (blob) {

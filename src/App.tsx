@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import GdprPolicy from "./pages/GdprPolicy";
+import FolderView from "@/pages/FolderView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,11 +52,7 @@ const App = () => (
                 <Dashboard />
               </AuthGuard>
             } />
-            <Route path="/dashboard/folder/:folderId" element={
-              <AuthGuard>
-                <Dashboard />
-              </AuthGuard>
-            } />
+            <Route path="/dashboard/folder/:folderId" element={<AuthGuard><FolderView /></AuthGuard>} />
             <Route path="/generate" element={
               <AuthGuard>
                 <Generate />
