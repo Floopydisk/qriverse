@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 
@@ -10,6 +11,7 @@ export interface QRCode {
   options: Json | null;
   user_id: string;
   folder_id: string | null;
+  scan_count?: number;
 }
 
 export interface UserProfile {
@@ -271,5 +273,71 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
   } catch (error) {
     console.error('Error updating user profile:', error);
     return null;
+  }
+}
+
+export interface QRScanCount {
+  qr_code_id: string;
+  total_scans: number;
+}
+
+export async function logQRCodeScan(qrCodeId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('qr_scans')
+      .insert({
+        qr_code_id: qrCodeId,
+        scanned_at: new Date().toISOString(),
+      });
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error logging QR code scan:', error);
+    return false;
+  }
+}
+
+export async function fetchQRCodeScans(qrCodeId: string): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('qr_scans')
+      .select('*', { count: 'exact', head: true })
+      .eq('qr_code_id', qrCodeId);
+
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    console.error('Error fetching QR code scans:', error);
+    return 0;
+  }
+}
+
+export async function fetchAllQRCodeScans(userId: string): Promise<QRScanCount[]> {
+  try {
+    // First get all QR codes belonging to this user
+    const { data: userQRCodes, error: qrError } = await supabase
+      .from('qr_codes')
+      .select('id')
+      .eq('user_id', userId);
+
+    if (qrError) throw qrError;
+    
+    if (!userQRCodes || userQRCodes.length === 0) {
+      return [];
+    }
+
+    // Get scan counts for each QR code
+    const qrCodeIds = userQRCodes.map(qr => qr.id);
+    
+    const { data, error } = await supabase
+      .rpc('get_qr_scan_counts', { qr_ids: qrCodeIds });
+
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching all QR code scans:', error);
+    return [];
   }
 }

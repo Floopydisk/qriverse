@@ -1,90 +1,85 @@
 
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "./use-toast";
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-interface UseAvatarUploadOptions {
-  bucketName?: string;
+interface UseAvatarUploadProps {
   userId: string;
 }
 
-interface UploadAvatarResult {
+interface AvatarUploadResult {
   error: Error | null;
   avatarUrl: string | null;
 }
 
-export function useAvatarUpload({ bucketName = 'avatars', userId }: UseAvatarUploadOptions) {
+export function useAvatarUpload({ userId }: UseAvatarUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
-
-  const uploadAvatar = async (file: File): Promise<UploadAvatarResult> => {
-    if (!file || !userId) {
-      return { error: new Error("Missing file or user ID"), avatarUrl: null };
+  
+  const uploadAvatar = async (file: File): Promise<AvatarUploadResult> => {
+    if (!userId) {
+      return { error: new Error('User ID is required'), avatarUrl: null };
     }
     
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Avatar image must be less than 5MB",
+        variant: "destructive",
+      });
+      return { error: new Error('File too large'), avatarUrl: null };
+    }
+    
+    setIsUploading(true);
+    
     try {
-      setIsUploading(true);
-      
-      // Check if the bucket exists, create if not
-      const { error: bucketError } = await supabase.storage.getBucket(bucketName);
-      
-      if (bucketError && bucketError.message.includes('does not exist')) {
-        await supabase.storage.createBucket(bucketName, {
-          public: true
-        });
-      }
-      
-      // Create a unique filename with proper extension
+      // Create a unique file name
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}.${fileExt}`;
-      const filePath = fileName;
+      const fileName = `${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
       
-      // Upload the file with upsert to replace any existing avatar
+      // Use the "profileavatars" bucket instead of "avatars"
       const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          upsert: true,
-          contentType: file.type
-        });
-      
+        .from('profileavatars')
+        .upload(filePath, file, { upsert: true });
+        
       if (uploadError) {
         throw uploadError;
       }
       
       // Get the public URL
       const { data } = supabase.storage
-        .from(bucketName)
+        .from('profileavatars')
         .getPublicUrl(filePath);
       
       // Update the user profile
-      await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: filePath })
+        .update({ avatar_url: filePath, updated_at: new Date().toISOString() })
         .eq('id', userId);
+        
+      if (updateError) {
+        throw updateError;
+      }
       
       toast({
-        title: "Avatar Updated",
-        description: "Your profile picture has been updated successfully"
+        title: "Avatar updated",
+        description: "Your avatar has been updated successfully",
       });
       
       return { error: null, avatarUrl: data.publicUrl };
-    } catch (error: any) {
-      console.error("Error uploading avatar:", error);
-      
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
       toast({
-        title: "Upload Failed",
-        description: error.message || "Failed to upload avatar",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to upload avatar image",
+        variant: "destructive",
       });
-      
       return { error: error as Error, avatarUrl: null };
     } finally {
       setIsUploading(false);
     }
   };
-
-  return {
-    uploadAvatar,
-    isUploading
-  };
+  
+  return { uploadAvatar, isUploading };
 }
