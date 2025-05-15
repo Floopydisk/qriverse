@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -29,8 +28,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useAvatarUpload } from "@/hooks/use-avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchUserProfile, updateUserProfile, fetchUserQRCodes, QRCode } from "@/lib/api";
@@ -39,23 +40,26 @@ import { User, Mail, Key, Trash2, Upload, LogOut, AlertCircle } from "lucide-rea
 const Profile = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
   
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
   const [deletionConfirmPassword, setDeletionConfirmPassword] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Use the avatar upload hook
+  const { uploadAvatar, isUploading } = user ? 
+    useAvatarUpload({ userId: user.id }) : 
+    { uploadAvatar: () => Promise.resolve({ error: new Error('No user'), avatarUrl: null }), isUploading: false };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -69,13 +73,12 @@ const Profile = () => {
         setEmail(user.email || "");
         
         if (profile?.avatar_url) {
-          const { data, error } = await supabase.storage
+          const { data } = supabase.storage
             .from('avatars')
-            .download(profile.avatar_url);
-          
-          if (data && !error) {
-            const url = URL.createObjectURL(data);
-            setAvatarUrl(url);
+            .getPublicUrl(profile.avatar_url);
+            
+          if (data?.publicUrl) {
+            setAvatarUrl(data.publicUrl);
           }
         }
       } catch (error) {
@@ -91,64 +94,17 @@ const Profile = () => {
     };
     
     fetchProfile();
-    
-    return () => {
-      if (avatarUrl) {
-        URL.revokeObjectURL(avatarUrl);
-      }
-    };
   }, [user]);
 
-  const uploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user || !e.target.files || !e.target.files[0]) return;
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !user) return;
     
-    try {
-      setUploading(true);
-      
-      const { error: bucketError } = await supabase.storage.getBucket('avatars');
-      
-      if (bucketError && bucketError.message.includes('does not exist')) {
-        await supabase.storage.createBucket('avatars', {
-          public: true
-        });
-      }
-      
-      const file = e.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}.${fileExt}`;
-      
-      const { error } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-          upsert: true
-        });
-      
-      if (error) throw error;
-      
-      await updateUserProfile(user.id, {
-        avatar_url: filePath
-      });
-      
-      const url = URL.createObjectURL(file);
-      if (avatarUrl) URL.revokeObjectURL(avatarUrl);
-      setAvatarUrl(url);
-      
-      toast({
-        title: "Avatar Updated",
-        description: "Your profile picture has been updated successfully"
-      });
-      
+    const file = e.target.files[0];
+    const { error, avatarUrl: newAvatarUrl } = await uploadAvatar(file);
+    
+    if (!error && newAvatarUrl) {
+      setAvatarUrl(newAvatarUrl);
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
-      
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile picture",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -365,7 +321,7 @@ const Profile = () => {
       <FloatingCircles />
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 pt-24 pb-12 max-w-[1400px]">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold mb-8">Account Settings</h1>
           
@@ -377,33 +333,33 @@ const Profile = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-center gap-6">
-                  <Avatar className="h-24 w-24">
+                  <Avatar className="h-24 w-24 border-2 border-primary/20">
                     {avatarUrl ? (
                       <AvatarImage src={avatarUrl} alt={fullName || "Profile"} />
                     ) : (
-                      <AvatarFallback className="text-lg">
+                      <AvatarFallback className="text-lg bg-primary/10">
                         {fullName ? fullName.charAt(0).toUpperCase() : <User className="h-12 w-12" />}
                       </AvatarFallback>
                     )}
                   </Avatar>
                   
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 w-full sm:w-auto">
                     <Button
                       variant="outline"
                       onClick={() => document.getElementById('avatar-upload')?.click()}
-                      disabled={uploading}
+                      disabled={isUploading}
                       className="w-full sm:w-auto"
                     >
                       <Upload className="mr-2 h-4 w-4" />
-                      {uploading ? "Uploading..." : "Upload Avatar"}
+                      {isUploading ? "Uploading..." : "Upload Avatar"}
                     </Button>
                     <input
                       id="avatar-upload"
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={uploadAvatar}
-                      disabled={uploading}
+                      onChange={handleAvatarChange}
+                      disabled={isUploading}
                     />
                     <p className="text-xs text-muted-foreground">
                       Recommended: Square image, 500x500 pixels or larger
@@ -418,6 +374,7 @@ const Profile = () => {
                       id="fullName"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                      className="bg-background"
                     />
                   </div>
                   
@@ -427,6 +384,7 @@ const Profile = () => {
                       id="username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
+                      className="bg-background"
                     />
                   </div>
                 </div>
@@ -449,6 +407,7 @@ const Profile = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="bg-background"
                   />
                 </div>
               </CardContent>
@@ -470,6 +429,7 @@ const Profile = () => {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
+                    className="bg-background"
                   />
                 </div>
                 
@@ -480,6 +440,7 @@ const Profile = () => {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-background"
                   />
                 </div>
               </CardContent>
@@ -505,7 +466,7 @@ const Profile = () => {
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive">Delete Account</Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent className="max-w-md">
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                       <AlertDialogDescription>
@@ -521,6 +482,7 @@ const Profile = () => {
                         placeholder="Password"
                         value={deletionConfirmPassword}
                         onChange={(e) => setDeletionConfirmPassword(e.target.value)}
+                        className="bg-background"
                       />
                     </div>
                     <AlertDialogFooter>

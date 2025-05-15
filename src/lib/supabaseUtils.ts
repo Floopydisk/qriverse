@@ -21,6 +21,14 @@ export async function saveMediaToSupabase(
     // Construct the storage path: user_userId/filename
     const filePath = `${baseFolderName}_${userId}/${filename}`;
 
+    // Check if bucket exists, create if not
+    const { error: bucketError } = await supabase.storage.getBucket(bucketName);
+    if (bucketError && bucketError.message.includes('does not exist')) {
+      await supabase.storage.createBucket(bucketName, {
+        public: true
+      });
+    }
+
     const { data, error } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file, {
@@ -86,4 +94,42 @@ export async function downloadQRCode(
     console.error('Error in download process:', error);
     return false;
   }
+}
+
+// Helper to add padding around logo in QR code
+export function createPaddedLogo(originalLogo: HTMLImageElement, paddingPercentage: number = 15): Promise<Blob> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const padding = (paddingPercentage / 100);
+    
+    // Calculate dimensions with padding
+    const size = Math.max(originalLogo.width, originalLogo.height);
+    const paddedSize = size * (1 + padding * 2); // Add padding on both sides
+    
+    canvas.width = paddedSize;
+    canvas.height = paddedSize;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Could not get canvas context');
+    }
+    
+    // Draw transparent background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, paddedSize, paddedSize);
+    
+    // Center the logo with padding
+    const xOffset = (paddedSize - originalLogo.width) / 2;
+    const yOffset = (paddedSize - originalLogo.height) / 2;
+    
+    ctx.drawImage(originalLogo, xOffset, yOffset);
+    
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        throw new Error('Failed to create blob from canvas');
+      }
+    }, 'image/png');
+  });
 }

@@ -38,6 +38,56 @@
   }
 }
 
+/* Container styles for better responsive design */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1600px; /* Cap width on extremely large screens */
+  }
+  
+  html {
+    font-size: 18px; /* Slightly larger base font for better readability on large screens */
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+  
+  h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+}
+
 .floating-circles {
   position: fixed;
   width: 100%;
@@ -54,4 +104,20 @@
   background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0) 70%);
   border-radius: 50%;
   animation: float 6s infinite;
+}
+
+/* Animation for floating circles */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-10px) translateX(10px);
+  }
+  50% {
+    transform: translateY(5px) translateX(-5px);
+  }
+  75% {
+    transform: translateY(10px) translateX(5px);
+  }
 }
