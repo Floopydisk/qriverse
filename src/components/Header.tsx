@@ -112,7 +112,7 @@ const Header = () => {
                 </Button>
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/barcode">
-                    <BarCode className="h-4 w-4 mr-1" />
+                    <Barcode className="h-4 w-4 mr-1" />
                     Create Barcode
                   </Link>
                 </Button>
@@ -142,7 +142,7 @@ const Header = () => {
                     Create QR Code
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/barcode")}>
-                    <BarCode className="h-4 w-4 mr-2" />
+                    <Barcode className="h-4 w-4 mr-2" />
                     Create Barcode
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
