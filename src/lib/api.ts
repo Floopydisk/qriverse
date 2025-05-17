@@ -12,6 +12,7 @@ export interface QRCode {
   options: any;
   folder_id: string | null;
   user_id: string;
+  scan_count?: number; // Add scan count as optional for now
 }
 
 export interface Folder {
@@ -34,7 +35,12 @@ export const fetchUserQRCodes = async () => {
     .order('created_at', { ascending: false });
   
   if (error) throw error;
-  return data;
+  
+  // For now, we'll set scan_count to 0 until we implement scan tracking
+  return data.map(qrCode => ({
+    ...qrCode,
+    scan_count: 0
+  }));
 };
 
 export const fetchQRCode = async (id: string) => {
@@ -148,7 +154,12 @@ export const fetchQRCodesInFolder = async (folderId: string) => {
     .order('created_at', { ascending: false });
   
   if (error) throw error;
-  return data;
+  
+  // For now, we'll set scan_count to 0 until we implement scan tracking
+  return data.map(qrCode => ({
+    ...qrCode,
+    scan_count: 0
+  }));
 };
 
 // User profile
@@ -193,4 +204,17 @@ export const ensureQRCodeStorageBucket = async () => {
     console.error("Error ensuring QR code storage bucket:", error);
     return false;
   }
+};
+
+// This is a placeholder function for recording QR code scans
+// We'll implement this properly once the qr_scans table is created
+export const recordQRCodeScan = async (qrCodeId: string) => {
+  console.log(`Scan recorded for QR code ${qrCodeId}`);
+  return true;
+};
+
+// This is a placeholder function for fetching QR code scan count
+// We'll implement this properly once the qr_scans table is created
+export const fetchQRCodeScanCount = async (qrCodeId: string) => {
+  return 0; // Return 0 scans for now
 };

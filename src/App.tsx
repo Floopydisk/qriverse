@@ -19,6 +19,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import GdprPolicy from "./pages/GdprPolicy";
+import FolderView from "./pages/FolderView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,7 +55,7 @@ const App = () => (
             } />
             <Route path="/dashboard/folder/:folderId" element={
               <AuthGuard>
-                <Dashboard />
+                <FolderView />
               </AuthGuard>
             } />
             <Route path="/generate" element={

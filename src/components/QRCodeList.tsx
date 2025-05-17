@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,18 +29,23 @@ const QRCodeList = () => {
       const urls: Record<string, string> = {};
       
       for (const qrCode of qrCodes) {
-        if (qrCode.options && typeof qrCode.options === 'object' && 'storagePath' in qrCode.options) {
-          try {
-            const { data, error } = await supabase.storage
-              .from('qrcodes')
-              .download(qrCode.options.storagePath as string);
-            
-            if (data && !error) {
-              const url = URL.createObjectURL(data);
-              urls[qrCode.id] = url;
+        if (qrCode.options && typeof qrCode.options === 'object') {
+          // Safely access storagePath with type checking
+          const options = qrCode.options as { storagePath?: string };
+          
+          if (options.storagePath) {
+            try {
+              const { data, error } = await supabase.storage
+                .from('qrcodes')
+                .download(options.storagePath);
+              
+              if (data && !error) {
+                const url = URL.createObjectURL(data);
+                urls[qrCode.id] = url;
+              }
+            } catch (err) {
+              console.error(`Error fetching QR code image for ${qrCode.id}:`, err);
             }
-          } catch (err) {
-            console.error(`Error fetching QR code image for ${qrCode.id}:`, err);
           }
         }
       }
@@ -66,10 +72,15 @@ const QRCodeList = () => {
     try {
       const qrCode = qrCodes.find(qr => qr.id === id);
       
-      if (qrCode?.options && typeof qrCode.options === 'object' && 'storagePath' in qrCode.options) {
-        await supabase.storage
-          .from('qrcodes')
-          .remove([qrCode.options.storagePath as string]);
+      if (qrCode?.options && typeof qrCode.options === 'object') {
+        // Safely access storagePath with type checking
+        const options = qrCode.options as { storagePath?: string };
+        
+        if (options.storagePath) {
+          await supabase.storage
+            .from('qrcodes')
+            .remove([options.storagePath]);
+        }
       }
       
       await deleteQRCode(id);
@@ -107,26 +118,30 @@ const QRCodeList = () => {
       return;
     }
 
-    if (qrCode.options && 
-        typeof qrCode.options === 'object' && 
-        'storagePath' in qrCode.options) {
+    if (qrCode.options && typeof qrCode.options === 'object') {
+      // Safely access storagePath with type checking
+      const options = qrCode.options as { storagePath?: string };
       
-      const storagePath = qrCode.options.storagePath as string;
-      const fileName = `${name.replace(/\s+/g, "_")}_qrcode.png`;
-      
-      try {
-        const success = await downloadQRCode(storagePath, fileName);
+      if (options.storagePath) {
+        const storagePath = options.storagePath;
+        const fileName = `${name.replace(/\s+/g, "_")}_qrcode.png`;
         
-        if (success) {
-          toast({
-            title: "QR Code Downloaded",
-            description: "Your QR code has been downloaded successfully"
-          });
-        } else {
+        try {
+          const success = await downloadQRCode(storagePath, fileName);
+          
+          if (success) {
+            toast({
+              title: "QR Code Downloaded",
+              description: "Your QR code has been downloaded successfully"
+            });
+          } else {
+            downloadFromUrlObject(id, name);
+          }
+        } catch (error) {
+          console.error("Error downloading from storage:", error);
           downloadFromUrlObject(id, name);
         }
-      } catch (error) {
-        console.error("Error downloading from storage:", error);
+      } else {
         downloadFromUrlObject(id, name);
       }
     } else {
@@ -244,7 +259,7 @@ const QRCodeList = () => {
                         {qrCode.type.charAt(0).toUpperCase() + qrCode.type.slice(1)}
                       </Badge>
                       <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
-                        0 Scans
+                        {qrCode.scan_count || 0} Scans
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         {new Date(qrCode.created_at).toLocaleDateString()}
