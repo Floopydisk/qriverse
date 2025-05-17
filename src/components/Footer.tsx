@@ -17,7 +17,7 @@ const Footer = () => {
           <div className="md:col-span-4 space-y-5">
             <Link to="/" className="flex items-center gap-2">
               <Logo className="h-8 w-8" />
-              <span className="text-xl font-bold">QRGen</span>
+              <span className="text-xl font-bold">BarQR</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Create and manage QR codes for all your needs, with powerful tracking and analytics. Our platform makes it easy to generate, customize, and track QR codes for any purpose.
@@ -108,11 +108,11 @@ const Footer = () => {
         
         <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4">
           <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2">
-            <span>© {currentYear} QRGen.</span>
+            <span>© {currentYear} BarQR.</span>
             <span>All rights reserved.</span>
             <span className="hidden md:inline">|</span>
             <span className="flex items-center gap-1">
-              Made with <Heart className="h-3 w-3 text-red-500" /> by QRGen Team
+              Made with <Heart className="h-3 w-3 text-red-500" /> by BarQR Team
             </span>
           </div>
           

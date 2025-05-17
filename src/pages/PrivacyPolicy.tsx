@@ -25,7 +25,7 @@ const PrivacyPolicy = () => {
               <section className="mb-10">
                 <h2 className="text-xl font-semibold mb-4">Introduction</h2>
                 <p>
-                  QRGen ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.
+                  BarQR ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.
                 </p>
                 <p>
                   Please read this Privacy Policy carefully. By accessing or using our service, you acknowledge that you have read, understood, and agree to be bound by all the terms of this Privacy Policy.
@@ -61,7 +61,7 @@ const PrivacyPolicy = () => {
                 <ul>
                   <li>With service providers who assist us in operating our service.</li>
                   <li>To comply with legal obligations.</li>
-                  <li>To protect against harm to the rights, property, or safety of QRGen, our users, or the public.</li>
+                  <li>To protect against harm to the rights, property, or safety of BarQR, our users, or the public.</li>
                   <li>With your consent or at your direction.</li>
                 </ul>
               </section>
@@ -99,7 +99,7 @@ const PrivacyPolicy = () => {
                 <h2 className="text-xl font-semibold mb-4">Contact Us</h2>
                 <p>
                   If you have questions about this Privacy Policy, please contact us at 
-                  <a href="mailto:privacy@qrgen.com" className="text-primary ml-1">privacy@qrgen.com</a>.
+                  <a href="mailto:privacy@BarQR.com" className="text-primary ml-1">privacy@BarQR.com</a>.
                 </p>
               </section>
             </div>

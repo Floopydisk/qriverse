@@ -21,7 +21,7 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
       
       if (isNewUser === 'true') {
         toast({
-          title: "Welcome to QRGen!",
+          title: "Welcome to BarQR!",
           description: "Thank you for signing up. We're excited to have you on board!",
           variant: "default",
         });
