@@ -163,12 +163,27 @@ const Header = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Button size="sm" asChild className="!flex !items-center">
-              <Link to="/signin">
-                <User className="h-4 w-4 mr-1" />
-                Sign in
-              </Link>
-            </Button>
+            <>
+              {/* Add navigation links for non-authenticated users */}
+              <div className="hidden md:flex md:items-center md:gap-2">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/guides">
+                    Guides
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/scan">
+                    Scan
+                  </Link>
+                </Button>
+              </div>
+              <Button size="sm" className="flex items-center" asChild>
+                <Link to="/signin">
+                  <User className="h-4 w-4 mr-1" />
+                  Sign in
+                </Link>
+              </Button>
+            </>
           )}
         </div>
       </div>

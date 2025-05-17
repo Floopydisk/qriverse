@@ -93,12 +93,15 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col w-full">
         <FloatingCircles />
         <Header />
 
-        <div className="flex-1 flex">
-          <Sidebar variant="sidebar" collapsible={sidebarCollapsed ? "icon" : "none"}>
+        <div className="flex-1 flex w-full">
+          <Sidebar 
+            variant="sidebar" 
+            collapsible={sidebarCollapsed ? "icon" : "none"}
+          >
             <DashboardSidebar 
               view={view}
               setView={setView}
