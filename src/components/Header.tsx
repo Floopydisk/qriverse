@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { QrCode, BarCode, User, LogOut, Settings, Home } from "lucide-react";
+import { Barcode, QrCode, User, LogOut, Settings, Home } from "lucide-react";
 import Logo from "./Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { useAvatar } from "@/hooks/use-avatar";

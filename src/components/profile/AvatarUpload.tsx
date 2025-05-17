@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { User, Upload } from "lucide-react";
-import { useAvatarUpload } from "@/hooks/use-avatar";
+import { useAvatar } from "@/hooks/use-avatar";
 
 interface AvatarUploadProps {
   userId: string;
@@ -13,16 +13,16 @@ interface AvatarUploadProps {
 }
 
 export default function AvatarUpload({ userId, fullName, avatarUrl, onAvatarChange }: AvatarUploadProps) {
-  const { uploadAvatar, isUploading } = useAvatarUpload({ userId });
+  const { uploadAvatar, isUploading } = useAvatar();
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     
     const file = e.target.files[0];
-    const { error, avatarUrl: newAvatarUrl } = await uploadAvatar(file);
+    const newAvatarPath = await uploadAvatar(file, userId);
     
-    if (!error && newAvatarUrl) {
-      onAvatarChange(newAvatarUrl);
+    if (newAvatarPath) {
+      onAvatarChange(newAvatarPath);
     }
   };
 
