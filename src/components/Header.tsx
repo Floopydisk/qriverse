@@ -78,6 +78,11 @@ const Header = () => {
     }
   };
 
+  // Add debugging console logs
+  console.log("User authenticated:", !!user);
+  console.log("Current path:", location.pathname);
+  console.log("Is homepage:", isHomePage);
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -97,7 +102,7 @@ const Header = () => {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden md:flex md:items-center md:gap-2">
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/dashboard">
                     <Home className="h-4 w-4 mr-1" />
@@ -158,7 +163,7 @@ const Header = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Button size="sm" asChild>
+            <Button size="sm" asChild className="!flex !items-center">
               <Link to="/signin">
                 <User className="h-4 w-4 mr-1" />
                 Sign in
