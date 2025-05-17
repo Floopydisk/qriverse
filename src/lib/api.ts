@@ -9,10 +9,10 @@ export interface QRCode {
   type: string;
   created_at: string;
   updated_at: string;
-  options: any;
+  options: Json;
   folder_id: string | null;
   user_id: string;
-  scan_count?: number; // Add scan count as optional for now
+  scan_count?: number;
 }
 
 export interface Folder {
@@ -36,11 +36,16 @@ export const fetchUserQRCodes = async () => {
   
   if (error) throw error;
   
-  // For now, we'll set scan_count to 0 until we implement scan tracking
-  return data.map(qrCode => ({
-    ...qrCode,
-    scan_count: 0
+  // Fetch scan counts for each QR code
+  const qrCodesWithScans = await Promise.all(data.map(async (qrCode) => {
+    const scanCount = await fetchQRCodeScanCount(qrCode.id);
+    return {
+      ...qrCode,
+      scan_count: scanCount
+    };
   }));
+  
+  return qrCodesWithScans;
 };
 
 export const fetchQRCode = async (id: string) => {
@@ -155,11 +160,16 @@ export const fetchQRCodesInFolder = async (folderId: string) => {
   
   if (error) throw error;
   
-  // For now, we'll set scan_count to 0 until we implement scan tracking
-  return data.map(qrCode => ({
-    ...qrCode,
-    scan_count: 0
+  // Fetch scan counts for each QR code
+  const qrCodesWithScans = await Promise.all(data.map(async (qrCode) => {
+    const scanCount = await fetchQRCodeScanCount(qrCode.id);
+    return {
+      ...qrCode,
+      scan_count: scanCount
+    };
   }));
+  
+  return qrCodesWithScans;
 };
 
 // User profile
@@ -206,15 +216,51 @@ export const ensureQRCodeStorageBucket = async () => {
   }
 };
 
-// This is a placeholder function for recording QR code scans
-// We'll implement this properly once the qr_scans table is created
+// Scan tracking functions
 export const recordQRCodeScan = async (qrCodeId: string) => {
-  console.log(`Scan recorded for QR code ${qrCodeId}`);
-  return true;
+  try {
+    const { error } = await supabase
+      .from('qr_scans')
+      .insert([{
+        qr_code_id: qrCodeId,
+      }]);
+      
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error recording QR code scan:", error);
+    return false;
+  }
 };
 
-// This is a placeholder function for fetching QR code scan count
-// We'll implement this properly once the qr_scans table is created
-export const fetchQRCodeScanCount = async (qrCodeId: string) => {
-  return 0; // Return 0 scans for now
+export const fetchQRCodeScanCount = async (qrCodeId: string): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('qr_scans')
+      .select('*', { count: 'exact', head: true })
+      .eq('qr_code_id', qrCodeId);
+    
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    console.error("Error fetching QR code scan count:", error);
+    return 0;
+  }
+};
+
+// Function to get scan history data
+export const fetchQRCodeScanStats = async (qrCodeId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('qr_scans')
+      .select('created_at, country, user_agent')
+      .eq('qr_code_id', qrCodeId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error fetching QR code scan stats:", error);
+    return [];
+  }
 };

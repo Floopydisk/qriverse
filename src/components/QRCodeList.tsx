@@ -2,25 +2,28 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder } from "lucide-react";
+import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder, BarChart2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType } from "@/lib/api";
+import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType, fetchQRCodeScanStats } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadQRCode } from "@/lib/supabaseUtils";
 import MoveQRCodeDialog from "@/components/MoveQRCodeDialog";
+import QRCodeScanDialog from "./QRCodeScanDialog";
 
-const QRCodeList = () => {
+const QRCodeList = ({ folderId }: { folderId?: string }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [qrImageUrls, setQrImageUrls] = useState<Record<string, string>>({});
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [scanDialogOpen, setScanDialogOpen] = useState(false);
   const [selectedQRCode, setSelectedQRCode] = useState<{id: string, folderId: string | null} | null>(null);
+  const [selectedQRCodeForStats, setSelectedQRCodeForStats] = useState<QRCodeType | null>(null);
   
   const { data: qrCodes = [], isLoading, error } = useQuery({
-    queryKey: ['qrCodes'],
+    queryKey: ['qrCodes', folderId],
     queryFn: fetchUserQRCodes
   });
 
@@ -30,8 +33,7 @@ const QRCodeList = () => {
       
       for (const qrCode of qrCodes) {
         if (qrCode.options && typeof qrCode.options === 'object') {
-          // Safely access storagePath with type checking
-          const options = qrCode.options as { storagePath?: string };
+          const options = qrCode.options as Record<string, any>;
           
           if (options.storagePath) {
             try {
@@ -73,8 +75,7 @@ const QRCodeList = () => {
       const qrCode = qrCodes.find(qr => qr.id === id);
       
       if (qrCode?.options && typeof qrCode.options === 'object') {
-        // Safely access storagePath with type checking
-        const options = qrCode.options as { storagePath?: string };
+        const options = qrCode.options as Record<string, any>;
         
         if (options.storagePath) {
           await supabase.storage
@@ -118,13 +119,15 @@ const QRCodeList = () => {
       return;
     }
 
+    // Clean up name for file - remove special characters and spaces
+    const cleanName = name.replace(/[^a-zA-Z0-9_-]/g, "_");
+
     if (qrCode.options && typeof qrCode.options === 'object') {
-      // Safely access storagePath with type checking
-      const options = qrCode.options as { storagePath?: string };
+      const options = qrCode.options as Record<string, any>;
       
       if (options.storagePath) {
         const storagePath = options.storagePath;
-        const fileName = `${name.replace(/\s+/g, "_")}_qrcode.png`;
+        const fileName = `${cleanName}.png`;
         
         try {
           const success = await downloadQRCode(storagePath, fileName);
@@ -135,17 +138,17 @@ const QRCodeList = () => {
               description: "Your QR code has been downloaded successfully"
             });
           } else {
-            downloadFromUrlObject(id, name);
+            downloadFromUrlObject(id, cleanName);
           }
         } catch (error) {
           console.error("Error downloading from storage:", error);
-          downloadFromUrlObject(id, name);
+          downloadFromUrlObject(id, cleanName);
         }
       } else {
-        downloadFromUrlObject(id, name);
+        downloadFromUrlObject(id, cleanName);
       }
     } else {
-      downloadFromUrlObject(id, name);
+      downloadFromUrlObject(id, cleanName);
     }
   };
   
@@ -163,7 +166,7 @@ const QRCodeList = () => {
     
     const link = document.createElement("a");
     link.href = imageUrl;
-    link.download = `${name.replace(/\s+/g, "_")}_qrcode.png`;
+    link.download = `${name}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -177,6 +180,11 @@ const QRCodeList = () => {
   const handleMoveQRCode = (id: string, folderId: string | null) => {
     setSelectedQRCode({ id, folderId });
     setMoveDialogOpen(true);
+  };
+
+  const handleShowScanStats = (qrCode: QRCodeType) => {
+    setSelectedQRCodeForStats(qrCode);
+    setScanDialogOpen(true);
   };
 
   if (isLoading) {
@@ -203,13 +211,19 @@ const QRCodeList = () => {
     );
   }
 
-  if (qrCodes.length === 0) {
+  // Filter by folder if folderId is provided
+  const filteredQRCodes = folderId 
+    ? qrCodes.filter(qr => qr.folder_id === folderId)
+    : qrCodes;
+
+  if (filteredQRCodes.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8 max-w-md mx-auto">
           <h3 className="text-xl font-medium mb-2">No QR Codes Found</h3>
           <p className="text-muted-foreground mb-6">
-            You haven't created any QR codes yet. Get started by creating your first QR code!
+            {folderId ? "This folder is empty." : "You haven't created any QR codes yet."} 
+            Get started by creating your first QR code!
           </p>
           <Button onClick={() => navigate("/generate")}>
             Create QR Code
@@ -222,7 +236,7 @@ const QRCodeList = () => {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {qrCodes.map((qrCode: QRCodeType) => (
+        {filteredQRCodes.map((qrCode: QRCodeType) => (
           <div 
             key={qrCode.id} 
             className="bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors rounded-lg overflow-hidden"
@@ -258,7 +272,11 @@ const QRCodeList = () => {
                       <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
                         {qrCode.type.charAt(0).toUpperCase() + qrCode.type.slice(1)}
                       </Badge>
-                      <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
+                      <Badge 
+                        variant={qrCode.scan_count && qrCode.scan_count > 0 ? "secondary" : "outline"} 
+                        className={`${qrCode.scan_count && qrCode.scan_count > 0 ? 'bg-secondary/80' : 'bg-muted/30'} text-xs px-2 py-0 h-5 cursor-pointer`}
+                        onClick={() => handleShowScanStats(qrCode)}
+                      >
                         {qrCode.scan_count || 0} Scans
                       </Badge>
                       <span className="text-xs text-muted-foreground">
@@ -288,6 +306,14 @@ const QRCodeList = () => {
                   >
                     <Folder className="h-3.5 w-3.5 mr-1" /> Move
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => handleShowScanStats(qrCode)}
+                  >
+                    <BarChart2 className="h-3.5 w-3.5 mr-1" /> Stats
+                  </Button>
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -309,6 +335,14 @@ const QRCodeList = () => {
           onClose={() => setMoveDialogOpen(false)}
           qrCodeId={selectedQRCode.id}
           currentFolderId={selectedQRCode.folderId}
+        />
+      )}
+
+      {selectedQRCodeForStats && (
+        <QRCodeScanDialog
+          isOpen={scanDialogOpen}
+          onClose={() => setScanDialogOpen(false)}
+          qrCode={selectedQRCodeForStats}
         />
       )}
     </>

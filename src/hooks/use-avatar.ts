@@ -3,88 +3,93 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
 
-interface UseAvatarUploadOptions {
-  bucketName?: string;
-  userId: string;
-}
-
-interface UploadAvatarResult {
-  error: Error | null;
-  avatarUrl: string | null;
-}
-
-export function useAvatarUpload({ bucketName = 'avatars', userId }: UseAvatarUploadOptions) {
+export function useAvatar() {
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const uploadAvatar = async (file: File): Promise<UploadAvatarResult> => {
-    if (!file || !userId) {
-      return { error: new Error("Missing file or user ID"), avatarUrl: null };
-    }
-    
+  const uploadAvatar = async (file: File, userId: string): Promise<string | null> => {
     try {
       setIsUploading(true);
+      setError(null);
       
-      // Check if the bucket exists, create if not
-      const { error: bucketError } = await supabase.storage.getBucket(bucketName);
-      
-      if (bucketError && bucketError.message.includes('does not exist')) {
-        await supabase.storage.createBucket(bucketName, {
-          public: true
+      // Check if file is an image
+      if (!file.type.startsWith("image/")) {
+        setError("File must be an image");
+        toast({
+          title: "Error",
+          description: "File must be an image",
+          variant: "destructive",
         });
+        return null;
       }
       
-      // Create a unique filename with proper extension
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}.${fileExt}`;
-      const filePath = fileName;
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setError("Image size must be less than 2MB");
+        toast({
+          title: "Error",
+          description: "Image size must be less than 2MB",
+          variant: "destructive",
+        });
+        return null;
+      }
       
-      // Upload the file with upsert to replace any existing avatar
+      // Generate a unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+      
+      // Upload to the profileavatars bucket instead of avatars
       const { error: uploadError } = await supabase.storage
-        .from(bucketName)
+        .from('profileavatars')
         .upload(filePath, file, {
-          upsert: true,
-          contentType: file.type
+          cacheControl: '3600',
+          upsert: true
         });
       
       if (uploadError) {
         throw uploadError;
       }
       
-      // Get the public URL
-      const { data } = supabase.storage
-        .from(bucketName)
+      // Get the URL of the uploaded avatar
+      const { data: publicUrlData } = supabase.storage
+        .from('profileavatars')
         .getPublicUrl(filePath);
-      
-      // Update the user profile
-      await supabase
-        .from('profiles')
-        .update({ avatar_url: filePath })
-        .eq('id', userId);
-      
+        
       toast({
         title: "Avatar Updated",
-        description: "Your profile picture has been updated successfully"
+        description: "Your avatar has been updated successfully"
       });
       
-      return { error: null, avatarUrl: data.publicUrl };
+      return filePath; // Return the storage path
     } catch (error: any) {
-      console.error("Error uploading avatar:", error);
-      
+      setError(error.message);
       toast({
-        title: "Upload Failed",
+        title: "Error",
         description: error.message || "Failed to upload avatar",
-        variant: "destructive"
+        variant: "destructive",
       });
-      
-      return { error: error as Error, avatarUrl: null };
+      return null;
     } finally {
       setIsUploading(false);
     }
   };
+  
+  const getAvatarUrl = (path: string | null): string | null => {
+    if (!path) return null;
+    
+    const { data } = supabase.storage
+      .from('profileavatars')
+      .getPublicUrl(path);
+      
+    return data?.publicUrl || null;
+  };
 
   return {
     uploadAvatar,
-    isUploading
+    getAvatarUrl,
+    isUploading,
+    error,
   };
 }

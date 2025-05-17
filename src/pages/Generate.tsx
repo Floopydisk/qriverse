@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
@@ -645,15 +644,35 @@ const Generate = () => {
       
       const logoImg = new Image();
       logoImg.onload = () => {
-        const logoSize = qrImage.width * 0.25;
-        const logoX = (qrImage.width - logoSize) / 2;
-        const logoY = (qrImage.height - logoSize) / 2;
+        // Calculate size and position preserving aspect ratio
+        const maxLogoSize = qrImage.width * 0.25;
+        
+        // Get original logo dimensions
+        const originalWidth = logoImg.width;
+        const originalHeight = logoImg.height;
+        
+        // Calculate scaling factor to fit within maxLogoSize while preserving aspect ratio
+        const scaleFactor = Math.min(
+          maxLogoSize / originalWidth,
+          maxLogoSize / originalHeight
+        );
+        
+        // Calculate new dimensions
+        const logoWidth = originalWidth * scaleFactor;
+        const logoHeight = originalHeight * scaleFactor;
+        
+        // Center logo in QR code
+        const logoX = (qrImage.width - logoWidth) / 2;
+        const logoY = (qrImage.height - logoHeight) / 2;
         
         if (ctx) {
+          // Add white padding around logo that's slightly larger than the logo
+          const padding = 5;
           ctx.fillStyle = "#FFFFFF";
-          ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+          ctx.fillRect(logoX - padding, logoY - padding, logoWidth + (padding * 2), logoHeight + (padding * 2));
           
-          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+          // Draw the logo with preserved aspect ratio
+          ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
           
           const finalQR = canvas.toDataURL("image/png");
           setQrDataUrl(finalQR);

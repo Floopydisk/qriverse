@@ -1,278 +1,172 @@
 
 import { useState, useEffect } from "react";
-import { useLocation, Link, useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { Menu, X, QrCode, Barcode, LayoutDashboard, User, LogOut, Settings, BookOpen } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useIsMobile } from "@/hooks/use-mobile";
-import Logo from "./Logo";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { QrCode, BarCode, User, LogOut, Settings, Home } from "lucide-react";
+import Logo from "./Logo";
+import { useAuth } from "@/hooks/use-auth";
+import { useAvatar } from "@/hooks/use-avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { fetchUserProfile } from "@/lib/api";
 
 const Header = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut } = useAuth();
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
+  const { getAvatarUrl } = useAvatar();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+
+  const isHomePage = location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      const isScrolled = window.scrollY > 10;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [scrolled]);
 
   useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location.pathname]);
+    const getUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const profile = await fetchUserProfile(user.id);
+          setProfileData(profile);
+          
+          if (profile?.avatar_url) {
+            const url = getAvatarUrl(profile.avatar_url);
+            setAvatarUrl(url);
+          }
+          
+          if (profile?.username) {
+            setUsername(profile.username);
+          } else if (profile?.full_name) {
+            setUsername(profile.full_name);
+          } else {
+            setUsername('User');
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      }
+    };
+
+    getUserProfile();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out",
-      });
+      navigate("/");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign out",
-        variant: "destructive",
-      });
+      console.error("Error signing out:", error);
     }
   };
 
   return (
     <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-30 transition-all duration-300 w-full",
-        isScrolled
-          ? "bg-background/80 backdrop-blur-lg shadow-sm py-3"
-          : "bg-transparent py-6"
-      )}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled || !isHomePage
+          ? "bg-background/90 backdrop-blur-md shadow-sm"
+          : "bg-transparent"
+      }`}
     >
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-2">
-          <Logo className="h-8 w-8" />
-          <span className="text-xl font-bold">QRGen</span>
-        </Link>
-
-        {!isMobile && (
-          <NavigationMenu className="hidden md:block">
-            <NavigationMenuList>
-              {user ? (
-                <>
-                  <NavigationMenuItem>
-                    <Link to="/dashboard">
-                      <NavigationMenuLink
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        <LayoutDashboard className="h-4 w-4 mr-1" />
-                        Dashboard
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
-
-                  <NavigationMenuItem>
-                    <Link to="/generate">
-                      <NavigationMenuLink
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        <QrCode className="h-4 w-4 mr-1" />
-                        Generate QR
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
-
-                  <NavigationMenuItem>
-                    <Link to="/barcode">
-                      <NavigationMenuLink
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        <Barcode className="h-4 w-4 mr-1" />
-                        Barcode
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
-                </>
-              ) : (
-                <>
-                  <NavigationMenuItem>
-                    <Link to="/">
-                      <NavigationMenuLink
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        Home
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <Link to="/generate">
-                      <NavigationMenuLink
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        Generate QR
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <Link to="/guides">
-                      <NavigationMenuLink
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        <BookOpen className="h-4 w-4 mr-1" />
-                        Guides
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
-                </>
-              )}
-            </NavigationMenuList>
-          </NavigationMenu>
-        )}
+      <div className="container mx-auto px-4 flex h-16 items-center justify-between">
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center gap-2">
+            <Logo />
+            <span className="text-xl font-bold text-foreground">QR Gen</span>
+          </Link>
+        </div>
 
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/dashboard">
+                    <Home className="h-4 w-4 mr-1" />
+                    Dashboard
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/generate">
+                    <QrCode className="h-4 w-4 mr-1" />
+                    Create QR
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/barcode">
+                    <BarCode className="h-4 w-4 mr-1" />
+                    Create Barcode
+                  </Link>
+                </Button>
+              </div>
+
               <DropdownMenu>
-                <DropdownMenuTrigger asChild className="md:flex items-center hidden">
-                  <Button variant="outline" size="sm">
-                    <User className="h-4 w-4 mr-2" />
-                    Profile
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 px-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={avatarUrl || undefined} />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {(username || user.email || "U").charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:inline">Hi, {username}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem className="flex items-center" onClick={() => navigate("/profile")}>
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <Home className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/generate")}>
+                    <QrCode className="h-4 w-4 mr-2" />
+                    Create QR Code
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/barcode")}>
+                    <BarCode className="h-4 w-4 mr-2" />
+                    Create Barcode
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <Settings className="h-4 w-4 mr-2" />
-                    Account Settings
+                    Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center text-red-500" onClick={handleSignOut}>
+                  <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                    Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              {isMobile ? (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                >
-                  {isMenuOpen ? <X /> : <Menu />}
-                </Button>
-              ) : null}
             </>
           ) : (
-            <>
-              <Link to="/signin" className="hidden md:block">
-                <Button variant="default" size="sm">
-                  Sign In
-                </Button>
+            <Button size="sm" asChild>
+              <Link to="/signin">
+                <User className="h-4 w-4 mr-1" />
+                Sign in
               </Link>
-              {isMobile ? (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                >
-                  {isMenuOpen ? <X /> : <Menu />}
-                </Button>
-              ) : null}
-            </>
+            </Button>
           )}
         </div>
       </div>
-
-      {isMobile && isMenuOpen && (
-        <div className="fixed inset-0 top-[72px] bg-background/95 backdrop-blur-sm z-20 flex flex-col p-6 pt-10 space-y-6 md:hidden">
-          {user ? (
-            <>
-              <Link
-                to="/dashboard"
-                className="flex items-center px-4 py-3 text-lg font-medium"
-              >
-                <LayoutDashboard className="h-5 w-5 mr-3" />
-                Dashboard
-              </Link>
-              <Link
-                to="/generate"
-                className="flex items-center px-4 py-3 text-lg font-medium"
-              >
-                <QrCode className="h-5 w-5 mr-3" />
-                Generate QR
-              </Link>
-              <Link
-                to="/barcode"
-                className="flex items-center px-4 py-3 text-lg font-medium"
-              >
-                <Barcode className="h-5 w-5 mr-3" />
-                Barcode
-              </Link>
-              <Link
-                to="/profile"
-                className="flex items-center px-4 py-3 text-lg font-medium"
-              >
-                <User className="h-5 w-5 mr-3" />
-                Profile
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center px-4 py-3 text-lg font-medium text-red-500"
-              >
-                <LogOut className="h-5 w-5 mr-3" />
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/"
-                className="flex items-center px-4 py-3 text-lg font-medium"
-              >
-                Home
-              </Link>
-              <Link
-                to="/generate"
-                className="flex items-center px-4 py-3 text-lg font-medium"
-              >
-                Generate QR
-              </Link>
-              <Link
-                to="/guides"
-                className="flex items-center px-4 py-3 text-lg font-medium"
-              >
-                <BookOpen className="h-5 w-5 mr-3" />
-                Guides
-              </Link>
-              <Link
-                to="/signin"
-                className="flex items-center px-4 py-3 text-lg font-medium bg-primary text-primary-foreground rounded-md justify-center mt-4"
-              >
-                Sign In
-              </Link>
-            </>
-          )}
-        </div>
-      )}
     </header>
   );
 };

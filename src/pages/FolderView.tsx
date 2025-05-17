@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchQRCodesInFolder, fetchUserFolders, Folder, QRCode } from "@/lib/api";
+import { fetchQRCodesInFolder, fetchUserFolders, Folder } from "@/lib/api";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
@@ -26,7 +26,6 @@ const FolderView = () => {
   }, [folderId, navigate]);
 
   const { 
-    data: qrCodes = [], 
     isLoading: qrCodesLoading, 
     error: qrCodesError 
   } = useQuery({
@@ -95,7 +94,7 @@ const FolderView = () => {
                     {currentFolder ? currentFolder.name : 'Folder'}
                   </h1>
                   <p className="text-muted-foreground">
-                    {qrCodes.length} QR code{qrCodes.length !== 1 ? 's' : ''}
+                    Manage QR codes in this folder
                   </p>
                 </div>
               </div>
@@ -117,20 +116,8 @@ const FolderView = () => {
                       </Button>
                     </div>
                   </div>
-                ) : qrCodes.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8 max-w-md mx-auto">
-                      <h3 className="text-xl font-medium mb-2">No QR Codes in This Folder</h3>
-                      <p className="text-muted-foreground mb-6">
-                        This folder is empty. Add QR codes to this folder from the dashboard.
-                      </p>
-                      <Button onClick={() => navigate("/generate")}>
-                        Create QR Code
-                      </Button>
-                    </div>
-                  </div>
                 ) : (
-                  <QRCodeList />
+                  <QRCodeList folderId={folderId} />
                 )}
               </div>
             </div>
