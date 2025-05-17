@@ -22,9 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { fetchUserProfile } from "@/lib/api";
-import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const location = useLocation();
@@ -34,8 +31,6 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<any>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,31 +43,6 @@ const Header = () => {
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (user) {
-        try {
-          const userData = await fetchUserProfile(user.id);
-          setProfile(userData);
-          
-          if (userData?.avatar_url) {
-            const { data } = supabase.storage
-              .from('profileavatars')
-              .getPublicUrl(userData.avatar_url);
-              
-            if (data?.publicUrl) {
-              setAvatarUrl(data.publicUrl);
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-        }
-      }
-    };
-    
-    fetchUserData();
-  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -184,16 +154,9 @@ const Header = () => {
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild className="md:flex items-center hidden">
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    {avatarUrl ? (
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={avatarUrl} alt={profile?.username || "User"} />
-                        <AvatarFallback>{profile?.username?.charAt(0) || user.email?.charAt(0) || "U"}</AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <User className="h-4 w-4" />
-                    )}
-                    <span>Hi {profile?.username || "User"}</span>
+                  <Button variant="outline" size="sm">
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">

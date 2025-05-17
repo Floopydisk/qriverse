@@ -33,9 +33,8 @@ const Profile = () => {
         setProfile(profile);
         
         if (profile?.avatar_url) {
-          // Update to use the 'profileavatars' bucket instead of 'avatars'
           const { data } = supabase.storage
-            .from('profileavatars')
+            .from('avatars')
             .getPublicUrl(profile.avatar_url);
             
           if (data?.publicUrl) {
