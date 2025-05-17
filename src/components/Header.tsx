@@ -67,7 +67,7 @@ const Header = () => {
     };
 
     getUserProfile();
-  }, [user]);
+  }, [user, getAvatarUrl]);
 
   const handleSignOut = async () => {
     try {
