@@ -25,7 +25,7 @@ const GdprPolicy = () => {
               <section className="mb-10">
                 <h2 className="text-xl font-semibold mb-4">Introduction</h2>
                 <p>
-                  BarQR is committed to ensuring the protection and security of personal data in accordance with the General Data Protection Regulation (GDPR). This policy outlines our approach to data protection and your rights under the GDPR.
+                  QrLabs is committed to ensuring the protection and security of personal data in accordance with the General Data Protection Regulation (GDPR). This policy outlines our approach to data protection and your rights under the GDPR.
                 </p>
               </section>
               
@@ -81,10 +81,10 @@ const GdprPolicy = () => {
                   To exercise your rights or if you have any questions about our data protection practices, please contact our Data Protection Officer:
                 </p>
                 <p>
-                  Email: <a href="mailto:dpo@BarQR.com" className="text-primary">dpo@BarQR.com</a>
+                  Email: <a href="mailto:dpo@QrLabs.com" className="text-primary">dpo@QrLabs.com</a>
                 </p>
                 <p>
-                  Postal address: BarQR Data Protection Office, 123 Tech Street, Digital City, 45678.
+                  Postal address: QrLabs Data Protection Office, 123 Tech Street, Digital City, 45678.
                 </p>
               </section>
               

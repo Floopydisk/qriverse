@@ -25,7 +25,7 @@ const CookiePolicy = () => {
               <section className="mb-10">
                 <h2 className="text-xl font-semibold mb-4">Introduction</h2>
                 <p>
-                  This Cookie Policy explains how BarQR uses cookies and similar technologies 
+                  This Cookie Policy explains how QrLabs uses cookies and similar technologies 
                   to recognize you when you visit our website and use our services. It explains what these technologies are 
                   and why we use them, as well as your rights to control our use of them.
                 </p>
@@ -39,7 +39,7 @@ const CookiePolicy = () => {
                   as well as to provide reporting information.
                 </p>
                 <p>
-                  Cookies set by the website owner (in this case, BarQR) are called "first-party cookies." 
+                  Cookies set by the website owner (in this case, QrLabs) are called "first-party cookies." 
                   Cookies set by parties other than the website owner are called "third-party cookies." 
                   Third-party cookies enable third-party features or functionality to be provided on or through the website 
                   (e.g., advertising, interactive content, and analytics).
@@ -82,7 +82,7 @@ const CookiePolicy = () => {
                 <h2 className="text-xl font-semibold mb-4">Contact Us</h2>
                 <p>
                   If you have questions about this Cookie Policy, please contact us at 
-                  <a href="mailto:privacy@BarQR.com" className="text-primary ml-1">privacy@BarQR.com</a>.
+                  <a href="mailto:privacy@QrLabs.com" className="text-primary ml-1">privacy@QrLabs.com</a>.
                 </p>
               </section>
             </div>

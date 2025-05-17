@@ -25,7 +25,7 @@ const TermsOfService = () => {
               <section className="mb-10">
                 <h2 className="text-xl font-semibold mb-4">Introduction</h2>
                 <p>
-                  These Terms of Service ("Terms") govern your access to and use of BarQR's website, services, and applications (collectively, the "Service"). 
+                  These Terms of Service ("Terms") govern your access to and use of QrLabs's website, services, and applications (collectively, the "Service"). 
                   Please read these Terms carefully before using our Service.
                 </p>
                 <p>
@@ -36,7 +36,7 @@ const TermsOfService = () => {
               <section className="mb-10">
                 <h2 className="text-xl font-semibold mb-4">Use of the Service</h2>
                 <p>
-                  You may use our Service only if you can form a binding contract with BarQR and only in compliance with these Terms and all applicable laws.
+                  You may use our Service only if you can form a binding contract with QrLabs and only in compliance with these Terms and all applicable laws.
                 </p>
                 <p>
                   You are responsible for safeguarding your account information and for any activities or actions under your account.
@@ -49,7 +49,7 @@ const TermsOfService = () => {
                   You retain ownership of any content that you submit, upload, or display on or through the Service ("User Content").
                 </p>
                 <p>
-                  By submitting User Content, you grant BarQR a worldwide, non-exclusive, royalty-free license to use, copy, modify, create derivative works based on, distribute, publicly display, and publicly perform your User Content in connection with operating and providing the Service.
+                  By submitting User Content, you grant QrLabs a worldwide, non-exclusive, royalty-free license to use, copy, modify, create derivative works based on, distribute, publicly display, and publicly perform your User Content in connection with operating and providing the Service.
                 </p>
               </section>
               
@@ -68,10 +68,10 @@ const TermsOfService = () => {
               <section className="mb-10">
                 <h2 className="text-xl font-semibold mb-4">Intellectual Property</h2>
                 <p>
-                  The Service and its original content (excluding User Content), features, and functionality are and will remain the exclusive property of BarQR and its licensors.
+                  The Service and its original content (excluding User Content), features, and functionality are and will remain the exclusive property of QrLabs and its licensors.
                 </p>
                 <p>
-                  Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of BarQR.
+                  Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of QrLabs.
                 </p>
               </section>
               
@@ -91,14 +91,14 @@ const TermsOfService = () => {
                   The Service is provided "as is" and "as available" without warranties of any kind, either express or implied.
                 </p>
                 <p>
-                  BarQR does not warrant that the Service will be uninterrupted or error-free, that defects will be corrected, or that the Service or the servers that make it available are free of viruses or other harmful components.
+                  QrLabs does not warrant that the Service will be uninterrupted or error-free, that defects will be corrected, or that the Service or the servers that make it available are free of viruses or other harmful components.
                 </p>
               </section>
               
               <section className="mb-10">
                 <h2 className="text-xl font-semibold mb-4">Limitation of Liability</h2>
                 <p>
-                  In no event shall BarQR, its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
+                  In no event shall QrLabs, its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
                 </p>
               </section>
               

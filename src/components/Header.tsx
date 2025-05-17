@@ -95,7 +95,7 @@
          <div className="flex items-center">
            <Link to="/" className="flex items-center gap-2">
              <Logo />
-             <span className="text-xl font-bold text-foreground">BarQR</span>
+             <span className="text-xl font-bold text-foreground">QrLabs</span>
            </Link>
          </div>
  

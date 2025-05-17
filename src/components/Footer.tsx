@@ -17,14 +17,14 @@ const Footer = () => {
           <div className="md:col-span-4 space-y-5">
             <Link to="/" className="flex items-center gap-2">
               <Logo className="h-8 w-8" />
-              <span className="text-xl font-bold">BarQR</span>
+              <span className="text-xl font-bold">QrLabs</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Create and manage QR codes for all your needs, with powerful tracking and analytics. Our platform makes it easy to generate, customize, and track QR codes for any purpose.
             </p>
             <div className="flex items-center space-x-3">
               <a
-                href="https://twitter.com/barqrapp"
+                href="https://twitter.com/QrLabsapp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-card hover:bg-primary hover:text-white transition-colors p-2 rounded-md"
@@ -40,7 +40,7 @@ const Footer = () => {
                 <Github className="h-4 w-4" />
               </a>
               <a
-                href="https://linkedin.com/company/barqr"
+                href="https://linkedin.com/company/QrLabs"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-card hover:bg-primary hover:text-white transition-colors p-2 rounded-md"
@@ -108,11 +108,11 @@ const Footer = () => {
         
         <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4">
           <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2">
-            <span>© {currentYear} BarQR.</span>
+            <span>© {currentYear} QrLabs.</span>
             <span>All rights reserved.</span>
             <span className="hidden md:inline">|</span>
             <span className="flex items-center gap-1">
-              Made with <Heart className="h-3 w-3 text-red-500" /> by BarQR Team
+              Made with <Heart className="h-3 w-3 text-red-500" /> by QrLabs Team
             </span>
           </div>
           
