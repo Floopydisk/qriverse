@@ -65,7 +65,7 @@
 /* Large screen optimizations */
 @media (min-width: 1920px) {
   .container {
-    max-width: 1600px; /* Cap width on extremely large screens */
+    max-width: 1800px; /* Increased max-width for very large displays */
   }
   
   html {
@@ -73,7 +73,7 @@
   }
 }
 
-/* Mobile optimizations */
+/* Better mobile optimizations */
 @media (max-width: 640px) {
   html {
     font-size: 14px;
@@ -85,6 +85,17 @@
   
   h2 {
     font-size: 1.5rem !important;
+  }
+
+  /* Improved mobile spacing */
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Make buttons more touch-friendly on mobile */
+  button, .btn, [role="button"] {
+    min-height: 2.5rem;
   }
 }
 
@@ -120,4 +131,26 @@
   75% {
     transform: translateY(10px) translateX(5px);
   }
+}
+
+/* Improved mobile navigation */
+@media (max-width: 768px) {
+  .mobile-menu-button {
+    display: block;
+  }
+  
+  .desktop-nav {
+    display: none;
+  }
+}
+
+/* Better typography for readability */
+p, li, span, div {
+  max-width: 70ch; /* Improve readability by limiting line length */
+}
+
+/* Dark mode focus improvements */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }

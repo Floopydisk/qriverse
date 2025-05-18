@@ -18,8 +18,10 @@ import {
   PauseCircle,
   Plus,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  QrCode
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import FolderList from "@/components/FolderList";
 import { Button } from "@/components/ui/button";
 
@@ -80,6 +82,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               >
                 <PauseCircle className="h-4 w-4" />
                 <span>Paused ({0})</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            {/* Add Dynamic QR section */}
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                asChild
+                tooltip="Dynamic QR Codes"
+              >
+                <Link to="/dynamic-qr">
+                  <QrCode className="h-4 w-4" />
+                  <span>Dynamic QR</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
