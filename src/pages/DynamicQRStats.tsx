@@ -13,6 +13,11 @@ import QRCodeDetails from '@/components/dynamicQR/QRCodeDetails';
 import StatsSummaryCards from '@/components/dynamicQR/StatsSummaryCards';
 import DetailedStatsSection from '@/components/dynamicQR/DetailedStatsSection';
 import useDynamicQRStats from '@/hooks/useDynamicQRStats';
+import { 
+  QRCodeDetailsSkeleton, 
+  StatsSummaryCardsSkeleton, 
+  DetailedStatsSectionSkeleton 
+} from '@/components/dynamicQR/DynamicQRStatsSkeleton';
 
 // Color palette for charts
 const COLORS = ['#10B981', '#0EA5E9', '#8B5CF6', '#F43F5E', '#F59E0B', '#64748B'];
@@ -36,19 +41,9 @@ const DynamicQRStats = () => {
   // Process statistics data using the custom hook
   const { barChartData, pieChartData, firstScan, uniqueCountries } = useDynamicQRStats(scanStats);
 
-  if (isLoadingQrCode || isLoadingStats) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 container mx-auto px-4 pt-24 pb-12 flex items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const isLoading = isLoadingQrCode || isLoadingStats;
 
-  if (!qrCode) {
+  if (!qrCode && !isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -86,25 +81,38 @@ const DynamicQRStats = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <QRCodeDetails 
-                qrCode={qrCode} 
-                onEdit={() => navigate(`/dynamic-qr/edit/${qrCode.id}`)} 
-              />
+              {isLoading ? (
+                <QRCodeDetailsSkeleton />
+              ) : (
+                <QRCodeDetails 
+                  qrCode={qrCode} 
+                  onEdit={() => navigate(`/dynamic-qr/edit/${qrCode.id}`)} 
+                />
+              )}
             </div>
             
             <div className="lg:col-span-2 space-y-6">
-              <StatsSummaryCards 
-                totalScans={scanStats?.totalScans || 0}
-                uniqueCountries={uniqueCountries}
-                firstScan={firstScan}
-              />
-              
-              <DetailedStatsSection
-                barChartData={barChartData}
-                pieChartData={pieChartData}
-                scans={scanStats?.rawScans || []}
-                colors={COLORS}
-              />
+              {isLoading ? (
+                <>
+                  <StatsSummaryCardsSkeleton />
+                  <DetailedStatsSectionSkeleton />
+                </>
+              ) : (
+                <>
+                  <StatsSummaryCards 
+                    totalScans={scanStats?.totalScans || 0}
+                    uniqueCountries={uniqueCountries}
+                    firstScan={firstScan}
+                  />
+                  
+                  <DetailedStatsSection
+                    barChartData={barChartData}
+                    pieChartData={pieChartData}
+                    scans={scanStats?.rawScans || []}
+                    colors={COLORS}
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
