@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -114,7 +113,7 @@ const DynamicQRStats = () => {
     return Object.entries(scanStats.scansByCountry)
       .map(([country, count]) => ({
         name: country,
-        value: count,
+        value: count as number,
       }))
       .sort((a, b) => b.value - a.value);
   };
@@ -342,7 +341,11 @@ const DynamicQRStats = () => {
                               fill="#8884d8"
                               dataKey="value"
                               nameKey="name"
-                              label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                              label={({name, percent}) => {
+                                // Ensure percent is treated as a number
+                                const percentValue = Number(percent);
+                                return `${name} ${(percentValue * 100).toFixed(0)}%`;
+                              }}
                             >
                               {pieChartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
