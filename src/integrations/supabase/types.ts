@@ -9,6 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      dynamic_qr_codes: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          qr_image_path: string | null
+          short_code: string
+          target_url: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          qr_image_path?: string | null
+          short_code: string
+          target_url: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          qr_image_path?: string | null
+          short_code?: string
+          target_url?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dynamic_qr_scans: {
+        Row: {
+          city: string | null
+          country: string | null
+          dynamic_qr_code_id: string
+          id: string
+          ip_address: string | null
+          latitude: number | null
+          longitude: number | null
+          referrer: string | null
+          scanned_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          dynamic_qr_code_id: string
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          referrer?: string | null
+          scanned_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          dynamic_qr_code_id?: string
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          referrer?: string | null
+          scanned_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dynamic_qr_scans_dynamic_qr_code_id_fkey"
+            columns: ["dynamic_qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "dynamic_qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folders: {
         Row: {
           created_at: string

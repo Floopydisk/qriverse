@@ -20,6 +20,9 @@ import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import GdprPolicy from "./pages/GdprPolicy";
 import FolderView from "./pages/FolderView";
+import DynamicQR from "./pages/DynamicQR";
+import DynamicQRStats from "./pages/DynamicQRStats";
+import EditDynamicQR from "./pages/EditDynamicQR";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +74,21 @@ const App = () => (
             <Route path="/profile" element={
               <AuthGuard>
                 <Profile />
+              </AuthGuard>
+            } />
+            <Route path="/dynamic-qr" element={
+              <AuthGuard>
+                <DynamicQR />
+              </AuthGuard>
+            } />
+            <Route path="/dynamic-qr/stats/:id" element={
+              <AuthGuard>
+                <DynamicQRStats />
+              </AuthGuard>
+            } />
+            <Route path="/dynamic-qr/edit/:id" element={
+              <AuthGuard>
+                <EditDynamicQR />
               </AuthGuard>
             } />
             <Route path="*" element={<NotFound />} />

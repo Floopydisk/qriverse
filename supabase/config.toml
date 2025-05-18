@@ -1,1 +1,5 @@
+
 project_id = "kienjbeckgfsajjxjqhs"
+
+[functions.dynamic-qr]
+verify_jwt = false
