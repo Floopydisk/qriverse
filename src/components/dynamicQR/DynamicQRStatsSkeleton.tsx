@@ -29,7 +29,7 @@ export const StatsSummaryCardsSkeleton = () => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {Array(3).fill(0).map((_, i) => (
-        <Card key={i}>
+        <Card key={i} className="shadow-sm">
           <CardHeader className="pb-2">
             <Skeleton className="h-6 w-1/2" />
           </CardHeader>
