@@ -16,7 +16,7 @@ import useDynamicQRStats from '@/hooks/useDynamicQRStats';
 import { 
   QRCodeDetailsSkeleton, 
   StatsSummaryCardsSkeleton, 
-  DetailedStatsSectionSkeleton 
+  ChartSkeletons as DetailedStatsSectionSkeleton 
 } from '@/components/dynamicQR/DynamicQRStatsSkeleton';
 
 // Color palette for charts
