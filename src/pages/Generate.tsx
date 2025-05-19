@@ -1,48 +1,30 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Copy, 
-  Download, 
-  Upload, 
-  Trash, 
-  Scan, 
-  Wifi, 
-  Contact, 
-  LinkIcon, 
-  Text, 
-  QrCode,
-  MessageSquare,
-  Mail,
-  Twitter,
-  Bitcoin,
-  Facebook,
-  Linkedin,
-  Instagram,
-  Youtube
-} from "lucide-react";
+import { Scan, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import QRCode from "qrcode";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/use-auth";
-import { createQRCode, fetchQRCode, updateQRCode } from "@/lib/api";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { Textarea } from "@/components/ui/textarea";
-import { Json } from "@/integrations/supabase/types";
+import { fetchQRCode } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+
+// Import QR Generator Components
+import { QRNameInput } from "@/components/qr-generator/QRNameInput";
+import { QRStyleOptions } from "@/components/qr-generator/QRStyleOptions";
+import { QRTabSelector } from "@/components/qr-generator/QRTabSelector";
+import { QRCodePreview } from "@/components/qr-generator/QRCodePreview";
+import { TextQRTab } from "@/components/qr-generator/tabs/TextQRTab";
+import { WifiQRTab } from "@/components/qr-generator/tabs/WifiQRTab";
+import { ContactQRTab } from "@/components/qr-generator/tabs/ContactQRTab";
+import { SmsQRTab } from "@/components/qr-generator/tabs/SmsQRTab";
+import { EmailQRTab } from "@/components/qr-generator/tabs/EmailQRTab";
+import { TwitterQRTab } from "@/components/qr-generator/tabs/TwitterQRTab";
+import { BitcoinQRTab } from "@/components/qr-generator/tabs/BitcoinQRTab";
+
+import { useQRGenerator } from "@/hooks/use-qr-generator";
 
 const Generate = () => {
   const navigate = useNavigate();
@@ -51,12 +33,8 @@ const Generate = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [name, setName] = useState("");
-  const [qrDataUrl, setQrDataUrl] = useState("");
-  const [darkColor, setDarkColor] = useState("#10B981");
-  const [lightColor, setLightColor] = useState("#FFFFFF");
-  const [logo, setLogo] = useState<string | null>(null);
-  const [addLogo, setAddLogo] = useState(false);
+  // QR Generator hook
+  const qrGenerator = useQRGenerator({ user, editId });
   
   // Text/URL
   const [text, setText] = useState("");
@@ -75,7 +53,7 @@ const Generate = () => {
   const [title, setTitle] = useState("");
   const [website, setWebsite] = useState("");
   
-  // Contact - Social Media Links (new)
+  // Contact - Social Media Links
   const [facebookUrl, setFacebookUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
@@ -112,14 +90,14 @@ const Generate = () => {
 
   useEffect(() => {
     if (qrCodeData) {
-      setName(qrCodeData.name || "");
+      qrGenerator.setName(qrCodeData.name || "");
       if (qrCodeData.options && typeof qrCodeData.options === 'object') {
         // Fix: Type guard to ensure we're working with an object
         const options = qrCodeData.options as Record<string, any>;
-        setQrDataUrl(options.dataUrl || "");
-        setDarkColor(options.darkColor || "#10B981");
-        setLightColor(options.lightColor || "#FFFFFF");
-        setAddLogo(options.hasLogo || false);
+        qrGenerator.setQrDataUrl(options.dataUrl || "");
+        qrGenerator.setDarkColor(options.darkColor || "#10B981");
+        qrGenerator.setLightColor(options.lightColor || "#FFFFFF");
+        qrGenerator.setAddLogo(options.hasLogo || false);
       }
 
       if (qrCodeData.type === "url" || qrCodeData.type === "text") {
@@ -234,138 +212,16 @@ const Generate = () => {
         }
       }
     }
-  }, [qrCodeData]);
-
-  const createQRCodeMutation = useMutation({
-    mutationFn: createQRCode,
-    onSuccess: async (data) => {
-      if (qrDataUrl) {
-        try {
-          const filename = `${data.id}.png`;
-          const { error: folderError } = await supabase.storage.from('qrcodes').list(`user_${user?.id}`);
-          
-          if (folderError && folderError.message.includes('Not found')) {
-            await supabase.storage.from('qrcodes').upload(`user_${user?.id}/.folder_metadata`, '');
-          }
-          
-          const response = await fetch(qrDataUrl);
-          const blob = await response.blob();
-          
-          const { error } = await supabase.storage
-            .from('qrcodes')
-            .upload(`user_${user?.id}/${filename}`, blob, {
-              contentType: 'image/png',
-              upsert: true
-            });
-            
-          if (error) throw error;
-          
-          await updateQRCode(data.id, {
-            options: {
-              ...(typeof data.options === 'object' && data.options !== null ? data.options : {}),
-              storagePath: `user_${user?.id}/${filename}`
-            }
-          });
-          
-          toast({
-            title: "QR Code Saved",
-            description: "Your QR code has been saved to your dashboard"
-          });
-        } catch (error) {
-          console.error("Error uploading QR code:", error);
-          toast({
-            title: "QR Code Saved",
-            description: "Your QR code was saved but the image upload failed"
-          });
-        }
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save QR code",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const updateQRCodeMutation = useMutation({
-    mutationFn: ({id, updates}: {id: string, updates: any}) => updateQRCode(id, updates),
-    onSuccess: async (data) => {
-      if (qrDataUrl && editId) {
-        try {
-          const response = await fetch(qrDataUrl);
-          const blob = await response.blob();
-          
-          const filename = `${editId}.png`;
-          const { error } = await supabase.storage
-            .from('qrcodes')
-            .upload(`user_${user?.id}/${filename}`, blob, {
-              contentType: 'image/png',
-              upsert: true
-            });
-            
-          if (error) throw error;
-          
-          toast({
-            title: "QR Code Updated",
-            description: "Your QR code has been updated successfully"
-          });
-        } catch (error) {
-          console.error("Error uploading QR code:", error);
-          toast({
-            title: "QR Code Updated",
-            description: "Your QR code was updated but the image upload failed"
-          });
-        }
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update QR code",
-        variant: "destructive",
-      });
-    }
-  });
+  }, [qrCodeData, qrGenerator]);
 
   const generateTextQR = async () => {
-    if (!text) {
-      toast({
-        title: "Error",
-        description: "Please enter some text to generate a QR code",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const dataUrl = await QRCode.toDataURL(text, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: darkColor,
-          light: lightColor,
-        },
-      });
-      setQrDataUrl(dataUrl);
-      
-      if (addLogo && logo) {
-        addLogoToQR(dataUrl, text);
-      } else {
-        toast({
-          title: "Success",
-          description: "QR code generated successfully",
-        });
-        
-        saveQRCodeToDatabase(dataUrl, text, text.startsWith("http") ? "url" : "text");
-      }
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to generate QR code",
-        variant: "destructive",
-      });
+    const result = await qrGenerator.validateAndGenerate(
+      text,
+      "Please enter some text to generate a QR code"
+    );
+    
+    if (result) {
+      qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, result.type);
     }
   };
 
@@ -384,25 +240,13 @@ const Generate = () => {
         hidden ? "true" : "false"
       };;`;
       
-      const dataUrl = await QRCode.toDataURL(wifiString, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: darkColor,
-          light: lightColor,
-        },
-      });
-      setQrDataUrl(dataUrl);
+      const result = await qrGenerator.validateAndGenerate(
+        wifiString,
+        "Please enter the network name (SSID)"
+      );
       
-      if (addLogo && logo) {
-        addLogoToQR(dataUrl, wifiString);
-      } else {
-        toast({
-          title: "Success",
-          description: "WiFi QR code generated successfully",
-        });
-        
-        saveQRCodeToDatabase(dataUrl, wifiString, "wifi");
+      if (result) {
+        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "wifi");
       }
     } catch (err) {
       toast({
@@ -443,25 +287,13 @@ const Generate = () => {
         "END:VCARD"
       ].filter(Boolean).join("\n");
       
-      const dataUrl = await QRCode.toDataURL(vCardLines, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: darkColor,
-          light: lightColor,
-        },
-      });
-      setQrDataUrl(dataUrl);
+      const result = await qrGenerator.validateAndGenerate(
+        vCardLines,
+        "Please enter at least a name"
+      );
       
-      if (addLogo && logo) {
-        addLogoToQR(dataUrl, vCardLines);
-      } else {
-        toast({
-          title: "Success",
-          description: "Contact QR code generated successfully",
-        });
-        
-        saveQRCodeToDatabase(dataUrl, vCardLines, "contact");
+      if (result) {
+        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "contact");
       }
     } catch (err) {
       toast({
@@ -485,25 +317,13 @@ const Generate = () => {
     try {
       const smsString = `SMSTO:${smsPhone}:${smsMessage}`;
       
-      const dataUrl = await QRCode.toDataURL(smsString, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: darkColor,
-          light: lightColor,
-        },
-      });
-      setQrDataUrl(dataUrl);
+      const result = await qrGenerator.validateAndGenerate(
+        smsString,
+        "Please enter a phone number"
+      );
       
-      if (addLogo && logo) {
-        addLogoToQR(dataUrl, smsString);
-      } else {
-        toast({
-          title: "Success",
-          description: "SMS QR code generated successfully",
-        });
-        
-        saveQRCodeToDatabase(dataUrl, smsString, "sms");
+      if (result) {
+        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "sms");
       }
     } catch (err) {
       toast({
@@ -534,25 +354,13 @@ const Generate = () => {
         if (emailBody) emailString += `body=${encodeURIComponent(emailBody)}`;
       }
       
-      const dataUrl = await QRCode.toDataURL(emailString, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: darkColor,
-          light: lightColor,
-        },
-      });
-      setQrDataUrl(dataUrl);
+      const result = await qrGenerator.validateAndGenerate(
+        emailString,
+        "Please enter an email address"
+      );
       
-      if (addLogo && logo) {
-        addLogoToQR(dataUrl, emailString);
-      } else {
-        toast({
-          title: "Success",
-          description: "Email QR code generated successfully",
-        });
-        
-        saveQRCodeToDatabase(dataUrl, emailString, "email");
+      if (result) {
+        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "email");
       }
     } catch (err) {
       toast({
@@ -582,25 +390,13 @@ const Generate = () => {
       if ((twitterText || twitterShareUrl) && twitterHashtags) twitterString += '&';
       if (twitterHashtags) twitterString += `hashtags=${encodeURIComponent(twitterHashtags.replace(/#/g, '').replace(/\s+/g, ','))}`;
       
-      const dataUrl = await QRCode.toDataURL(twitterString, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: darkColor,
-          light: lightColor,
-        },
-      });
-      setQrDataUrl(dataUrl);
+      const result = await qrGenerator.validateAndGenerate(
+        twitterString,
+        "Please enter at least one Twitter field"
+      );
       
-      if (addLogo && logo) {
-        addLogoToQR(dataUrl, twitterString);
-      } else {
-        toast({
-          title: "Success",
-          description: "Twitter QR code generated successfully",
-        });
-        
-        saveQRCodeToDatabase(dataUrl, twitterString, "twitter");
+      if (result) {
+        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "twitter");
       }
     } catch (err) {
       toast({
@@ -633,25 +429,13 @@ const Generate = () => {
         if (bitcoinMessage) bitcoinString += `message=${encodeURIComponent(bitcoinMessage)}`;
       }
       
-      const dataUrl = await QRCode.toDataURL(bitcoinString, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: darkColor,
-          light: lightColor,
-        },
-      });
-      setQrDataUrl(dataUrl);
+      const result = await qrGenerator.validateAndGenerate(
+        bitcoinString,
+        "Please enter a Bitcoin address"
+      );
       
-      if (addLogo && logo) {
-        addLogoToQR(dataUrl, bitcoinString);
-      } else {
-        toast({
-          title: "Success",
-          description: "Bitcoin QR code generated successfully",
-        });
-        
-        saveQRCodeToDatabase(dataUrl, bitcoinString, "bitcoin");
+      if (result) {
+        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "bitcoin");
       }
     } catch (err) {
       toast({
@@ -660,180 +444,6 @@ const Generate = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const addLogoToQR = (qrDataUrl: string, content: string) => {
-    if (!logo) return;
-    
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const qrImage = new Image();
-    
-    qrImage.onload = () => {
-      canvas.width = qrImage.width;
-      canvas.height = qrImage.height;
-      
-      if (ctx) ctx.drawImage(qrImage, 0, 0);
-      
-      const logoImg = new Image();
-      logoImg.onload = () => {
-        // Calculate size and position preserving aspect ratio
-        const maxLogoSize = qrImage.width * 0.25;
-        
-        // Get original logo dimensions
-        const originalWidth = logoImg.width;
-        const originalHeight = logoImg.height;
-        
-        // Calculate scaling factor to fit within maxLogoSize while preserving aspect ratio
-        const scaleFactor = Math.min(
-          maxLogoSize / originalWidth,
-          maxLogoSize / originalHeight
-        );
-        
-        // Calculate new dimensions
-        const logoWidth = originalWidth * scaleFactor;
-        const logoHeight = originalHeight * scaleFactor;
-        
-        // Center logo in QR code
-        const logoX = (qrImage.width - logoWidth) / 2;
-        const logoY = (qrImage.height - logoHeight) / 2;
-        
-        if (ctx) {
-          // Add white padding around logo that's slightly larger than the logo
-          const padding = 5;
-          ctx.fillStyle = "#FFFFFF";
-          ctx.fillRect(logoX - padding, logoY - padding, logoWidth + (padding * 2), logoHeight + (padding * 2));
-          
-          // Draw the logo with preserved aspect ratio
-          ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
-          
-          const finalQR = canvas.toDataURL("image/png");
-          setQrDataUrl(finalQR);
-          
-          toast({
-            title: "Success",
-            description: "QR code with logo generated successfully",
-          });
-          
-          saveQRCodeToDatabase(finalQR, content, determineType(content));
-        }
-      };
-      logoImg.src = logo;
-    };
-    qrImage.src = qrDataUrl;
-  };
-
-  const determineType = (content: string): string => {
-    if (content.startsWith('WIFI:')) return 'wifi';
-    if (content.startsWith('BEGIN:VCARD')) return 'contact';
-    if (content.startsWith('SMSTO:')) return 'sms';
-    if (content.startsWith('MAILTO:')) return 'email';
-    if (content.includes('twitter.com/intent/tweet')) return 'twitter';
-    if (content.startsWith('bitcoin:')) return 'bitcoin';
-    if (content.startsWith('http')) return 'url';
-    return 'text';
-  };
-
-  const saveQRCodeToDatabase = (dataUrl: string, content: string, type: string) => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to save QR codes",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const qrName = name || `${type.toUpperCase()} QR - ${new Date().toLocaleString()}`;
-    
-    if (editId) {
-      updateQRCodeMutation.mutate({
-        id: editId,
-        updates: {
-          name: qrName,
-          content: content,
-          type: type,
-          options: {
-            darkColor,
-            lightColor,
-            hasLogo: addLogo,
-            dataUrl: dataUrl
-          }
-        }
-      });
-    } else {
-      createQRCodeMutation.mutate({
-        name: qrName,
-        content: content,
-        type: type,
-        options: {
-          darkColor,
-          lightColor,
-          hasLogo: addLogo,
-          dataUrl: dataUrl
-        },
-        user_id: user.id,
-        folder_id: null
-      });
-    }
-  };
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target && typeof event.target.result === "string") {
-          setLogo(event.target.result);
-          setAddLogo(true);
-          toast({
-            title: "Logo uploaded",
-            description: "Your logo has been uploaded successfully",
-          });
-        }
-      };
-      reader.readAsDataURL(e.target.files[0]);
-    }
-  };
-
-  const removeLogo = () => {
-    setLogo(null);
-    setAddLogo(false);
-    toast({
-      title: "Logo removed",
-      description: "Your logo has been removed",
-    });
-  };
-
-  const copyText = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast({
-        title: "Success",
-        description: "Text copied to clipboard",
-      });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to copy text",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const downloadQR = () => {
-    if (!qrDataUrl) return;
-    
-    const link = document.createElement("a");
-    link.href = qrDataUrl;
-    link.download = `qrcode-${activeTab}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "Success",
-      description: "QR code downloaded successfully",
-    });
   };
 
   const handleGenerate = () => {
@@ -877,481 +487,108 @@ const Generate = () => {
                 </Button>
               </div>
               
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid grid-cols-4 mb-2">
-                  <TabsTrigger value="text" className="flex items-center gap-1">
-                    <Text className="h-4 w-4" />
-                    <span className="hidden sm:inline">Text/URL</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="wifi" className="flex items-center gap-1">
-                    <Wifi className="h-4 w-4" />
-                    <span className="hidden sm:inline">WiFi</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="contact" className="flex items-center gap-1">
-                    <Contact className="h-4 w-4" />
-                    <span className="hidden sm:inline">Contact</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="more" className="flex items-center gap-1">
-                    <span>More</span>
-                  </TabsTrigger>
-                </TabsList>
-
-                {activeTab === "more" && (
-                  <TabsList className="grid grid-cols-4 mb-4">
-                    <TabsTrigger value="sms" className="flex items-center gap-1">
-                      <MessageSquare className="h-4 w-4" />
-                      <span className="hidden sm:inline">SMS</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="email" className="flex items-center gap-1">
-                      <Mail className="h-4 w-4" />
-                      <span className="hidden sm:inline">Email</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="twitter" className="flex items-center gap-1">
-                      <Twitter className="h-4 w-4" />
-                      <span className="hidden sm:inline">Twitter</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="bitcoin" className="flex items-center gap-1">
-                      <Bitcoin className="h-4 w-4" />
-                      <span className="hidden sm:inline">Bitcoin</span>
-                    </TabsTrigger>
-                  </TabsList>
-                )}
-                
+              <QRTabSelector activeTab={activeTab} setActiveTab={setActiveTab}>
                 <div className="space-y-4">
-                  <div className="relative">
-                    <Label htmlFor="qrName">QR Code Name</Label>
-                    <Input
-                      id="qrName"
-                      type="text"
-                      placeholder="Enter a name for your QR code"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="mt-1"
+                  <QRNameInput name={qrGenerator.name} setName={qrGenerator.setName} />
+                  
+                  <TabsContent value="text" className="mt-0">
+                    <TextQRTab text={text} setText={setText} />
+                  </TabsContent>
+                  
+                  <TabsContent value="wifi" className="mt-0">
+                    <WifiQRTab 
+                      ssid={ssid}
+                      setSsid={setSsid}
+                      encryption={encryption}
+                      setEncryption={setEncryption}
+                      password={password}
+                      setPassword={setPassword}
+                      hidden={hidden}
+                      setHidden={setHidden}
                     />
-                  </div>
-                  
-                  <TabsContent value="text" className="space-y-4 mt-0">
-                    <div className="relative">
-                      <Label htmlFor="qrContent">Content</Label>
-                      <Input
-                        id="qrContent"
-                        type="text"
-                        placeholder="Enter text or URL"
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
                   </TabsContent>
                   
-                  <TabsContent value="wifi" className="space-y-4 mt-0">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="ssid">Network Name (SSID)</Label>
-                        <Input
-                          id="ssid"
-                          value={ssid}
-                          onChange={(e) => setSsid(e.target.value)}
-                          placeholder="Enter network name"
-                        />
-                      </div>
+                  <TabsContent value="contact" className="mt-0">
+                    <ContactQRTab
+                      fullName={fullName}
+                      setFullName={setFullName}
+                      email={email}
+                      setEmail={setEmail}
+                      phone={phone}
+                      setPhone={setPhone}
+                      organization={organization}
+                      setOrganization={setOrganization}
+                      title={title}
+                      setTitle={setTitle}
+                      website={website}
+                      setWebsite={setWebsite}
+                      facebookUrl={facebookUrl}
+                      setFacebookUrl={setFacebookUrl}
+                      linkedinUrl={linkedinUrl}
+                      setLinkedinUrl={setLinkedinUrl}
+                      instagramUrl={instagramUrl}
+                      setInstagramUrl={setInstagramUrl}
+                      twitterUrl={twitterUrl}
+                      setTwitterUrl={setTwitterUrl}
+                      youtubeUrl={youtubeUrl}
+                      setYoutubeUrl={setYoutubeUrl}
+                    />
+                  </TabsContent>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="encryption">Security Type</Label>
-                        <Select value={encryption} onValueChange={setEncryption}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select security type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="WPA">WPA/WPA2</SelectItem>
-                            <SelectItem value="WEP">WEP</SelectItem>
-                            <SelectItem value="nopass">No Password</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                  <TabsContent value="sms" className="mt-0">
+                    <SmsQRTab 
+                      smsPhone={smsPhone}
+                      setSmsPhone={setSmsPhone}
+                      smsMessage={smsMessage}
+                      setSmsMessage={setSmsMessage}
+                    />
+                  </TabsContent>
 
-                      {encryption !== "nopass" && (
-                        <div className="space-y-2">
-                          <Label htmlFor="password">Password</Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter network password"
-                          />
-                        </div>
-                      )}
+                  <TabsContent value="email" className="mt-0">
+                    <EmailQRTab
+                      emailTo={emailTo}
+                      setEmailTo={setEmailTo}
+                      emailSubject={emailSubject}
+                      setEmailSubject={setEmailSubject}
+                      emailBody={emailBody}
+                      setEmailBody={setEmailBody}
+                    />
+                  </TabsContent>
 
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="hidden"
-                          checked={hidden}
-                          onCheckedChange={(checked) => setHidden(checked as boolean)}
-                        />
-                        <Label htmlFor="hidden">Hidden network</Label>
-                      </div>
-                    </div>
+                  <TabsContent value="twitter" className="mt-0">
+                    <TwitterQRTab 
+                      twitterText={twitterText}
+                      setTwitterText={setTwitterText}
+                      twitterShareUrl={twitterShareUrl}
+                      setTwitterShareUrl={setTwitterShareUrl}
+                      twitterHashtags={twitterHashtags}
+                      setTwitterHashtags={setTwitterHashtags}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="bitcoin" className="mt-0">
+                    <BitcoinQRTab 
+                      bitcoinAddress={bitcoinAddress}
+                      setBitcoinAddress={setBitcoinAddress}
+                      bitcoinAmount={bitcoinAmount}
+                      setBitcoinAmount={setBitcoinAmount}
+                      bitcoinLabel={bitcoinLabel}
+                      setBitcoinLabel={setBitcoinLabel}
+                      bitcoinMessage={bitcoinMessage}
+                      setBitcoinMessage={setBitcoinMessage}
+                    />
                   </TabsContent>
                   
-                  <TabsContent value="contact" className="space-y-4 mt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="fullName">Full Name</Label>
-                        <Input
-                          id="fullName"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          placeholder="John Doe"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="john@example.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                          id="phone"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="+1 234 567 8900"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="organization">Organization</Label>
-                        <Input
-                          id="organization"
-                          value={organization}
-                          onChange={(e) => setOrganization(e.target.value)}
-                          placeholder="Company Name"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="title">Job Title</Label>
-                        <Input
-                          id="title"
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                          placeholder="Software Engineer"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="website">Website</Label>
-                        <Input
-                          id="website"
-                          value={website}
-                          onChange={(e) => setWebsite(e.target.value)}
-                          placeholder="https://example.com"
-                        />
-                      </div>
-                      
-                      {/* New Social Media Fields */}
-                      <div className="md:col-span-2">
-                        <h3 className="text-sm font-medium mb-2">Social Media Links</h3>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="facebookUrl" className="flex items-center gap-1">
-                          <Facebook className="h-4 w-4" /> Facebook
-                        </Label>
-                        <Input
-                          id="facebookUrl"
-                          value={facebookUrl}
-                          onChange={(e) => setFacebookUrl(e.target.value)}
-                          placeholder="https://facebook.com/username"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="linkedinUrl" className="flex items-center gap-1">
-                          <Linkedin className="h-4 w-4" /> LinkedIn
-                        </Label>
-                        <Input
-                          id="linkedinUrl"
-                          value={linkedinUrl}
-                          onChange={(e) => setLinkedinUrl(e.target.value)}
-                          placeholder="https://linkedin.com/in/username"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="instagramUrl" className="flex items-center gap-1">
-                          <Instagram className="h-4 w-4" /> Instagram
-                        </Label>
-                        <Input
-                          id="instagramUrl"
-                          value={instagramUrl}
-                          onChange={(e) => setInstagramUrl(e.target.value)}
-                          placeholder="https://instagram.com/username"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="twitterUrl" className="flex items-center gap-1">
-                          <Twitter className="h-4 w-4" /> Twitter
-                        </Label>
-                        <Input
-                          id="twitterUrl"
-                          value={twitterUrl}
-                          onChange={(e) => setTwitterUrl(e.target.value)}
-                          placeholder="https://twitter.com/username"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="youtubeUrl" className="flex items-center gap-1">
-                          <Youtube className="h-4 w-4" /> YouTube
-                        </Label>
-                        <Input
-                          id="youtubeUrl"
-                          value={youtubeUrl}
-                          onChange={(e) => setYoutubeUrl(e.target.value)}
-                          placeholder="https://youtube.com/c/channel"
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="sms" className="space-y-4 mt-0">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="smsPhone">Phone Number</Label>
-                        <Input
-                          id="smsPhone"
-                          value={smsPhone}
-                          onChange={(e) => setSmsPhone(e.target.value)}
-                          placeholder="+1 234 567 8900"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="smsMessage">Message</Label>
-                        <Textarea
-                          id="smsMessage"
-                          value={smsMessage}
-                          onChange={(e) => setSmsMessage(e.target.value)}
-                          placeholder="Enter your message here"
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="email" className="space-y-4 mt-0">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="emailTo">Email Address</Label>
-                        <Input
-                          id="emailTo"
-                          type="email"
-                          value={emailTo}
-                          onChange={(e) => setEmailTo(e.target.value)}
-                          placeholder="recipient@example.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="emailSubject">Subject</Label>
-                        <Input
-                          id="emailSubject"
-                          value={emailSubject}
-                          onChange={(e) => setEmailSubject(e.target.value)}
-                          placeholder="Email subject"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="emailBody">Message</Label>
-                        <Textarea
-                          id="emailBody"
-                          value={emailBody}
-                          onChange={(e) => setEmailBody(e.target.value)}
-                          placeholder="Enter your message here"
-                          rows={4}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="twitter" className="space-y-4 mt-0">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="twitterText">Tweet Text</Label>
-                        <Textarea
-                          id="twitterText"
-                          value={twitterText}
-                          onChange={(e) => setTwitterText(e.target.value)}
-                          placeholder="Enter your tweet text"
-                          rows={3}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="twitterShareUrl">URL (optional)</Label>
-                        <Input
-                          id="twitterShareUrl"
-                          value={twitterShareUrl}
-                          onChange={(e) => setTwitterShareUrl(e.target.value)}
-                          placeholder="https://example.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="twitterHashtags">Hashtags (separate with spaces)</Label>
-                        <Input
-                          id="twitterHashtags"
-                          value={twitterHashtags}
-                          onChange={(e) => setTwitterHashtags(e.target.value)}
-                          placeholder="#qrcode #twitter"
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="bitcoin" className="space-y-4 mt-0">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="bitcoinAddress">Bitcoin Address</Label>
-                        <Input
-                          id="bitcoinAddress"
-                          value={bitcoinAddress}
-                          onChange={(e) => setBitcoinAddress(e.target.value)}
-                          placeholder="Enter Bitcoin address"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bitcoinAmount">Amount (BTC)</Label>
-                        <Input
-                          id="bitcoinAmount"
-                          type="number"
-                          step="0.00000001"
-                          value={bitcoinAmount}
-                          onChange={(e) => setBitcoinAmount(e.target.value)}
-                          placeholder="0.001"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bitcoinLabel">Label (optional)</Label>
-                        <Input
-                          id="bitcoinLabel"
-                          value={bitcoinLabel}
-                          onChange={(e) => setBitcoinLabel(e.target.value)}
-                          placeholder="Payment for services"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bitcoinMessage">Message (optional)</Label>
-                        <Textarea
-                          id="bitcoinMessage"
-                          value={bitcoinMessage}
-                          onChange={(e) => setBitcoinMessage(e.target.value)}
-                          placeholder="Thank you for your payment"
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="darkColor">QR Code Color</Label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          id="darkColor"
-                          value={darkColor}
-                          onChange={(e) => setDarkColor(e.target.value)}
-                          className="w-10 h-10 rounded cursor-pointer"
-                        />
-                        <Input
-                          type="text"
-                          value={darkColor}
-                          onChange={(e) => setDarkColor(e.target.value)}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="lightColor">Background Color</Label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          id="lightColor"
-                          value={lightColor}
-                          onChange={(e) => setLightColor(e.target.value)}
-                          className="w-10 h-10 rounded cursor-pointer"
-                        />
-                        <Input
-                          type="text"
-                          value={lightColor}
-                          onChange={(e) => setLightColor(e.target.value)}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="addLogo" 
-                        checked={addLogo} 
-                        onCheckedChange={(checked) => {
-                          setAddLogo(checked === true);
-                          if (checked === false) {
-                            setLogo(null);
-                          }
-                        }}
-                      />
-                      <Label htmlFor="addLogo">Add Logo to Center</Label>
-                    </div>
-                    
-                    {addLogo && (
-                      <div className="flex flex-col space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => document.getElementById('logo-upload')?.click()}
-                          >
-                            <Upload className="mr-2 h-4 w-4" />
-                            {logo ? "Change Logo" : "Upload Logo"}
-                          </Button>
-                          
-                          {logo && (
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={removeLogo}
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                        
-                        <input
-                          id="logo-upload"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleLogoUpload}
-                        />
-                        
-                        {logo && (
-                          <div className="flex justify-center">
-                            <img
-                              src={logo}
-                              alt="Logo preview"
-                              className="h-16 w-16 object-contain border rounded"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <QRStyleOptions
+                    darkColor={qrGenerator.darkColor}
+                    setDarkColor={qrGenerator.setDarkColor}
+                    lightColor={qrGenerator.lightColor}
+                    setLightColor={qrGenerator.setLightColor}
+                    logo={qrGenerator.logo}
+                    setLogo={qrGenerator.setLogo}
+                    addLogo={qrGenerator.addLogo}
+                    setAddLogo={qrGenerator.setAddLogo}
+                  />
                   
                   <Button 
                     className="w-full"
@@ -1361,40 +598,14 @@ const Generate = () => {
                     {editId ? "Update QR Code" : "Generate QR Code"}
                   </Button>
                 </div>
-              </Tabs>
+              </QRTabSelector>
             </div>
 
-            {qrDataUrl && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white rounded-lg p-4 mx-auto w-fit">
-                  <img
-                    src={qrDataUrl}
-                    alt="Generated QR Code"
-                    className="w-64 h-64"
-                  />
-                </div>
-
-                <div className="flex justify-center gap-4">
-                  {activeTab === "text" && (
-                    <Button
-                      variant="outline"
-                      className="w-40"
-                      onClick={copyText}
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy Text
-                    </Button>
-                  )}
-                  <Button
-                    className="w-40"
-                    onClick={downloadQR}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download QR
-                  </Button>
-                </div>
-              </div>
-            )}
+            <QRCodePreview 
+              qrDataUrl={qrGenerator.qrDataUrl}
+              activeTab={activeTab}
+              text={activeTab === "text" ? text : ""}
+            />
           </div>
         </div>
       </main>
