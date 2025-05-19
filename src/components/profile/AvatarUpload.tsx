@@ -13,7 +13,7 @@ interface AvatarUploadProps {
 }
 
 export default function AvatarUpload({ userId, fullName, avatarUrl, onAvatarChange }: AvatarUploadProps) {
-  const { uploadAvatar, isUploading } = useAvatar();
+  const { uploadAvatar, isUploading, getAvatarUrl } = useAvatar();
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
@@ -22,7 +22,11 @@ export default function AvatarUpload({ userId, fullName, avatarUrl, onAvatarChan
     const newAvatarPath = await uploadAvatar(file, userId);
     
     if (newAvatarPath) {
-      onAvatarChange(newAvatarPath);
+      // Get the public URL from the new path
+      const publicUrl = getAvatarUrl(newAvatarPath);
+      if (publicUrl) {
+        onAvatarChange(newAvatarPath);
+      }
     }
   };
 

@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +19,8 @@ import {
   PauseCircle,
   Plus,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  QrCode
 } from "lucide-react";
 import FolderList from "@/components/FolderList";
 import { Button } from "@/components/ui/button";
@@ -41,15 +43,17 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   return (
     <>
       <SidebarHeader className="px-4 py-6 mt-24">
-        <div className="flex items-center gap-2">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search QR Codes..." 
-              className="h-9 pl-9"
-            />
+        {!sidebarCollapsed && (
+          <div className="flex items-center gap-2">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search QR Codes..." 
+                className="h-9 pl-9"
+              />
+            </div>
           </div>
-        </div>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -59,6 +63,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <SidebarMenuButton 
                 isActive={view === "all"} 
                 onClick={() => setView("all")}
+                tooltip={sidebarCollapsed ? "All QR Codes" : undefined}
               >
                 <List className="h-4 w-4" />
                 <span>All ({0})</span>
@@ -68,6 +73,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <SidebarMenuButton 
                 isActive={view === "active"} 
                 onClick={() => setView("active")}
+                tooltip={sidebarCollapsed ? "Active QR Codes" : undefined}
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>Active ({0})</span>
@@ -77,9 +83,21 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <SidebarMenuButton 
                 isActive={view === "paused"} 
                 onClick={() => setView("paused")}
+                tooltip={sidebarCollapsed ? "Paused QR Codes" : undefined}
               >
                 <PauseCircle className="h-4 w-4" />
                 <span>Paused ({0})</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                asChild
+                tooltip={sidebarCollapsed ? "Dynamic QR Codes" : undefined}
+              >
+                <Link to="/dynamic-qr">
+                  <QrCode className="h-4 w-4" />
+                  <span>Dynamic QR</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

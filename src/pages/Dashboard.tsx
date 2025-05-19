@@ -92,7 +92,7 @@ const Dashboard = () => {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={!sidebarCollapsed}>
       <div className="min-h-screen flex flex-col w-full">
         <FloatingCircles />
         <Header />
@@ -139,6 +139,10 @@ const Dashboard = () => {
                         <QrCode className="mr-2 h-4 w-4" />
                         Create QR Code
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/dynamic-qr")}>
+                        <QrCode className="mr-2 h-4 w-4" />
+                        Create Dynamic QR
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShowFolderDialog(true)}>
                         <FolderPlus className="mr-2 h-4 w-4" />
                         Create Folder
@@ -167,7 +171,7 @@ const Dashboard = () => {
           </main>
 
           <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Create New Folder</DialogTitle>
               </DialogHeader>

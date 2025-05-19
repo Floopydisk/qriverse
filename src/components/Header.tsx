@@ -1,3 +1,4 @@
+
  
  import { useState, useEffect } from "react";
  import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -110,6 +111,12 @@
                    </Link>
                  </Button>
                  <Button variant="ghost" size="sm" asChild>
+                   <Link to="/dynamic-qr">
+                     <QrCode className="h-4 w-4 mr-1" />
+                     Dynamic QR
+                   </Link>
+                 </Button>
+                 <Button variant="ghost" size="sm" asChild>
                    <Link to="/generate">
                      <QrCode className="h-4 w-4 mr-1" />
                      Create QR
@@ -141,6 +148,10 @@
                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                      <Home className="h-4 w-4 mr-2" />
                      Dashboard
+                   </DropdownMenuItem>
+                   <DropdownMenuItem onClick={() => navigate("/dynamic-qr")}>
+                     <QrCode className="h-4 w-4 mr-2" />
+                     Dynamic QR
                    </DropdownMenuItem>
                    <DropdownMenuItem onClick={() => navigate("/generate")}>
                      <QrCode className="h-4 w-4 mr-2" />
@@ -192,4 +203,3 @@
  };
  
  export default Header;
- 

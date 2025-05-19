@@ -65,7 +65,8 @@
 /* Large screen optimizations */
 @media (min-width: 1920px) {
   .container {
-    max-width: 1600px; /* Cap width on extremely large screens */
+    max-width: 1800px; /* Increased max width for very large displays */
+    margin: 0 auto;
   }
   
   html {
@@ -73,7 +74,7 @@
   }
 }
 
-/* Mobile optimizations */
+/* Mobile optimizations - enhanced */
 @media (max-width: 640px) {
   html {
     font-size: 14px;
@@ -85,6 +86,30 @@
   
   h2 {
     font-size: 1.5rem !important;
+  }
+  
+  /* Better spacing for mobile elements */
+  .card {
+    padding: 1rem !important;
+  }
+  
+  /* Improved mobile form layouts */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom */
+  }
+  
+  /* Ensure buttons are easier to tap */
+  button, .button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
