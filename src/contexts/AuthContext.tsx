@@ -124,6 +124,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         options: {
           redirectTo: `${window.location.origin}/dashboard`,
         }
+        
       });
       
       if (error) throw error;
