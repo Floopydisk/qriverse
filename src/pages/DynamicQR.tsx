@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -85,6 +84,11 @@ const DynamicQR = () => {
     }
   };
 
+  // New function to switch to create tab
+  const switchToCreateTab = () => {
+    setActiveTab('create');
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <FloatingCircles />
@@ -102,7 +106,7 @@ const DynamicQR = () => {
               </p>
             </div>
             <Button
-              onClick={() => setActiveTab('create')}
+              onClick={switchToCreateTab}
               className="md:self-end"
             >
               <Plus className="mr-2 h-4 w-4" /> Create Dynamic QR
@@ -119,6 +123,7 @@ const DynamicQR = () => {
               <DynamicQRCodeList
                 dynamicQRCodes={dynamicQRCodes || []}
                 isLoading={isLoading}
+                onCreateNew={switchToCreateTab}
               />
             </TabsContent>
             

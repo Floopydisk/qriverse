@@ -35,12 +35,13 @@ export function useAvatar() {
         return null;
       }
       
-      // Generate a unique filename
+      // Generate a unique filename with user folder structure
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      // Create a path with user ID as a folder for better organization and security
+      const filePath = `${userId}/${fileName}`;
       
-      // Upload to the avatars bucket instead of profileavatars
+      // Upload to the avatars bucket
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
@@ -49,6 +50,7 @@ export function useAvatar() {
         });
       
       if (uploadError) {
+        console.error("Upload error:", uploadError);
         throw uploadError;
       }
       
@@ -64,6 +66,7 @@ export function useAvatar() {
       
       return filePath; // Return the storage path
     } catch (error: any) {
+      console.error("Avatar upload error:", error);
       setError(error.message);
       toast({
         title: "Error",

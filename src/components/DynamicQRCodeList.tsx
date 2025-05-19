@@ -42,9 +42,10 @@ import { DynamicQRCode, deleteDynamicQRCode, getDynamicQRRedirectUrl } from '@/l
 interface DynamicQRCodeListProps {
   dynamicQRCodes: DynamicQRCode[];
   isLoading: boolean;
+  onCreateNew: () => void; // New prop to handle tab switching
 }
 
-const DynamicQRCodeList = ({ dynamicQRCodes, isLoading }: DynamicQRCodeListProps) => {
+const DynamicQRCodeList = ({ dynamicQRCodes, isLoading, onCreateNew }: DynamicQRCodeListProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -143,7 +144,7 @@ const DynamicQRCodeList = ({ dynamicQRCodes, isLoading }: DynamicQRCodeListProps
         <p className="text-muted-foreground mb-4">
           Create your first dynamic QR code to get started
         </p>
-        <Button onClick={() => navigate("/dynamic-qr/create")}>
+        <Button onClick={onCreateNew}>
           Create Dynamic QR Code
         </Button>
       </div>
