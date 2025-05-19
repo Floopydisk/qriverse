@@ -117,13 +117,10 @@ const Dashboard = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold">
-                      Active QR Codes
+                      Static QR Codes
                     </h1>
-                    <div className="text-sm text-muted-foreground">
-                      (0/50 Dynamic codes)
-                    </div>
                   </div>
-                  <p className="text-muted-foreground">Manage your QR codes and folders</p>
+                  <p className="text-muted-foreground">Manage your Static QR codes and folders</p>
                 </div>
                 
                 <div className="flex gap-2">
@@ -152,19 +149,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant={view === "active" ? "default" : "outline"}
-                      onClick={() => setView("active")}
-                      className="flex items-center gap-1"
-                    >
-                      <span>Last Created</span>
-                    </Button>
-                  </div>
-                </div>
-                
+              <div className="space-y-4">                
                 <QRCodeList />
               </div>
             </div>
