@@ -42,6 +42,13 @@ export function useAvatar() {
       const filePath = `${userId}/${fileName}`;
       
       // Upload to the avatars bucket
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Upload to the avatars bucket
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {

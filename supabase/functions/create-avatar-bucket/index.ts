@@ -36,7 +36,7 @@ serve(async (req) => {
       }
       
       // Create RLS policies for the avatars bucket
-      // Owners can read their own avatars
+      // Anyone can read avatars (public read access)
       const { error: readPolicyError } = await supabase
         .rpc('create_storage_policy', {
           bucket_name: 'avatars',
@@ -49,7 +49,7 @@ serve(async (req) => {
         throw readPolicyError;
       }
       
-      // Only authenticated users can upload avatars
+      // Only authenticated users can upload avatars to their own folder
       const { error: insertPolicyError } = await supabase
         .rpc('create_storage_policy', {
           bucket_name: 'avatars',

@@ -19,7 +19,11 @@ import {
   MessageSquare,
   Mail,
   Twitter,
-  Bitcoin
+  Bitcoin,
+  Facebook,
+  Linkedin,
+  Instagram,
+  Youtube
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import QRCode from "qrcode";
@@ -71,6 +75,13 @@ const Generate = () => {
   const [title, setTitle] = useState("");
   const [website, setWebsite] = useState("");
   
+  // Contact - Social Media Links (new)
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  
   // SMS
   const [smsPhone, setSmsPhone] = useState("");
   const [smsMessage, setSmsMessage] = useState("");
@@ -82,7 +93,7 @@ const Generate = () => {
   
   // Twitter
   const [twitterText, setTwitterText] = useState("");
-  const [twitterUrl, setTwitterUrl] = useState("");
+  const [twitterShareUrl, setTwitterShareUrl] = useState("");
   const [twitterHashtags, setTwitterHashtags] = useState("");
   
   // Bitcoin
@@ -141,12 +152,27 @@ const Generate = () => {
           const titleMatch = vCardString.match(/TITLE:(.*?)(?:\r?\n|$)/);
           const urlMatch = vCardString.match(/URL:(.*?)(?:\r?\n|$)/);
           
+          // Parse social media links
+          const fbMatch = vCardString.match(/X-SOCIALPROFILE;type=facebook:(.*?)(?:\r?\n|$)/);
+          const liMatch = vCardString.match(/X-SOCIALPROFILE;type=linkedin:(.*?)(?:\r?\n|$)/);
+          const igMatch = vCardString.match(/X-SOCIALPROFILE;type=instagram:(.*?)(?:\r?\n|$)/);
+          const twMatch = vCardString.match(/X-SOCIALPROFILE;type=twitter:(.*?)(?:\r?\n|$)/);
+          const ytMatch = vCardString.match(/X-SOCIALPROFILE;type=youtube:(.*?)(?:\r?\n|$)/);
+          
           if (fnMatch) setFullName(fnMatch[1]);
           if (emailMatch) setEmail(emailMatch[1]);
           if (telMatch) setPhone(telMatch[1]);
           if (orgMatch) setOrganization(orgMatch[1]);
           if (titleMatch) setTitle(titleMatch[1]);
           if (urlMatch) setWebsite(urlMatch[1]);
+          
+          // Set social media values
+          if (fbMatch) setFacebookUrl(fbMatch[1]);
+          if (liMatch) setLinkedinUrl(liMatch[1]);
+          if (igMatch) setInstagramUrl(igMatch[1]);
+          if (twMatch) setTwitterUrl(twMatch[1]);
+          if (ytMatch) setYoutubeUrl(ytMatch[1]);
+          
         } catch (err) {
           console.error("Failed to parse contact QR code:", err);
         }
@@ -185,7 +211,7 @@ const Generate = () => {
           const hashtagsMatch = twitterString.match(/[?&]hashtags=(.*?)(?:&|$)/);
           
           if (textMatch) setTwitterText(decodeURIComponent(textMatch[1]));
-          if (urlMatch) setTwitterUrl(decodeURIComponent(urlMatch[1]));
+          if (urlMatch) setTwitterShareUrl(decodeURIComponent(urlMatch[1]));
           if (hashtagsMatch) setTwitterHashtags(decodeURIComponent(hashtagsMatch[1]));
         } catch (err) {
           console.error("Failed to parse Twitter QR code:", err);
@@ -398,7 +424,8 @@ const Generate = () => {
     }
 
     try {
-      const vCardString = [
+      // Build vCard with social media links
+      const vCardLines = [
         "BEGIN:VCARD",
         "VERSION:3.0",
         `FN:${fullName}`,
@@ -407,10 +434,16 @@ const Generate = () => {
         organization ? `ORG:${organization}` : "",
         title ? `TITLE:${title}` : "",
         website ? `URL:${website}` : "",
+        // Add social media links using X-SOCIALPROFILE format
+        facebookUrl ? `X-SOCIALPROFILE;type=facebook:${facebookUrl}` : "",
+        linkedinUrl ? `X-SOCIALPROFILE;type=linkedin:${linkedinUrl}` : "",
+        instagramUrl ? `X-SOCIALPROFILE;type=instagram:${instagramUrl}` : "",
+        twitterUrl ? `X-SOCIALPROFILE;type=twitter:${twitterUrl}` : "",
+        youtubeUrl ? `X-SOCIALPROFILE;type=youtube:${youtubeUrl}` : "",
         "END:VCARD"
       ].filter(Boolean).join("\n");
       
-      const dataUrl = await QRCode.toDataURL(vCardString, {
+      const dataUrl = await QRCode.toDataURL(vCardLines, {
         width: 400,
         margin: 2,
         color: {
@@ -421,14 +454,14 @@ const Generate = () => {
       setQrDataUrl(dataUrl);
       
       if (addLogo && logo) {
-        addLogoToQR(dataUrl, vCardString);
+        addLogoToQR(dataUrl, vCardLines);
       } else {
         toast({
           title: "Success",
           description: "Contact QR code generated successfully",
         });
         
-        saveQRCodeToDatabase(dataUrl, vCardString, "contact");
+        saveQRCodeToDatabase(dataUrl, vCardLines, "contact");
       }
     } catch (err) {
       toast({
@@ -531,7 +564,7 @@ const Generate = () => {
   };
 
   const generateTwitterQR = async () => {
-    if (!twitterText && !twitterUrl && !twitterHashtags) {
+    if (!twitterText && !twitterShareUrl && !twitterHashtags) {
       toast({
         title: "Error",
         description: "Please enter at least one Twitter field",
@@ -544,9 +577,9 @@ const Generate = () => {
       let twitterString = "https://twitter.com/intent/tweet?";
       
       if (twitterText) twitterString += `text=${encodeURIComponent(twitterText)}`;
-      if (twitterText && twitterUrl) twitterString += '&';
-      if (twitterUrl) twitterString += `url=${encodeURIComponent(twitterUrl)}`;
-      if ((twitterText || twitterUrl) && twitterHashtags) twitterString += '&';
+      if (twitterText && twitterShareUrl) twitterString += '&';
+      if (twitterShareUrl) twitterString += `url=${encodeURIComponent(twitterShareUrl)}`;
+      if ((twitterText || twitterShareUrl) && twitterHashtags) twitterString += '&';
       if (twitterHashtags) twitterString += `hashtags=${encodeURIComponent(twitterHashtags.replace(/#/g, '').replace(/\s+/g, ','))}`;
       
       const dataUrl = await QRCode.toDataURL(twitterString, {
@@ -729,7 +762,6 @@ const Generate = () => {
         }
       });
     } else {
-      // Fix: Rather than spread undefined data.options, create a new object
       createQRCodeMutation.mutate({
         name: qrName,
         content: content,
@@ -1019,6 +1051,71 @@ const Generate = () => {
                           placeholder="https://example.com"
                         />
                       </div>
+                      
+                      {/* New Social Media Fields */}
+                      <div className="md:col-span-2">
+                        <h3 className="text-sm font-medium mb-2">Social Media Links</h3>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="facebookUrl" className="flex items-center gap-1">
+                          <Facebook className="h-4 w-4" /> Facebook
+                        </Label>
+                        <Input
+                          id="facebookUrl"
+                          value={facebookUrl}
+                          onChange={(e) => setFacebookUrl(e.target.value)}
+                          placeholder="https://facebook.com/username"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="linkedinUrl" className="flex items-center gap-1">
+                          <Linkedin className="h-4 w-4" /> LinkedIn
+                        </Label>
+                        <Input
+                          id="linkedinUrl"
+                          value={linkedinUrl}
+                          onChange={(e) => setLinkedinUrl(e.target.value)}
+                          placeholder="https://linkedin.com/in/username"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="instagramUrl" className="flex items-center gap-1">
+                          <Instagram className="h-4 w-4" /> Instagram
+                        </Label>
+                        <Input
+                          id="instagramUrl"
+                          value={instagramUrl}
+                          onChange={(e) => setInstagramUrl(e.target.value)}
+                          placeholder="https://instagram.com/username"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="twitterUrl" className="flex items-center gap-1">
+                          <Twitter className="h-4 w-4" /> Twitter
+                        </Label>
+                        <Input
+                          id="twitterUrl"
+                          value={twitterUrl}
+                          onChange={(e) => setTwitterUrl(e.target.value)}
+                          placeholder="https://twitter.com/username"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="youtubeUrl" className="flex items-center gap-1">
+                          <Youtube className="h-4 w-4" /> YouTube
+                        </Label>
+                        <Input
+                          id="youtubeUrl"
+                          value={youtubeUrl}
+                          onChange={(e) => setYoutubeUrl(e.target.value)}
+                          placeholder="https://youtube.com/c/channel"
+                        />
+                      </div>
                     </div>
                   </TabsContent>
 
@@ -1093,11 +1190,11 @@ const Generate = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="twitterUrl">URL (optional)</Label>
+                        <Label htmlFor="twitterShareUrl">URL (optional)</Label>
                         <Input
-                          id="twitterUrl"
-                          value={twitterUrl}
-                          onChange={(e) => setTwitterUrl(e.target.value)}
+                          id="twitterShareUrl"
+                          value={twitterShareUrl}
+                          onChange={(e) => setTwitterShareUrl(e.target.value)}
                           placeholder="https://example.com"
                         />
                       </div>
