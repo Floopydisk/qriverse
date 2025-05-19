@@ -11,10 +11,20 @@ import {
   FolderPlus,
 } from "lucide-react";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -22,7 +32,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import QRCodeList from "@/components/QRCodeList";
 import { useAuth } from "@/hooks/use-auth";
@@ -108,8 +117,7 @@ const Dashboard = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold">
-                      {view === "active" ? "Active QR Codes" : 
-                       view === "all" ? "All QR Codes" : "Paused QR Codes"}
+                      Active QR Codes
                     </h1>
                     <div className="text-sm text-muted-foreground">
                       (0/50 Dynamic codes)
@@ -130,10 +138,6 @@ const Dashboard = () => {
                       <DropdownMenuItem onClick={() => navigate("/generate")}>
                         <QrCode className="mr-2 h-4 w-4" />
                         Create QR Code
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/dynamic-qr")}>
-                        <QrCode className="mr-2 h-4 w-4" />
-                        Create Dynamic QR
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShowFolderDialog(true)}>
                         <FolderPlus className="mr-2 h-4 w-4" />

@@ -41,8 +41,8 @@ const CountryDistributionChart = ({ countryData, colors }: CountryDistributionCh
                   dataKey="value"
                   nameKey="name"
                   label={({name, percent}) => {
-                    // Ensure percent is always a number
-                    const percentValue = Number(percent);
+                    // Convert percent to a number to fix TypeScript error
+                    const percentValue = typeof percent === 'number' ? percent : 0;
                     return `${name} ${Math.round(percentValue * 100)}%`;
                   }}
                 >

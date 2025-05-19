@@ -40,9 +40,9 @@ export function useAvatar() {
       const fileName = `${userId}-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
       
-      // Upload to the avatars bucket
+      // Upload to the profileavatars bucket instead of avatars
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from('profileavatars')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
@@ -54,7 +54,7 @@ export function useAvatar() {
       
       // Get the URL of the uploaded avatar
       const { data: publicUrlData } = supabase.storage
-        .from('avatars')
+        .from('profileavatars')
         .getPublicUrl(filePath);
         
       toast({
@@ -80,7 +80,7 @@ export function useAvatar() {
     if (!path) return null;
     
     const { data } = supabase.storage
-      .from('avatars')
+      .from('profileavatars')
       .getPublicUrl(path);
       
     return data?.publicUrl || null;
