@@ -6,11 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Badge,
-  Button,
-  Switch,
-} from '@/components/ui';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Pencil, Link2 } from 'lucide-react';
 import { DynamicQRCode, getDynamicQRRedirectUrl } from '@/lib/api';
 
