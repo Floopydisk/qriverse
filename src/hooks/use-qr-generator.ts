@@ -1,170 +1,133 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { createQRCode } from "@/lib/api";
+import { generateQRCode, addLogoToQR } from "@/utils/qr-generator";
 
-const useQrGenerator = () => {
-  const [qrName, setQrName] = useState("");
-  const [selectedTab, setSelectedTab] = useState("text");
-  const [textContent, setTextContent] = useState("");
-  const [urlContent, setUrlContent] = useState("");
-  const [emailContent, setEmailContent] = useState({
-    email: "",
-    subject: "",
-    body: "",
-  });
-  const [phoneContent, setPhoneContent] = useState("");
-  const [smsContent, setSmsContent] = useState({
-    phone: "",
-    message: "",
-  });
-  const [wifiContent, setWifiContent] = useState({
-    ssid: "",
-    password: "",
-    encryption: "WPA",
-  });
-  const [foregroundColor, setForegroundColor] = useState("#000000");
-  const [backgroundColor, setBackgroundColor] = useState("#ffffff");
-  const [cornerDotType, setCornerDotType] = useState("square");
-  const [cornerSquareType, setCornerSquareType] = useState("square");
-  const [logoImage, setLogoImage] = useState<string | null>(null);
-  const [logoWidth, setLogoWidth] = useState(40);
-  const [logoHeight, setLogoHeight] = useState(40);
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+const useQrGenerator = (initialData = {}) => {
+  const [name, setName] = useState("");
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [darkColor, setDarkColor] = useState("#10B981");
+  const [lightColor, setLightColor] = useState("#FFFFFF");
+  const [logo, setLogo] = useState("");
+  const [addLogo, setAddLogo] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  const getContent = () => {
-    switch (selectedTab) {
-      case "text":
-        return textContent;
-      case "url":
-        return urlContent;
-      case "email":
-        return `mailto:${emailContent.email}?subject=${encodeURIComponent(
-          emailContent.subject
-        )}&body=${encodeURIComponent(emailContent.body)}`;
-      case "phone":
-        return `tel:${phoneContent}`;
-      case "sms":
-        return `sms:${smsContent.phone}?body=${encodeURIComponent(
-          smsContent.message
-        )}`;
-      case "wifi":
-        return `wifi:T:${wifiContent.encryption};S:${
-          wifiContent.ssid
-        };P:${wifiContent.password};;`;
-      default:
-        return "";
+  const validateAndGenerate = async (content, errorMessage) => {
+    if (!content) {
+      toast({
+        title: "Error",
+        description: errorMessage || "Please enter some content to generate a QR code",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    setIsGenerating(true);
+    try {
+      const dataUrl = await generateQRCode(content, {
+        darkColor,
+        lightColor,
+        width: 400,
+        margin: 2,
+      });
+
+      setQrDataUrl(dataUrl);
+
+      return {
+        dataUrl,
+        content,
+        type: determineContentType(content),
+      };
+    } catch (error) {
+      console.error("QR generation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  // Fix the createQRCode call to remove user_id from the data passed
-  const handleSaveQRCode = async () => {
-    if (!qrName) {
+  const saveQRCodeToDatabase = async (dataUrl, content, type) => {
+    if (!name) {
       toast({
-        title: "Name Required",
-        description: "Please provide a name for your QR code before saving.",
+        title: "Error",
+        description: "Please give your QR code a name",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      setIsSaving(true);
-      
       const qrCodeData = {
-        name: qrName,
-        type: selectedTab,
-        content: getContent(),
+        name,
+        type,
+        content,
         options: {
-          foregroundColor: foregroundColor,
-          backgroundColor: backgroundColor,
-          cornerDotType: cornerDotType,
-          cornerSquareType: cornerSquareType,
-          logoImage: logoImage,
-          logoWidth: logoWidth,
-          logoHeight: logoHeight,
+          dataUrl,
+          darkColor,
+          lightColor,
+          hasLogo: addLogo,
         },
-        folder_id: selectedFolder || null,
+        folder_id: null,
         scan_count: 0,
         active: true
       };
-      
-      const savedQRCode = await createQRCode(qrCodeData);
-      
-      if (savedQRCode) {
+
+      const result = await createQRCode(qrCodeData);
+
+      if (result) {
         toast({
           title: "Success",
-          description: "QR code created successfully!",
+          description: "QR code saved successfully",
         });
-        
-        // Reset the state
-        setQrName("");
-        setSelectedTab("text");
-        setTextContent("");
-        setUrlContent("");
-        setEmailContent({ email: "", subject: "", body: "" });
-        setPhoneContent("");
-        setSmsContent({ phone: "", message: "" });
-        setWifiContent({ ssid: "", password: "", encryption: "WPA" });
-        setForegroundColor("#000000");
-        setBackgroundColor("#ffffff");
-        setCornerDotType("square");
-        setCornerSquareType("square");
-        setLogoImage(null);
-        setLogoWidth(40);
-        setLogoHeight(40);
-        setSelectedFolder(null);
+        // Reset the form
+        setName("");
+        setQrDataUrl("");
+        setLogo("");
       }
     } catch (error) {
-      console.error("Error creating QR code:", error);
+      console.error("Error saving QR code:", error);
       toast({
         title: "Error",
-        description: "Failed to create QR code. Please try again.",
+        description: "Failed to save QR code",
         variant: "destructive",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
+  const determineContentType = (content) => {
+    if (content.startsWith("WIFI:")) return "wifi";
+    if (content.startsWith("BEGIN:VCARD")) return "contact";
+    if (content.startsWith("SMSTO:")) return "sms";
+    if (content.startsWith("MAILTO:")) return "email";
+    if (content.includes("twitter.com/intent/tweet")) return "twitter";
+    if (content.startsWith("bitcoin:")) return "bitcoin";
+    if (content.startsWith("http")) return "url";
+    return "text";
+  };
+
   return {
-    qrName,
-    setQrName,
-    selectedTab,
-    setSelectedTab,
-    textContent,
-    setTextContent,
-    urlContent,
-    setUrlContent,
-    emailContent,
-    setEmailContent,
-    phoneContent,
-    setPhoneContent,
-    smsContent,
-    setSmsContent,
-    wifiContent,
-    setWifiContent,
-    foregroundColor,
-    setForegroundColor,
-    backgroundColor,
-    setBackgroundColor,
-    cornerDotType,
-    setCornerDotType,
-    cornerSquareType,
-    setCornerSquareType,
-    logoImage,
-    setLogoImage,
-    logoWidth,
-    setLogoWidth,
-    logoHeight,
-    setLogoHeight,
-    selectedFolder,
-    setSelectedFolder,
-    isSaving,
-    handleSaveQRCode,
-    getContent,
+    name,
+    setName,
+    qrDataUrl,
+    setQrDataUrl,
+    darkColor,
+    setDarkColor,
+    lightColor,
+    setLightColor,
+    logo,
+    setLogo,
+    addLogo,
+    setAddLogo,
+    isGenerating,
+    validateAndGenerate,
+    saveQRCodeToDatabase
   };
 };
 

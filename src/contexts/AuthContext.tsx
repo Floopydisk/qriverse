@@ -1,20 +1,18 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
-interface AuthContextType {
+export type AuthContextType = {
   user: User | null;
-  session: any;
-  isLoading: boolean;
-  loading: boolean; // Added alias for isLoading for backward compatibility
+  session: Session | null;
+  loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>; // Added
-  signInWithGoogle: () => Promise<void>; // Added
+  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-}
+  signInWithGoogle: () => Promise<void>;
+};
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -22,17 +20,17 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadSession = async () => {
-      setIsLoading(true);
+      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
 
       setUser(session?.user || null);
       setSession(session || null);
-      setIsLoading(false);
+      setLoading(false);
     };
 
     loadSession();
@@ -83,12 +81,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     session,
-    isLoading,
-    loading: isLoading, // Alias for backward compatibility
+    loading,
     signIn,
     signUp,
-    signInWithGoogle,
     signOut,
+    signInWithGoogle,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

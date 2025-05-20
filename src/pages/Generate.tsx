@@ -36,7 +36,7 @@ const Generate = () => {
   const { toast } = useToast();
 
   // QR Generator hook
-  const qrGenerator = useQrGenerator({ user, editId });
+  const qrGenerator = useQrGenerator();
   
   // Text/URL
   const [text, setText] = useState("");

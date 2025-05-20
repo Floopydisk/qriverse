@@ -18,7 +18,7 @@ export interface QRCode {
   type: string;
   content: string;
   user_id: string;
-  options: object | null;
+  options: Record<string, any> | null;
   folder_id: string | null;
   scan_count: number;
   active: boolean;
@@ -171,10 +171,10 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       type: item.type,
       content: item.content,
       user_id: item.user_id,
-      options: item.options || null,
+      options: typeof item.options === 'object' ? item.options : null,
       folder_id: item.folder_id || null,
       scan_count: item.scan_count || 0,
-      active: item.active === null ? true : item.active
+      active: item.active === null ? true : Boolean(item.active)
     }));
   } catch (error) {
     console.error("Unexpected error fetching QR codes:", error);
@@ -204,10 +204,10 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
       type: data.type,
       content: data.content,
       user_id: data.user_id,
-      options: data.options || null,
+      options: typeof data.options === 'object' ? data.options : null,
       folder_id: data.folder_id || null,
       scan_count: data.scan_count || 0,
-      active: data.active === null ? true : data.active
+      active: data.active === null ? true : Boolean(data.active)
     };
   } catch (error) {
     console.error("Unexpected error fetching QR code:", error);
@@ -254,10 +254,10 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
       type: data.type,
       content: data.content,
       user_id: data.user_id,
-      options: data.options || null,
+      options: typeof data.options === 'object' ? data.options : null,
       folder_id: data.folder_id || null,
       scan_count: data.scan_count || 0,
-      active: data.active === null ? true : data.active
+      active: data.active === null ? true : Boolean(data.active)
     };
   } catch (error) {
     console.error("Unexpected error creating QR code:", error);
@@ -498,10 +498,10 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
       type: item.type,
       content: item.content,
       user_id: item.user_id,
-      options: item.options || null,
+      options: typeof item.options === 'object' ? item.options : null,
       folder_id: item.folder_id || null,
       scan_count: item.scan_count || 0,
-      active: item.active === null ? true : item.active
+      active: item.active === null ? true : Boolean(item.active)
     }));
   } catch (error) {
     console.error('Error fetching QR codes in folder:', error);

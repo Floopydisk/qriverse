@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -68,7 +69,7 @@ const SignIn = () => {
     }
   };
 
-  // Change variable references from isLoading to loading
+  // Update references from isLoading to loading
   return (
     <div className="min-h-screen flex flex-col bg-[#0C0B10] text-white">
       <Header />
