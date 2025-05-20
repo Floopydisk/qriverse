@@ -173,7 +173,7 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       user_id: item.user_id,
       options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
-      scan_count: item.scan_count || 0,
+      scan_count: Number(item.scan_count) || 0,
       active: item.active === null ? true : Boolean(item.active)
     }));
   } catch (error) {
@@ -206,7 +206,7 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: data.scan_count || 0,
+      scan_count: Number(data.scan_count) || 0,
       active: data.active === null ? true : Boolean(data.active)
     };
   } catch (error) {
@@ -256,7 +256,7 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: data.scan_count || 0,
+      scan_count: Number(data.scan_count) || 0,
       active: data.active === null ? true : Boolean(data.active)
     };
   } catch (error) {
@@ -301,7 +301,7 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: data.scan_count || 0,
+      scan_count: Number(data.scan_count) || 0,
       active: data.active === null ? true : Boolean(data.active)
     };
   } catch (error) {
@@ -500,7 +500,7 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
       user_id: item.user_id,
       options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
-      scan_count: item.scan_count || 0,
+      scan_count: Number(item.scan_count) || 0,
       active: item.active === null ? true : Boolean(item.active)
     }));
   } catch (error) {
