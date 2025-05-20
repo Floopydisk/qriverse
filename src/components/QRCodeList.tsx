@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder, BarChart2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType, fetchQRCodeScanStats, fetchQRCodesInFolder } from "@/lib/api";
+import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType, fetchQRCodeScanStats } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,7 @@ import { downloadQRCode } from "@/lib/supabaseUtils";
 import MoveQRCodeDialog from "@/components/MoveQRCodeDialog";
 import QRCodeScanDialog from "./QRCodeScanDialog";
 
-const QRCodeList = ({ searchQuery = "", folderId }: { searchQuery?: string, folderId?: string }) => {
+const QRCodeList = ({ folderId }: { folderId?: string }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -22,24 +22,9 @@ const QRCodeList = ({ searchQuery = "", folderId }: { searchQuery?: string, fold
   const [selectedQRCode, setSelectedQRCode] = useState<{id: string, folderId: string | null} | null>(null);
   const [selectedQRCodeForStats, setSelectedQRCodeForStats] = useState<QRCodeType | null>(null);
   
-  const { data: qrCodes = [], isLoading, error, isFetching } = useQuery({
-    queryKey: ['qrCodes', folderId, searchQuery],
-    queryFn: async () => {
-      const codes = folderId 
-        ? await fetchQRCodesInFolder(folderId) 
-        : await fetchUserQRCodes();
-      
-      // Filter by search query if provided
-      if (searchQuery) {
-        return codes.filter((code: any) => 
-          code.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          code.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          code.type.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-      
-      return codes;
-    }
+  const { data: qrCodes = [], isLoading, error } = useQuery({
+    queryKey: ['qrCodes', folderId],
+    queryFn: fetchUserQRCodes
   });
 
   useEffect(() => {
@@ -202,7 +187,7 @@ const QRCodeList = ({ searchQuery = "", folderId }: { searchQuery?: string, fold
     setScanDialogOpen(true);
   };
 
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>

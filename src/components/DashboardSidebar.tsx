@@ -1,144 +1,134 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
-  Search,
-  QrCode,
-  Barcode,
-  CheckCircle2,
-  PauseCircle,
-  List,
-  Plus,
-  FolderOpen
-} from "lucide-react";
-import FolderList from "@/components/FolderList";
-import { cn } from "@/lib/utils";
-import {
+  SidebarContent,
+  SidebarHeader,
+  SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton
+  SidebarMenuButton,
 } from "@/components/ui/sidebar";
+import {
+  List,
+  CheckCircle2,
+  PauseCircle,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  QrCode
+} from "lucide-react";
+import FolderList from "@/components/FolderList";
+import { Button } from "@/components/ui/button";
 
 interface DashboardSidebarProps {
+  view: "active" | "all" | "paused";
+  setView: (view: "active" | "all" | "paused") => void;
   setShowFolderDialog: (show: boolean) => void;
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
-  setShowFolderDialog
+  view,
+  setView,
+  setShowFolderDialog,
+  sidebarCollapsed,
+  toggleSidebar
 }) => {
-  const location = useLocation();
-
-  const isActive = (path: string) => location.pathname === path;
-
   return (
     <>
-      {/* My QR Codes Section */}
-      <SidebarGroup>
-        <SidebarGroupLabel>MY CODES</SidebarGroupLabel>
-        <SidebarGroupContent>
+      <SidebarHeader className="px-4 py-6 mt-24">
+        {!sidebarCollapsed && (
+          <div className="flex items-center gap-2">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search QR Codes..." 
+                className="h-9 pl-9"
+              />
+            </div>
+          </div>
+        )}
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>MY QR CODES</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                variant={isActive("/dashboard") ? "outline" : "default"}
-                isActive={isActive("/dashboard")}
-                asChild
+              <SidebarMenuButton 
+                isActive={view === "all"} 
+                onClick={() => setView("all")}
+                tooltip={sidebarCollapsed ? "All QR Codes" : undefined}
               >
-                <Link to="/dashboard">
-                  <List className="h-4 w-4 mr-2" />
-                  <span>All (32)</span>
-                </Link>
+                <List className="h-4 w-4" />
+                <span>All ({0})</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-
             <SidebarMenuItem>
-              <SidebarMenuButton
-                variant={isActive("/barcode") ? "outline" : "default"}
-                isActive={isActive("/barcode")}
-                asChild
+              <SidebarMenuButton 
+                isActive={view === "active"} 
+                onClick={() => setView("active")}
+                tooltip={sidebarCollapsed ? "Active QR Codes" : undefined}
               >
-                <Link to="/barcode">
-                  <Barcode className="h-4 w-4 mr-2" />
-                  <span>Barcodes</span>
-                </Link>
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Active ({0})</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-
             <SidebarMenuItem>
-              <SidebarMenuButton
-                variant={isActive("/dashboard") && !location.search.includes("dynamic") ? "outline" : "default"}
-                isActive={isActive("/dashboard") && !location.search.includes("dynamic")}
-                asChild
+              <SidebarMenuButton 
+                isActive={view === "paused"} 
+                onClick={() => setView("paused")}
+                tooltip={sidebarCollapsed ? "Paused QR Codes" : undefined}
               >
-                <Link to="/dashboard">
-                  <QrCode className="h-4 w-4 mr-2" />
-                  <span>Static QR Codes</span>
-                </Link>
+                <PauseCircle className="h-4 w-4" />
+                <span>Paused ({0})</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-
             <SidebarMenuItem>
-              <SidebarMenuButton
-                variant={isActive("/dynamic-qr") ? "outline" : "default"}
-                isActive={isActive("/dynamic-qr")}
+              <SidebarMenuButton 
                 asChild
+                tooltip={sidebarCollapsed ? "Dynamic QR Codes" : undefined}
               >
                 <Link to="/dynamic-qr">
-                  <QrCode className="h-4 w-4 mr-2" />
-                  <span>Dynamic QR Codes</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                variant={isActive("/dynamic-qr") && location.search.includes("active") ? "outline" : "default"}
-                isActive={isActive("/dynamic-qr") && location.search.includes("active")}
-                asChild
-              >
-                <Link to="/dynamic-qr?status=active">
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  <span>Active (10)</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                variant={isActive("/dynamic-qr") && location.search.includes("paused") ? "outline" : "default"}
-                isActive={isActive("/dynamic-qr") && location.search.includes("paused")}
-                asChild
-              >
-                <Link to="/dynamic-qr?status=paused">
-                  <PauseCircle className="h-4 w-4 mr-2" />
-                  <span>Paused (11)</span>
+                  <QrCode className="h-4 w-4" />
+                  <span>Dynamic QR</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      {/* My Folders Section */}
-      <SidebarGroup>
-        <div className="flex items-center justify-between px-2">
-          <SidebarGroupLabel>MY FOLDERS</SidebarGroupLabel>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-5 w-5" 
-            onClick={() => setShowFolderDialog(true)}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        <SidebarGroupContent>
-          <FolderList />
-        </SidebarGroupContent>
-      </SidebarGroup>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel className="flex justify-between items-center">
+            MY FOLDERS
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-5 w-5" 
+              onClick={() => setShowFolderDialog(true)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            <FolderList />
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter className="p-4 mt-auto">
+        <Button 
+          onClick={toggleSidebar} 
+          variant="outline" 
+          size="icon"
+          className="mx-auto flex h-8 w-8 rounded-full bg-background shadow-md"
+        >
+          {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
+      </SidebarFooter>
     </>
   );
 };
