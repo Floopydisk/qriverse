@@ -7,6 +7,7 @@ export interface UserProfile {
   full_name: string;
   avatar_url: string;
   updated_at?: string;
+  username?: string;
 }
 
 export interface QRCode {
@@ -33,10 +34,10 @@ export interface ScanStat {
   id: string;
   created_at: string;
   qr_code_id: string;
-  location: object | null;
-  device: object | null;
   country?: string;
   user_agent?: string;
+  location?: object | null;
+  device?: object | null;
 }
 
 export interface DynamicQRCode {
@@ -93,6 +94,7 @@ export const fetchUserProfile = async (): Promise<UserProfile | null> => {
       full_name: profile.full_name || '',
       avatar_url: profile.avatar_url || '',
       updated_at: profile.updated_at || null,
+      username: profile.username || '',
     };
   } catch (error) {
     console.error("Unexpected error fetching user profile:", error);
@@ -129,6 +131,7 @@ export const updateUserProfile = async (updates: { full_name?: string; avatar_ur
       full_name: profile.full_name || '',
       avatar_url: profile.avatar_url || '',
       updated_at: profile.updated_at || null,
+      username: profile.username || '',
     };
   } catch (error) {
     console.error("Unexpected error updating user profile:", error);
@@ -158,10 +161,39 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       return [];
     }
 
-    return data || [];
+    return data.map(item => ({
+      ...item,
+      scan_count: item.scan_count || 0,
+      active: item.active === null ? true : item.active
+    }));
   } catch (error) {
     console.error("Unexpected error fetching QR codes:", error);
     return [];
+  }
+};
+
+// Function to fetch a single QR code
+export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching QR code:", error.message);
+      return null;
+    }
+
+    return {
+      ...data,
+      scan_count: data.scan_count || 0,
+      active: data.active === null ? true : data.active
+    };
+  } catch (error) {
+    console.error("Unexpected error fetching QR code:", error);
+    return null;
   }
 };
 
@@ -178,7 +210,16 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
   try {
     const { data, error } = await supabase
       .from('qr_codes')
-      .insert([{ ...qrCodeData, user_id: user.id }])
+      .insert([{ 
+        name: qrCodeData.name,
+        type: qrCodeData.type,
+        content: qrCodeData.content,
+        options: qrCodeData.options,
+        folder_id: qrCodeData.folder_id,
+        scan_count: qrCodeData.scan_count,
+        active: qrCodeData.active,
+        user_id: user.id 
+      }])
       .select('*')
       .single();
 
@@ -187,7 +228,11 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
       return null;
     }
 
-    return data;
+    return {
+      ...data,
+      scan_count: data.scan_count || 0,
+      active: data.active === null ? true : data.active
+    };
   } catch (error) {
     console.error("Unexpected error creating QR code:", error);
     return null;
@@ -199,7 +244,15 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
   try {
     const { data, error } = await supabase
       .from('qr_codes')
-      .update(updates)
+      .update({
+        name: updates.name,
+        type: updates.type,
+        content: updates.content,
+        options: updates.options,
+        folder_id: updates.folder_id,
+        scan_count: updates.scan_count,
+        active: updates.active
+      })
       .eq('id', id)
       .select('*')
       .single();
@@ -209,7 +262,11 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
       return null;
     }
 
-    return data;
+    return {
+      ...data,
+      scan_count: data.scan_count || 0,
+      active: data.active === null ? true : data.active
+    };
   } catch (error) {
     console.error("Unexpected error updating QR code:", error);
     return null;
@@ -370,7 +427,15 @@ export const fetchQRCodeScanStats = async (qrCodeId: string): Promise<ScanStat[]
       return [];
     }
 
-    return data || [];
+    return data.map(scan => ({
+      id: scan.id,
+      created_at: scan.created_at,
+      qr_code_id: scan.qr_code_id,
+      country: scan.country,
+      user_agent: scan.user_agent,
+      location: null,
+      device: null
+    }));
   } catch (error) {
     console.error("Unexpected error fetching QR code scan stats:", error);
     return [];
@@ -387,7 +452,12 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
       .order('created_at', { ascending: false });
     
     if (error) throw new Error(error.message);
-    return data || [];
+    
+    return data.map(item => ({
+      ...item,
+      scan_count: item.scan_count || 0,
+      active: item.active === null ? true : item.active
+    }));
   } catch (error) {
     console.error('Error fetching QR codes in folder:', error);
     throw error;

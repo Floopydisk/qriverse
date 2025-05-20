@@ -31,9 +31,9 @@ export default function ProfileInfoForm({
 
   const handleUpdateProfile = async () => {
     try {
-      await updateUserProfile(userId, {
+      await updateUserProfile({
         full_name: fullName,
-        username: username
+        avatar_url: avatarUrl || undefined
       });
       
       toast({

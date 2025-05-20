@@ -178,8 +178,9 @@ export function useQRGenerator({ user, editId }: UseQRGeneratorProps) {
           hasLogo: addLogo,
           dataUrl: dataUrl
         },
-        user_id: user.id,
-        folder_id: null
+        folder_id: null,
+        scan_count: 0,
+        active: true
       });
     }
   };

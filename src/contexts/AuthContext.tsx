@@ -1,168 +1,77 @@
-
-import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { ensureQRCodeStorageBucket } from '@/lib/api';
+import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  session: Session | null;
   user: User | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: object) => Promise<void>;
+  session: any;
+  isLoading: boolean;
+  signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
-  loading: boolean;
-  isLoading: boolean; // Add isLoading property
-  signInWithGoogle: () => Promise<void>; // Add signInWithGoogle method
 }
 
-export const AuthContext = createContext<AuthContextType>({
-  session: null,
-  user: null,
-  signIn: async () => {},
-  signUp: async () => {},
-  signOut: async () => {},
-  loading: true,
-  isLoading: true, // Initialize isLoading
-  signInWithGoogle: async () => {}, // Initialize signInWithGoogle
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Add useAuth hook here
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [session, setSession] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const loadSession = async () => {
+      setIsLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
 
-        // Ensure storage buckets exist for authenticated users
-        if (session?.user) {
-          ensureQRCodeStorageBucket();
-        }
-      }
-    );
-
-    // Get current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      // Ensure storage buckets exist for authenticated users
-      if (session?.user) {
-        ensureQRCodeStorageBucket();
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
+      setUser(session?.user || null);
+      setSession(session || null);
+      setIsLoading(false);
     };
+
+    loadSession();
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+      setSession(session || null);
+    });
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithOtp({ email });
       if (error) throw error;
-      navigate('/dashboard');
+      alert('Check your email for the magic link to sign in.');
     } catch (error: any) {
-      toast({
-        title: "Authentication error",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const signUp = async (email: string, password: string, metadata: object = {}) => {
-    try {
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: metadata,
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Signup successful",
-        description: "Please check your email to confirm your account",
-      });
-      
-    } catch (error: any) {
-      toast({
-        title: "Authentication error",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const signInWithGoogle = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        }
-        
-      });
-      
-      if (error) throw error;
-    } catch (error: any) {
-      toast({
-        title: "Authentication error",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
+      alert(error.error_description || error.message);
     }
   };
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/');
     } catch (error: any) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
+      alert(error.error_description || error.message);
     }
   };
 
-  return (
-    <AuthContext.Provider value={{ 
-      session, 
-      user, 
-      signIn, 
-      signUp, 
-      signOut, 
-      loading, 
-      isLoading: loading, // Map loading to isLoading for backward compatibility
-      signInWithGoogle 
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value: AuthContextType = {
+    user,
+    session,
+    isLoading,
+    signIn,
+    signOut,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

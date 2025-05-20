@@ -29,7 +29,7 @@ const Profile = () => {
       if (!user) return;
       
       try {
-        const profile = await fetchUserProfile(user.id);
+        const profile = await fetchUserProfile();
         setProfile(profile);
         
         if (profile?.avatar_url) {
