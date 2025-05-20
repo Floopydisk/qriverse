@@ -13,7 +13,8 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
   }
 
   try {
-    const { data, error } = await supabase
+    // Fetch QR codes
+    const { data: qrCodes, error } = await supabase
       .from('qr_codes')
       .select('*')
       .eq('user_id', user.id)
@@ -24,9 +25,29 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       return [];
     }
 
-    if (!data) return [];
+    if (!qrCodes || qrCodes.length === 0) return [];
 
-    return data.map(item => ({
+    // Fetch scan counts for all QR codes in a single query
+    const { data: scanCounts, error: scanError } = await supabase
+      .from('qr_scans')
+      .select('qr_code_id, count(*)')
+      .in('qr_code_id', qrCodes.map(qr => qr.id))
+      .group('qr_code_id');
+
+    if (scanError) {
+      console.error("Error fetching scan counts:", scanError.message);
+      // Continue without scan counts
+    }
+
+    // Create a map of QR code IDs to their scan counts
+    const scanCountMap: Record<string, number> = {};
+    if (scanCounts) {
+      scanCounts.forEach(item => {
+        scanCountMap[item.qr_code_id] = parseInt(item.count);
+      });
+    }
+
+    return qrCodes.map(item => ({
       id: item.id,
       created_at: item.created_at,
       updated_at: item.updated_at,
@@ -36,8 +57,8 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       user_id: item.user_id,
       options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
-      scan_count: 0, // Default value as this isn't in the database
-      active: true   // Default value as this isn't in the database
+      scan_count: scanCountMap[item.id] || 0,
+      active: true // Default value as this isn't in the database
     }));
   } catch (error) {
     console.error("Unexpected error fetching QR codes:", error);
@@ -48,6 +69,7 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
 // Function to fetch a single QR code
 export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
   try {
+    // Fetch the QR code
     const { data, error } = await supabase
       .from('qr_codes')
       .select('*')
@@ -61,6 +83,18 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
 
     if (!data) return null;
 
+    // Fetch scan count for this QR code
+    const { data: scanCount, error: scanError } = await supabase
+      .from('qr_scans')
+      .select('count(*)')
+      .eq('qr_code_id', id)
+      .single();
+
+    if (scanError) {
+      console.error("Error fetching scan count:", scanError.message);
+      // Continue without scan count
+    }
+
     return {
       id: data.id,
       created_at: data.created_at,
@@ -71,8 +105,8 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: 0, // Default value as this isn't in the database
-      active: true   // Default value as this isn't in the database
+      scan_count: scanCount ? parseInt(scanCount.count) : 0,
+      active: true // Default value as this isn't in the database
     };
   } catch (error) {
     console.error("Unexpected error fetching QR code:", error);
@@ -121,8 +155,8 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: 0, // Default value as this isn't in the database
-      active: true   // Default value as this isn't in the database
+      scan_count: 0, // New QR code has no scans
+      active: true // Default value as this isn't in the database
     };
   } catch (error) {
     console.error("Unexpected error creating QR code:", error);
@@ -156,6 +190,18 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
 
     if (!data) return null;
 
+    // Fetch scan count for this QR code
+    const { data: scanCount, error: scanError } = await supabase
+      .from('qr_scans')
+      .select('count(*)')
+      .eq('qr_code_id', id)
+      .single();
+
+    if (scanError) {
+      console.error("Error fetching scan count:", scanError.message);
+      // Continue without scan count
+    }
+
     return {
       id: data.id,
       created_at: data.created_at,
@@ -166,8 +212,8 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: 0, // Default value as this isn't in the database
-      active: true   // Default value as this isn't in the database
+      scan_count: scanCount ? parseInt(scanCount.count) : 0,
+      active: true // Default value as this isn't in the database
     };
   } catch (error) {
     console.error("Unexpected error updating QR code:", error);
@@ -249,6 +295,7 @@ export const fetchQRCodeScanStats = async (qrCodeId: string): Promise<ScanStat[]
 // Function to fetch QR codes in a specific folder
 export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> => {
   try {
+    // Fetch QR codes in the folder
     const { data, error } = await supabase
       .from('qr_codes')
       .select('*')
@@ -257,7 +304,27 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
     
     if (error) throw new Error(error.message);
     
-    if (!data) return [];
+    if (!data || data.length === 0) return [];
+    
+    // Fetch scan counts for all QR codes in a single query
+    const { data: scanCounts, error: scanError } = await supabase
+      .from('qr_scans')
+      .select('qr_code_id, count(*)')
+      .in('qr_code_id', data.map(qr => qr.id))
+      .group('qr_code_id');
+
+    if (scanError) {
+      console.error("Error fetching scan counts:", scanError.message);
+      // Continue without scan counts
+    }
+
+    // Create a map of QR code IDs to their scan counts
+    const scanCountMap: Record<string, number> = {};
+    if (scanCounts) {
+      scanCounts.forEach(item => {
+        scanCountMap[item.qr_code_id] = parseInt(item.count);
+      });
+    }
     
     return data.map(item => ({
       id: item.id,
@@ -269,8 +336,8 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
       user_id: item.user_id,
       options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
-      scan_count: 0, // Default value as this isn't in the database
-      active: true   // Default value as this isn't in the database
+      scan_count: scanCountMap[item.id] || 0,
+      active: true // Default value as this isn't in the database
     }));
   } catch (error) {
     console.error('Error fetching QR codes in folder:', error);
