@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
@@ -24,7 +24,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -32,6 +31,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import QRCodeList from "@/components/QRCodeList";
 import { useAuth } from "@/hooks/use-auth";
@@ -42,13 +48,11 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [showFolderDialog, setShowFolderDialog] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const createFolderMutation = useMutation({
     mutationFn: createFolder,
@@ -83,30 +87,37 @@ const Dashboard = () => {
     createFolderMutation.mutate(newFolderName);
   };
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // This will be used to filter QR codes
   };
 
   return (
-    <div className="min-h-screen flex flex-col w-full">
+    <div className="min-h-screen flex flex-col">
       <FloatingCircles />
       <Header />
 
       <div className="flex-1 flex w-full">
         {/* Sidebar */}
-        <div className={`h-full bg-background border-r border-border transition-all duration-300 ${sidebarCollapsed ? 'w-[60px]' : 'w-[250px]'}`}>
-          <DashboardSidebar
-            sidebarCollapsed={sidebarCollapsed}
-            toggleSidebar={toggleSidebar}
-            setShowFolderDialog={setShowFolderDialog}
-            onSearch={handleSearch}
-          />
-        </div>
+        <Sidebar>
+          <SidebarHeader className="pt-24">
+            <div className="relative w-full px-2">
+              <Input 
+                placeholder="Search codes..." 
+                className="h-9"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <DashboardSidebar 
+              setShowFolderDialog={setShowFolderDialog}
+            />
+          </SidebarContent>
+          <SidebarFooter>
+            <SidebarTrigger />
+          </SidebarFooter>
+        </Sidebar>
 
         {/* Main Content */}
         <main className="flex-1 container mx-auto px-4 pt-8 pb-12">

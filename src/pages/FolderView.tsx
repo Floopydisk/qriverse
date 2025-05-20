@@ -10,12 +10,19 @@ import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import QRCodeList from "@/components/QRCodeList";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarTrigger
+} from "@/components/ui/sidebar";
+import { Input } from "@/components/ui/input";
 
 const FolderView = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   
@@ -45,10 +52,6 @@ const FolderView = () => {
 
   const currentFolder = folders.find((folder: Folder) => folder.id === folderId);
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
@@ -70,16 +73,28 @@ const FolderView = () => {
       <FloatingCircles />
       <Header />
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex w-full">
         {/* Sidebar */}
-        <div className={`h-full bg-background border-r border-border transition-all duration-300 ${sidebarCollapsed ? 'w-[60px]' : 'w-[250px]'}`}>
-          <DashboardSidebar
-            sidebarCollapsed={sidebarCollapsed}
-            toggleSidebar={toggleSidebar}
-            setShowFolderDialog={setShowFolderDialog}
-            onSearch={handleSearch}
-          />
-        </div>
+        <Sidebar>
+          <SidebarHeader className="pt-24">
+            <div className="relative w-full px-2">
+              <Input 
+                placeholder="Search codes..." 
+                className="h-9"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <DashboardSidebar 
+              setShowFolderDialog={setShowFolderDialog}
+            />
+          </SidebarContent>
+          <SidebarFooter>
+            <SidebarTrigger />
+          </SidebarFooter>
+        </Sidebar>
 
         <main className="flex-1 container mx-auto px-4 pt-8 pb-12">
           <div className="max-w-7xl mx-auto space-y-8 mt-24">
