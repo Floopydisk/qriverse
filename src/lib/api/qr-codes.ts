@@ -24,6 +24,8 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       return [];
     }
 
+    if (!data) return [];
+
     return data.map(item => ({
       id: item.id,
       created_at: item.created_at,
@@ -34,8 +36,8 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       user_id: item.user_id,
       options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
-      scan_count: item.scan_count !== undefined ? Number(item.scan_count) : 0,
-      active: item.active === undefined ? true : Boolean(item.active)
+      scan_count: 0, // Default value as this isn't in the database
+      active: true   // Default value as this isn't in the database
     }));
   } catch (error) {
     console.error("Unexpected error fetching QR codes:", error);
@@ -57,6 +59,8 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
       return null;
     }
 
+    if (!data) return null;
+
     return {
       id: data.id,
       created_at: data.created_at,
@@ -67,8 +71,8 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: data.scan_count !== undefined ? Number(data.scan_count) : 0,
-      active: data.active === undefined ? true : Boolean(data.active)
+      scan_count: 0, // Default value as this isn't in the database
+      active: true   // Default value as this isn't in the database
     };
   } catch (error) {
     console.error("Unexpected error fetching QR code:", error);
@@ -95,8 +99,6 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
         content: qrCodeData.content,
         options: qrCodeData.options || {},
         folder_id: qrCodeData.folder_id || null,
-        scan_count: qrCodeData.scan_count || 0,
-        active: qrCodeData.active === undefined ? true : qrCodeData.active,
         user_id: user.id
       }])
       .select()
@@ -106,6 +108,8 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
       console.error("Error creating QR code:", error.message);
       return null;
     }
+
+    if (!data) return null;
 
     return {
       id: data.id,
@@ -117,8 +121,8 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: data.scan_count !== undefined ? Number(data.scan_count) : 0,
-      active: data.active === undefined ? true : Boolean(data.active)
+      scan_count: 0, // Default value as this isn't in the database
+      active: true   // Default value as this isn't in the database
     };
   } catch (error) {
     console.error("Unexpected error creating QR code:", error);
@@ -137,8 +141,6 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
     if (updates.content !== undefined) updateData.content = updates.content;
     if (updates.options !== undefined) updateData.options = updates.options;
     if (updates.folder_id !== undefined) updateData.folder_id = updates.folder_id;
-    if (updates.scan_count !== undefined) updateData.scan_count = updates.scan_count;
-    if (updates.active !== undefined) updateData.active = updates.active;
     
     const { data, error } = await supabase
       .from('qr_codes')
@@ -152,6 +154,8 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
       return null;
     }
 
+    if (!data) return null;
+
     return {
       id: data.id,
       created_at: data.created_at,
@@ -162,8 +166,8 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: data.scan_count !== undefined ? Number(data.scan_count) : 0,
-      active: data.active === undefined ? true : Boolean(data.active)
+      scan_count: 0, // Default value as this isn't in the database
+      active: true   // Default value as this isn't in the database
     };
   } catch (error) {
     console.error("Unexpected error updating QR code:", error);
@@ -225,6 +229,8 @@ export const fetchQRCodeScanStats = async (qrCodeId: string): Promise<ScanStat[]
       return [];
     }
 
+    if (!data) return [];
+
     return data.map(scan => ({
       id: scan.id,
       created_at: scan.created_at,
@@ -251,6 +257,8 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
     
     if (error) throw new Error(error.message);
     
+    if (!data) return [];
+    
     return data.map(item => ({
       id: item.id,
       created_at: item.created_at,
@@ -261,8 +269,8 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
       user_id: item.user_id,
       options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
-      scan_count: item.scan_count !== undefined ? Number(item.scan_count) : 0,
-      active: item.active === undefined ? true : Boolean(item.active)
+      scan_count: 0, // Default value as this isn't in the database
+      active: true   // Default value as this isn't in the database
     }));
   } catch (error) {
     console.error('Error fetching QR codes in folder:', error);
