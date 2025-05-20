@@ -43,7 +43,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                variant={isActive("/dashboard") ? "secondary" : "default"}
+                variant={isActive("/dashboard") ? "outline" : "default"}
                 isActive={isActive("/dashboard")}
                 asChild
               >
@@ -56,7 +56,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                variant={isActive("/barcode") ? "secondary" : "default"}
+                variant={isActive("/barcode") ? "outline" : "default"}
                 isActive={isActive("/barcode")}
                 asChild
               >
@@ -69,7 +69,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                variant={isActive("/dashboard") && !location.search.includes("dynamic") ? "secondary" : "default"}
+                variant={isActive("/dashboard") && !location.search.includes("dynamic") ? "outline" : "default"}
                 isActive={isActive("/dashboard") && !location.search.includes("dynamic")}
                 asChild
               >
@@ -82,7 +82,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                variant={isActive("/dynamic-qr") ? "secondary" : "default"}
+                variant={isActive("/dynamic-qr") ? "outline" : "default"}
                 isActive={isActive("/dynamic-qr")}
                 asChild
               >
@@ -95,7 +95,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                variant={isActive("/dynamic-qr") && location.search.includes("active") ? "secondary" : "default"}
+                variant={isActive("/dynamic-qr") && location.search.includes("active") ? "outline" : "default"}
                 isActive={isActive("/dynamic-qr") && location.search.includes("active")}
                 asChild
               >
@@ -108,7 +108,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                variant={isActive("/dynamic-qr") && location.search.includes("paused") ? "secondary" : "default"}
+                variant={isActive("/dynamic-qr") && location.search.includes("paused") ? "outline" : "default"}
                 isActive={isActive("/dynamic-qr") && location.search.includes("paused")}
                 asChild
               >
