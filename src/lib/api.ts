@@ -1,5 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export interface UserProfile {
   id: string;
@@ -19,8 +19,8 @@ export interface QRCode {
   user_id: string;
   options: object | null;
   folder_id: string | null;
-  scan_count: number | null;
-  active: boolean | null;
+  scan_count: number;
+  active: boolean;
 }
 
 export interface Folder {
@@ -163,6 +163,7 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
 
     return data.map(item => ({
       ...item,
+      options: item.options || null,
       scan_count: item.scan_count || 0,
       active: item.active === null ? true : item.active
     }));
@@ -188,6 +189,7 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
 
     return {
       ...data,
+      options: data.options || null,
       scan_count: data.scan_count || 0,
       active: data.active === null ? true : data.active
     };
@@ -210,17 +212,19 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
   try {
     const { data, error } = await supabase
       .from('qr_codes')
-      .insert([{ 
-        name: qrCodeData.name,
-        type: qrCodeData.type,
-        content: qrCodeData.content,
-        options: qrCodeData.options,
-        folder_id: qrCodeData.folder_id,
-        scan_count: qrCodeData.scan_count,
-        active: qrCodeData.active,
-        user_id: user.id 
-      }])
-      .select('*')
+      .insert([
+        {
+          name: qrCodeData.name,
+          type: qrCodeData.type,
+          content: qrCodeData.content,
+          options: qrCodeData.options || null,
+          folder_id: qrCodeData.folder_id || null,
+          scan_count: qrCodeData.scan_count || 0,
+          active: qrCodeData.active === undefined ? true : qrCodeData.active,
+          user_id: user.id
+        }
+      ])
+      .select()
       .single();
 
     if (error) {
@@ -230,6 +234,7 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
 
     return {
       ...data,
+      options: data.options || null,
       scan_count: data.scan_count || 0,
       active: data.active === null ? true : data.active
     };
@@ -242,19 +247,22 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
 // Function to update an existing QR code
 export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id' | 'created_at' | 'user_id'>>): Promise<QRCode | null> => {
   try {
+    const updateData: any = {};
+    
+    // Only include fields that are provided in updates
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.type !== undefined) updateData.type = updates.type;
+    if (updates.content !== undefined) updateData.content = updates.content;
+    if (updates.options !== undefined) updateData.options = updates.options;
+    if (updates.folder_id !== undefined) updateData.folder_id = updates.folder_id;
+    if (updates.scan_count !== undefined) updateData.scan_count = updates.scan_count;
+    if (updates.active !== undefined) updateData.active = updates.active;
+    
     const { data, error } = await supabase
       .from('qr_codes')
-      .update({
-        name: updates.name,
-        type: updates.type,
-        content: updates.content,
-        options: updates.options,
-        folder_id: updates.folder_id,
-        scan_count: updates.scan_count,
-        active: updates.active
-      })
+      .update(updateData)
       .eq('id', id)
-      .select('*')
+      .select()
       .single();
 
     if (error) {
@@ -264,6 +272,7 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
 
     return {
       ...data,
+      options: data.options || null,
       scan_count: data.scan_count || 0,
       active: data.active === null ? true : data.active
     };
@@ -455,6 +464,7 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
     
     return data.map(item => ({
       ...item,
+      options: item.options || null,
       scan_count: item.scan_count || 0,
       active: item.active === null ? true : item.active
     }));
