@@ -171,7 +171,7 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       type: item.type,
       content: item.content,
       user_id: item.user_id,
-      options: typeof item.options === 'object' ? item.options : null,
+      options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
       scan_count: item.scan_count || 0,
       active: item.active === null ? true : Boolean(item.active)
@@ -204,7 +204,7 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
       type: data.type,
       content: data.content,
       user_id: data.user_id,
-      options: typeof data.options === 'object' ? data.options : null,
+      options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
       scan_count: data.scan_count || 0,
       active: data.active === null ? true : Boolean(data.active)
@@ -232,7 +232,7 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
         name: qrCodeData.name,
         type: qrCodeData.type,
         content: qrCodeData.content,
-        options: qrCodeData.options || null,
+        options: qrCodeData.options || {},
         folder_id: qrCodeData.folder_id || null,
         scan_count: qrCodeData.scan_count || 0,
         active: qrCodeData.active === undefined ? true : qrCodeData.active,
@@ -254,7 +254,7 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
       type: data.type,
       content: data.content,
       user_id: data.user_id,
-      options: typeof data.options === 'object' ? data.options : null,
+      options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
       scan_count: data.scan_count || 0,
       active: data.active === null ? true : Boolean(data.active)
@@ -299,10 +299,10 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
       type: data.type,
       content: data.content,
       user_id: data.user_id,
-      options: data.options || null,
+      options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
       scan_count: data.scan_count || 0,
-      active: data.active === null ? true : data.active
+      active: data.active === null ? true : Boolean(data.active)
     };
   } catch (error) {
     console.error("Unexpected error updating QR code:", error);
@@ -498,7 +498,7 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
       type: item.type,
       content: item.content,
       user_id: item.user_id,
-      options: typeof item.options === 'object' ? item.options : null,
+      options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
       scan_count: item.scan_count || 0,
       active: item.active === null ? true : Boolean(item.active)

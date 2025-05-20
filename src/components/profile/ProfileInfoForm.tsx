@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { updateUserProfile } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -6,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface ProfileInfoFormProps {
+export interface ProfileInfoFormProps {
   profile: { 
-    full_name: string; 
+    full_name?: string; 
     username?: string;
   } | null;
   onProfileUpdated: () => void;
@@ -72,7 +73,7 @@ export function ProfileInfoForm({ profile, onProfileUpdated }: ProfileInfoFormPr
               onChange={(e) => setFullName(e.target.value)}
             />
           </div>
-          <Button disabled={isSubmitting} className="w-full">
+          <Button type="submit" disabled={isSubmitting} className="mt-4 w-full">
             {isSubmitting ? "Updating..." : "Update Profile"}
           </Button>
         </form>

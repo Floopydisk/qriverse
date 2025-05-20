@@ -14,7 +14,7 @@ import CTASection from "@/components/landing/CTASection";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   // Trigger scroll animation on mount
@@ -24,12 +24,12 @@ const Index = () => {
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !loading) {
       navigate("/dashboard");
     }
-  }, [user, isLoading, navigate]);
+  }, [user, loading, navigate]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0C0B10]">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>

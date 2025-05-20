@@ -9,13 +9,13 @@ interface AuthGuardProps {
 }
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
   const { toast } = useToast();
   
   // Show welcome toast when user logs in
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !loading) {
       // Only show toast if the user isn't coming from a dynamic QR redirect
       const hasRedirectParam = new URLSearchParams(window.location.search).has('redirect');
       const hasDynamicQRParam = new URLSearchParams(window.location.search).has('dynamic_qr');
@@ -40,9 +40,9 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
         }
       }
     }
-  }, [user, isLoading, toast]);
+  }, [user, loading, toast]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>

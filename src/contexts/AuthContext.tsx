@@ -1,11 +1,13 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 
 export type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isLoading: boolean; // Add alias for consistency
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -82,6 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     session,
     loading,
+    isLoading: loading, // Add alias for consistency
     signIn,
     signUp,
     signOut,
