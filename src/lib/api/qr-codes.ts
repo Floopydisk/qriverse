@@ -34,8 +34,8 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
       user_id: item.user_id,
       options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
-      scan_count: Number(item.scan_count) || 0,
-      active: item.active === null ? true : Boolean(item.active)
+      scan_count: item.scan_count !== undefined ? Number(item.scan_count) : 0,
+      active: item.active === undefined ? true : Boolean(item.active)
     }));
   } catch (error) {
     console.error("Unexpected error fetching QR codes:", error);
@@ -67,8 +67,8 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: Number(data.scan_count) || 0,
-      active: data.active === null ? true : Boolean(data.active)
+      scan_count: data.scan_count !== undefined ? Number(data.scan_count) : 0,
+      active: data.active === undefined ? true : Boolean(data.active)
     };
   } catch (error) {
     console.error("Unexpected error fetching QR code:", error);
@@ -117,8 +117,8 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: Number(data.scan_count) || 0,
-      active: data.active === null ? true : Boolean(data.active)
+      scan_count: data.scan_count !== undefined ? Number(data.scan_count) : 0,
+      active: data.active === undefined ? true : Boolean(data.active)
     };
   } catch (error) {
     console.error("Unexpected error creating QR code:", error);
@@ -162,8 +162,8 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: Number(data.scan_count) || 0,
-      active: data.active === null ? true : Boolean(data.active)
+      scan_count: data.scan_count !== undefined ? Number(data.scan_count) : 0,
+      active: data.active === undefined ? true : Boolean(data.active)
     };
   } catch (error) {
     console.error("Unexpected error updating QR code:", error);
@@ -261,8 +261,8 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
       user_id: item.user_id,
       options: typeof item.options === 'object' ? item.options : {},
       folder_id: item.folder_id || null,
-      scan_count: Number(item.scan_count) || 0,
-      active: item.active === null ? true : Boolean(item.active)
+      scan_count: item.scan_count !== undefined ? Number(item.scan_count) : 0,
+      active: item.active === undefined ? true : Boolean(item.active)
     }));
   } catch (error) {
     console.error('Error fetching QR codes in folder:', error);
