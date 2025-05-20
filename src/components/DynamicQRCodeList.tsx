@@ -42,7 +42,7 @@ import { DynamicQRCode, deleteDynamicQRCode, getDynamicQRRedirectUrl } from '@/l
 interface DynamicQRCodeListProps {
   dynamicQRCodes: DynamicQRCode[];
   isLoading: boolean;
-  onCreateNew: () => void; // New prop to handle tab switching
+  onCreateNew: () => void;
 }
 
 const DynamicQRCodeList = ({ dynamicQRCodes, isLoading, onCreateNew }: DynamicQRCodeListProps) => {

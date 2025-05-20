@@ -85,8 +85,8 @@ const DynamicQRStats = () => {
                 <QRCodeDetailsSkeleton />
               ) : (
                 <QRCodeDetails 
-                  qrCode={qrCode} 
-                  onEdit={() => navigate(`/dynamic-qr/edit/${qrCode.id}`)} 
+                  qrCode={qrCode!} 
+                  onEdit={() => navigate(`/dynamic-qr/edit/${qrCode!.id}`)} 
                 />
               )}
             </div>

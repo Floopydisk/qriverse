@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -22,7 +23,7 @@ const DynamicQR = () => {
   const [isCreating, setIsCreating] = useState(false);
 
   const {
-    data: dynamicQRCodes,
+    data: dynamicQRCodes = [],
     isLoading,
     refetch,
   } = useQuery({
@@ -121,7 +122,7 @@ const DynamicQR = () => {
             
             <TabsContent value="view" className="mt-6">
               <DynamicQRCodeList
-                dynamicQRCodes={dynamicQRCodes || []}
+                dynamicQRCodes={dynamicQRCodes}
                 isLoading={isLoading}
                 onCreateNew={switchToCreateTab}
               />

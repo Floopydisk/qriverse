@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder, BarChart2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType, fetchQRCodeScanStats } from "@/lib/api";
+import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType, fetchQRCodeScanStats, fetchQRCodesInFolder } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";

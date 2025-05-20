@@ -1,16 +1,23 @@
 
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QRCode, fetchQRCodeScanStats } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { QRCode, fetchQRCodeScanStats, ScanStat } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
 interface QRCodeScanDialogProps {
@@ -20,149 +27,96 @@ interface QRCodeScanDialogProps {
 }
 
 interface ScanData {
+  id: string;
   created_at: string;
-  country: string | null;
-  user_agent: string | null;
-}
-
-interface ChartData {
-  date: string;
-  scans: number;
+  qr_code_id: string;
+  country: string;
+  user_agent: string;
 }
 
 const QRCodeScanDialog = ({ isOpen, onClose, qrCode }: QRCodeScanDialogProps) => {
-  const [scanData, setScanData] = useState<ScanData[]>([]);
-  const [chartData, setChartData] = useState<ChartData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [scans, setScans] = useState<ScanData[]>([]);
 
   useEffect(() => {
-    const loadScanData = async () => {
-      if (isOpen && qrCode) {
-        setLoading(true);
+    if (isOpen) {
+      const loadScanStats = async () => {
+        setIsLoading(true);
         try {
-          const data = await fetchQRCodeScanStats(qrCode.id);
-          setScanData(data);
-          
-          // Process data for the chart
-          const dateMap = new Map<string, number>();
-          data.forEach((scan: ScanData) => {
-            const date = new Date(scan.created_at).toLocaleDateString();
-            const count = dateMap.get(date) || 0;
-            dateMap.set(date, count + 1);
-          });
-          
-          const chartDataArray = Array.from(dateMap.entries()).map(([date, scans]) => ({
-            date,
-            scans
+          const stats = await fetchQRCodeScanStats(qrCode.id);
+          // Convert ScanStat[] to ScanData[]
+          const scanData: ScanData[] = stats.map(stat => ({
+            id: stat.id,
+            created_at: stat.created_at,
+            qr_code_id: stat.qr_code_id,
+            country: stat.country || 'Unknown',
+            user_agent: stat.user_agent || 'Unknown'
           }));
-          
-          // Sort by date
-          chartDataArray.sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return dateA.getTime() - dateB.getTime();
-          });
-          
-          setChartData(chartDataArray);
+          setScans(scanData);
         } catch (error) {
-          console.error("Error loading scan data:", error);
+          console.error("Error loading scan stats:", error);
         } finally {
-          setLoading(false);
+          setIsLoading(false);
         }
-      }
-    };
-    
-    loadScanData();
-  }, [isOpen, qrCode]);
+      };
+
+      loadScanStats();
+    }
+  }, [isOpen, qrCode.id]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>QR Code Scan Analytics</DialogTitle>
+          <DialogTitle>Scan Statistics</DialogTitle>
+          <DialogDescription>
+            Viewing scan statistics for "{qrCode.name}"
+          </DialogDescription>
         </DialogHeader>
-        
-        <div className="py-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">{qrCode.name}</h3>
-            <div className="text-sm text-muted-foreground">Total Scans: {qrCode.scan_count || 0}</div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-          
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : (
-            <Tabs defaultValue="chart">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="chart">Chart</TabsTrigger>
-                <TabsTrigger value="details">Details</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="chart" className="mt-4">
-                <Card className="p-4">
-                  {chartData.length > 0 ? (
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis allowDecimals={false} />
-                          <Tooltip />
-                          <Bar dataKey="scans" fill="#10B981" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center text-muted-foreground">
-                      No scan data available
-                    </div>
-                  )}
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="details" className="mt-4">
-                <Card className="p-4">
-                  {scanData.length > 0 ? (
-                    <div className="max-h-[300px] overflow-auto">
-                      <table className="w-full">
-                        <thead className="sticky top-0 bg-background">
-                          <tr className="border-b">
-                            <th className="text-left p-2">Date & Time</th>
-                            <th className="text-left p-2">Location</th>
-                            <th className="text-left p-2">Device</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {scanData.map((scan, index) => (
-                            <tr key={index} className="border-b">
-                              <td className="p-2">{new Date(scan.created_at).toLocaleString()}</td>
-                              <td className="p-2">{scan.country || "Unknown"}</td>
-                              <td className="p-2 text-xs">
-                                {scan.user_agent 
-                                  ? (scan.user_agent.length > 40 
-                                    ? scan.user_agent.substring(0, 40) + "..." 
-                                    : scan.user_agent)
-                                  : "Unknown"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center text-muted-foreground">
-                      No scan data available
-                    </div>
-                  )}
-                </Card>
-              </TabsContent>
-            </Tabs>
-          )}
-        </div>
-        
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>Close</Button>
+        ) : scans.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">No scan data available for this QR code.</p>
+          </div>
+        ) : (
+          <div className="max-h-[60vh] overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Device</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {scans.map((scan) => (
+                  <TableRow key={scan.id}>
+                    <TableCell className="whitespace-nowrap">
+                      {format(new Date(scan.created_at), "PP p")}
+                    </TableCell>
+                    <TableCell>
+                      {scan.country || "Unknown"}
+                    </TableCell>
+                    <TableCell>
+                      {scan.user_agent
+                        ? scan.user_agent.split(" ")[0]
+                        : "Unknown"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        <div className="flex justify-end mt-4">
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

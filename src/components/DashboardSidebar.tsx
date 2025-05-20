@@ -83,7 +83,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             {/* All Codes */}
             <li>
               <Button
-                variant={selectedView === "all" ? "secondary" : "ghost"}
+                variant={selectedView === "all" ? "default" : "ghost"}
                 className="w-full justify-start text-sm h-9"
                 onClick={() => handleViewSelect("all")}
               >
@@ -95,7 +95,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             {/* Barcodes */}
             <li>
               <Button
-                variant={selectedView === "barcode" ? "secondary" : "ghost"}
+                variant={selectedView === "barcode" ? "default" : "ghost"}
                 className="w-full justify-start text-sm h-9"
                 onClick={() => handleViewSelect("barcode")}
               >
@@ -107,7 +107,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             {/* Static QR Codes */}
             <li>
               <Button
-                variant={selectedView === "static" ? "secondary" : "ghost"}
+                variant={selectedView === "static" ? "default" : "ghost"}
                 className="w-full justify-start text-sm h-9"
                 onClick={() => handleViewSelect("static")}
               >
@@ -119,7 +119,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             {/* Dynamic QR Codes */}
             <li className="space-y-1">
               <Button
-                variant={selectedView === "dynamic" ? "secondary" : "ghost"}
+                variant={selectedView === "dynamic" ? "default" : "ghost"}
                 className="w-full justify-start text-sm h-9"
                 onClick={() => handleViewSelect("dynamic")}
               >
@@ -130,7 +130,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               {!sidebarCollapsed && (selectedView === "dynamic" || selectedView === "dynamic-active" || selectedView === "dynamic-paused") && (
                 <div className="pl-6 space-y-1">
                   <Button
-                    variant={selectedView === "dynamic-active" ? "secondary" : "ghost"}
+                    variant={selectedView === "dynamic-active" ? "default" : "ghost"}
                     className="w-full justify-start text-xs h-8"
                     onClick={() => handleViewSelect("dynamic-active")}
                   >
@@ -139,7 +139,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   </Button>
 
                   <Button
-                    variant={selectedView === "dynamic-paused" ? "secondary" : "ghost"}
+                    variant={selectedView === "dynamic-paused" ? "default" : "ghost"}
                     className="w-full justify-start text-xs h-8"
                     onClick={() => handleViewSelect("dynamic-paused")}
                   >
