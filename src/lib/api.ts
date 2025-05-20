@@ -1,452 +1,366 @@
-import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
+import { supabase } from "@/integrations/supabase/client";
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url: string;
+  updated_at?: string;
+}
 
 export interface QRCode {
   id: string;
-  name: string;
-  content: string;
-  type: string;
   created_at: string;
-  updated_at: string;
-  options: Json;
-  folder_id: string | null;
+  name: string;
+  type: string;
+  content: string;
   user_id: string;
-  scan_count?: number;
+  options: object | null;
+  folder_id: string | null;
+  scan_count: number | null;
+  active: boolean | null;
 }
 
 export interface Folder {
   id: string;
-  name: string;
   created_at: string;
-  updated_at: string;
+  name: string;
   user_id: string;
 }
 
-// Dynamic QR Code interfaces
-export interface DynamicQRCode {
+export interface ScanStat {
   id: string;
-  user_id: string;
-  name: string;
-  short_code: string;
-  target_url: string;
   created_at: string;
-  updated_at: string;
-  qr_image_path: string | null;
-  active: boolean;
-  scan_count?: number;
+  qr_code_id: string;
+  location: object | null;
+  device: object | null;
 }
 
-export interface DynamicQRScan {
-  id: string;
-  dynamic_qr_code_id: string;
-  scanned_at: string;
-  user_agent: string | null;
-  country: string | null;
-  city: string | null;
-  ip_address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  referrer: string | null;
-}
+// Function to fetch the current user's profile
+export const fetchUserProfile = async (): Promise<UserProfile | null> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
 
-// QR Code functions
-export const fetchUserQRCodes = async () => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) throw new Error('User not authenticated');
-  
-  const { data, error } = await supabase
-    .from('qr_codes')
-    .select('*')
-    .eq('user_id', user.user.id)
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  
-  // Fetch scan counts for each QR code
-  const qrCodesWithScans = await Promise.all(data.map(async (qrCode) => {
-    const scanCount = await fetchQRCodeScanCount(qrCode.id);
-    return {
-      ...qrCode,
-      scan_count: scanCount
-    };
-  }));
-  
-  return qrCodesWithScans;
-};
+  if (!user) {
+    console.error("No user session found.");
+    return null;
+  }
 
-export const fetchQRCode = async (id: string) => {
-  const { data, error } = await supabase
-    .from('qr_codes')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const createQRCode = async (qrCode: Omit<QRCode, 'id' | 'created_at' | 'updated_at'>) => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) throw new Error('User not authenticated');
-  
-  const { data, error } = await supabase
-    .from('qr_codes')
-    .insert([qrCode])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const updateQRCode = async (id: string, updates: Partial<QRCode>) => {
-  const { data, error } = await supabase
-    .from('qr_codes')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const deleteQRCode = async (id: string) => {
-  const { error } = await supabase
-    .from('qr_codes')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
-};
-
-// Folder functions
-export const fetchUserFolders = async () => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) throw new Error('User not authenticated');
-  
-  const { data, error } = await supabase
-    .from('folders')
-    .select('*')
-    .eq('user_id', user.user.id)
-    .order('name');
-  
-  if (error) throw error;
-  return data;
-};
-
-export const createFolder = async (name: string) => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) throw new Error('User not authenticated');
-  
-  const { data, error } = await supabase
-    .from('folders')
-    .insert([{ 
-      name, 
-      user_id: user.user.id 
-    }])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const updateFolder = async (id: string, name: string) => {
-  const { data, error } = await supabase
-    .from('folders')
-    .update({ name })
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const deleteFolder = async (id: string) => {
-  const { error } = await supabase
-    .from('folders')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
-};
-
-export const fetchQRCodesInFolder = async (folderId: string) => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) throw new Error('User not authenticated');
-  
-  const { data, error } = await supabase
-    .from('qr_codes')
-    .select('*')
-    .eq('folder_id', folderId)
-    .eq('user_id', user.user.id)
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  
-  // Fetch scan counts for each QR code
-  const qrCodesWithScans = await Promise.all(data.map(async (qrCode) => {
-    const scanCount = await fetchQRCodeScanCount(qrCode.id);
-    return {
-      ...qrCode,
-      scan_count: scanCount
-    };
-  }));
-  
-  return qrCodesWithScans;
-};
-
-// User profile
-export const fetchUserProfile = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const updateUserProfile = async (userId: string, updates: { username?: string, full_name?: string, avatar_url?: string }) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(updates)
-    .eq('id', userId)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-// Create storage bucket for QR code images if it doesn't exist
-export const ensureQRCodeStorageBucket = async () => {
   try {
-    const { error: getBucketError } = await supabase.storage.getBucket('qrcodes');
-    
-    if (getBucketError && getBucketError.message.includes('does not exist')) {
-      const { error: createBucketError } = await supabase.storage.createBucket('qrcodes', {
-        public: true
-      });
-      
-      if (createBucketError) throw createBucketError;
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user profile:", error.message);
+      return null;
     }
-    
-    return true;
+
+    return {
+      id: profile.id,
+      email: user.email || '',
+      full_name: profile.full_name || '',
+      avatar_url: profile.avatar_url || '',
+      updated_at: profile.updated_at || null,
+    };
   } catch (error) {
-    console.error("Error ensuring QR code storage bucket:", error);
-    return false;
+    console.error("Unexpected error fetching user profile:", error);
+    return null;
   }
 };
 
-// Scan tracking functions
-export const recordQRCodeScan = async (qrCodeId: string) => {
+// Function to update the current user's profile
+export const updateUserProfile = async (updates: { full_name?: string; avatar_url?: string }): Promise<UserProfile | null> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) {
+    console.error("No user session found.");
+    return null;
+  }
+
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error("Error updating user profile:", error.message);
+      return null;
+    }
+
+    return {
+      id: profile.id,
+      email: user.email || '',
+      full_name: profile.full_name || '',
+      avatar_url: profile.avatar_url || '',
+      updated_at: profile.updated_at || null,
+    };
+  } catch (error) {
+    console.error("Unexpected error updating user profile:", error);
+    return null;
+  }
+};
+
+// Function to fetch all QR codes for the current user
+export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) {
+    console.error("No user session found.");
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching QR codes:", error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Unexpected error fetching QR codes:", error);
+    return [];
+  }
+};
+
+// Function to create a new QR code
+export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' | 'user_id'>): Promise<QRCode | null> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) {
+    console.error("No user session found.");
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .insert([{ ...qrCodeData, user_id: user.id }])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error("Error creating QR code:", error.message);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Unexpected error creating QR code:", error);
+    return null;
+  }
+};
+
+// Function to update an existing QR code
+export const updateQRCode = async (id: string, updates: Partial<QRCode>): Promise<QRCode | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .update(updates)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error("Error updating QR code:", error.message);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Unexpected error updating QR code:", error);
+    return null;
+  }
+};
+
+// Function to delete a QR code
+export const deleteQRCode = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('qr_scans')
-      .insert([{
-        qr_code_id: qrCodeId,
-      }]);
-      
-    if (error) throw error;
+      .from('qr_codes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting QR code:", error.message);
+      return false;
+    }
+
     return true;
   } catch (error) {
-    console.error("Error recording QR code scan:", error);
+    console.error("Unexpected error deleting QR code:", error);
     return false;
   }
 };
 
-export const fetchQRCodeScanCount = async (qrCodeId: string): Promise<number> => {
+// Function to fetch all folders for the current user
+export const fetchUserFolders = async (): Promise<Folder[]> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) {
+    console.error("No user session found.");
+    return [];
+  }
+
   try {
-    const { count, error } = await supabase
-      .from('qr_scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('qr_code_id', qrCodeId);
-    
-    if (error) throw error;
-    return count || 0;
+    const { data, error } = await supabase
+      .from('folders')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching folders:", error.message);
+      return [];
+    }
+
+    return data || [];
   } catch (error) {
-    console.error("Error fetching QR code scan count:", error);
-    return 0;
+    console.error("Unexpected error fetching folders:", error);
+    return [];
   }
 };
 
-// Function to get scan history data
-export const fetchQRCodeScanStats = async (qrCodeId: string) => {
+// Function to create a new folder
+export const createFolder = async (name: string): Promise<Folder | null> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) {
+    console.error("No user session found.");
+    return null;
+  }
+
   try {
     const { data, error } = await supabase
-      .from('qr_scans')
-      .select('created_at, country, user_agent')
+      .from('folders')
+      .insert([{ name: name, user_id: user.id }])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error("Error creating folder:", error.message);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Unexpected error creating folder:", error);
+    return null;
+  }
+};
+
+// Function to update an existing folder
+export const updateFolder = async (id: string, name: string): Promise<Folder | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('folders')
+      .update({ name: name })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error("Error updating folder:", error.message);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Unexpected error updating folder:", error);
+    return null;
+  }
+};
+
+// Function to delete a folder
+export const deleteFolder = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('folders')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting folder:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Unexpected error deleting folder:", error);
+    return false;
+  }
+};
+
+// Function to move a QR code to a folder
+export const moveQRCodeToFolder = async (qrCodeId: string, folderId: string | null): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('qr_codes')
+      .update({ folder_id: folderId })
+      .eq('id', qrCodeId);
+
+    if (error) {
+      console.error("Error moving QR code to folder:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Unexpected error moving QR code to folder:", error);
+    return false;
+  }
+};
+
+// Function to fetch scan stats for a QR code
+export const fetchQRCodeScanStats = async (qrCodeId: string): Promise<ScanStat[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('scan_stats')
+      .select('*')
       .eq('qr_code_id', qrCodeId)
       .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+
+    if (error) {
+      console.error("Error fetching QR code scan stats:", error.message);
+      return [];
+    }
+
+    return data || [];
   } catch (error) {
-    console.error("Error fetching QR code scan stats:", error);
+    console.error("Unexpected error fetching QR code scan stats:", error);
     return [];
   }
 };
 
-// Dynamic QR Code functions
-export const fetchUserDynamicQRCodes = async () => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) throw new Error('User not authenticated');
-  
-  const { data, error } = await supabase
-    .from('dynamic_qr_codes')
-    .select('*')
-    .eq('user_id', user.user.id)
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  
-  // Fetch scan counts for each dynamic QR code
-  const dynamicQRCodesWithScans = await Promise.all(data.map(async (qrCode) => {
-    const scanCount = await fetchDynamicQRCodeScanCount(qrCode.id);
-    return {
-      ...qrCode,
-      scan_count: scanCount
-    };
-  }));
-  
-  return dynamicQRCodesWithScans;
-};
-
-export const fetchDynamicQRCode = async (id: string) => {
-  const { data, error } = await supabase
-    .from('dynamic_qr_codes')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  
-  // Get scan count
-  const scanCount = await fetchDynamicQRCodeScanCount(id);
-  
-  return {
-    ...data,
-    scan_count: scanCount
-  };
-};
-
-export const createDynamicQRCode = async (name: string, targetUrl: string) => {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) throw new Error('User not authenticated');
-  
-  // Generate a random short code (8 characters alphanumeric)
-  const shortCode = generateShortCode();
-  
-  const { data, error } = await supabase
-    .from('dynamic_qr_codes')
-    .insert([{ 
-      name,
-      short_code: shortCode,
-      target_url: targetUrl,
-      user_id: user.user.id
-    }])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const updateDynamicQRCode = async (id: string, updates: { name?: string; target_url?: string; active?: boolean }) => {
-  const { data, error } = await supabase
-    .from('dynamic_qr_codes')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const deleteDynamicQRCode = async (id: string) => {
-  const { error } = await supabase
-    .from('dynamic_qr_codes')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
-};
-
-export const generateShortCode = () => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  const length = 8;
-  
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  
-  return result;
-};
-
-export const getDynamicQRRedirectUrl = (shortCode: string) => {
-  return `https://kienjbeckgfsajjxjqhs.supabase.co/functions/v1/dynamic-qr/${shortCode}`;
-};
-
-export const fetchDynamicQRCodeScanCount = async (qrCodeId: string): Promise<number> => {
-  try {
-    const { count, error } = await supabase
-      .from('dynamic_qr_scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('dynamic_qr_code_id', qrCodeId);
-    
-    if (error) throw error;
-    return count || 0;
-  } catch (error) {
-    console.error("Error fetching dynamic QR code scan count:", error);
-    return 0;
-  }
-};
-
-export const fetchDynamicQRCodeScans = async (qrCodeId: string) => {
+// Function to fetch QR codes in a specific folder
+export const fetchQRCodesInFolder = async (folderId: string) => {
   try {
     const { data, error } = await supabase
-      .from('dynamic_qr_scans')
+      .from('qr_codes')
       .select('*')
-      .eq('dynamic_qr_code_id', qrCodeId)
-      .order('scanned_at', { ascending: false });
+      .eq('folder_id', folderId)
+      .order('created_at', { ascending: false });
     
-    if (error) throw error;
-    return data;
+    if (error) throw new Error(error.message);
+    return data || [];
   } catch (error) {
-    console.error("Error fetching dynamic QR code scans:", error);
-    return [];
+    console.error('Error fetching QR codes in folder:', error);
+    throw error;
   }
-};
-
-export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
-  const scans = await fetchDynamicQRCodeScans(qrCodeId);
-  
-  // Group scans by date
-  const scansByDate = scans.reduce((acc, scan) => {
-    const date = new Date(scan.scanned_at).toLocaleDateString();
-    if (!acc[date]) acc[date] = 0;
-    acc[date]++;
-    return acc;
-  }, {});
-  
-  // Group scans by country
-  const scansByCountry = scans.reduce((acc, scan) => {
-    const country = scan.country || 'Unknown';
-    if (!acc[country]) acc[country] = 0;
-    acc[country]++;
-    return acc;
-  }, {});
-  
-  return {
-    totalScans: scans.length,
-    scansByDate,
-    scansByCountry,
-    rawScans: scans
-  };
 };

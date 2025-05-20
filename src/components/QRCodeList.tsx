@@ -12,7 +12,13 @@ import { downloadQRCode } from "@/lib/supabaseUtils";
 import MoveQRCodeDialog from "@/components/MoveQRCodeDialog";
 import QRCodeScanDialog from "./QRCodeScanDialog";
 
-const QRCodeList = ({ folderId }: { folderId?: string }) => {
+interface QRCodeListProps {
+  folderId?: string;
+  filterType?: string;
+  searchQuery?: string;
+}
+
+const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeListProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -24,7 +30,7 @@ const QRCodeList = ({ folderId }: { folderId?: string }) => {
   
   const { data: qrCodes = [], isLoading, error } = useQuery({
     queryKey: ['qrCodes', folderId],
-    queryFn: fetchUserQRCodes
+    queryFn: () => folderId ? fetchQRCodesInFolder(folderId) : fetchUserQRCodes()
   });
 
   useEffect(() => {
@@ -211,10 +217,35 @@ const QRCodeList = ({ folderId }: { folderId?: string }) => {
     );
   }
 
-  // Filter by folder if folderId is provided
-  const filteredQRCodes = folderId 
-    ? qrCodes.filter(qr => qr.folder_id === folderId)
-    : qrCodes;
+  // Apply filtering based on filterType
+  let filteredQRCodes = [...qrCodes];
+  
+  // First filter by folder if specified
+  if (folderId) {
+    filteredQRCodes = filteredQRCodes.filter(qr => qr.folder_id === folderId);
+  }
+  
+  // Then apply type filtering
+  if (filterType === "barcode") {
+    filteredQRCodes = filteredQRCodes.filter(qr => qr.type === "barcode");
+  } else if (filterType === "static") {
+    filteredQRCodes = filteredQRCodes.filter(qr => qr.type !== "dynamic" && qr.type !== "barcode");
+  } else if (filterType === "dynamic") {
+    filteredQRCodes = filteredQRCodes.filter(qr => qr.type === "dynamic");
+  } else if (filterType === "dynamic-active") {
+    filteredQRCodes = filteredQRCodes.filter(qr => qr.type === "dynamic" && qr.active !== false);
+  } else if (filterType === "dynamic-paused") {
+    filteredQRCodes = filteredQRCodes.filter(qr => qr.type === "dynamic" && qr.active === false);
+  }
+  
+  // Apply search filtering if a search query exists
+  if (searchQuery && searchQuery.trim() !== "") {
+    const query = searchQuery.toLowerCase().trim();
+    filteredQRCodes = filteredQRCodes.filter(qr => 
+      qr.name.toLowerCase().includes(query) || 
+      qr.content.toLowerCase().includes(query)
+    );
+  }
 
   if (filteredQRCodes.length === 0) {
     return (
@@ -222,8 +253,12 @@ const QRCodeList = ({ folderId }: { folderId?: string }) => {
         <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8 max-w-md mx-auto">
           <h3 className="text-xl font-medium mb-2">No QR Codes Found</h3>
           <p className="text-muted-foreground mb-6">
-            {folderId ? "This folder is empty." : "You haven't created any QR codes yet."} 
-            Get started by creating your first QR code!
+            {searchQuery 
+              ? "No results matched your search." 
+              : folderId 
+                ? "This folder is empty." 
+                : "You haven't created any QR codes yet."
+            }
           </p>
           <Button onClick={() => navigate("/generate")}>
             Create QR Code

@@ -8,7 +8,6 @@ import { fetchQRCodesInFolder, fetchUserFolders, Folder } from "@/lib/api";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCircles from "@/components/FloatingCircles";
-import { Sidebar, SidebarProvider } from "@/components/ui/sidebar";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import QRCodeList from "@/components/QRCodeList";
 
@@ -16,7 +15,10 @@ const FolderView = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [selectedView, setSelectedView] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
   
   // Redirect if no folder ID is provided
   useEffect(() => {
@@ -61,23 +63,27 @@ const FolderView = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex flex-col">
-        <FloatingCircles />
-        <Header />
+    <div className="min-h-screen flex flex-col w-full">
+      <FloatingCircles />
+      <Header />
 
-        <div className="flex-1 flex">
-          <Sidebar variant="sidebar" collapsible={sidebarCollapsed ? "icon" : "none"}>
-            <DashboardSidebar 
-              view="active"
-              setView={() => {}}
-              setShowFolderDialog={() => {}}
-              sidebarCollapsed={sidebarCollapsed}
-              toggleSidebar={toggleSidebar}
-            />
-          </Sidebar>
+      <div className="flex-1 flex w-full">
+        {/* Sidebar */}
+        <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-background border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>
+          <DashboardSidebar 
+            selectedView={selectedView}
+            setSelectedView={setSelectedView}
+            setShowFolderDialog={setShowFolderDialog}
+            sidebarCollapsed={sidebarCollapsed}
+            toggleSidebar={toggleSidebar}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+        </div>
 
-          <main className="flex-1 container mx-auto px-4 pt-8 pb-12">
+        {/* Main Content */}
+        <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+          <div className="container mx-auto px-4 pt-8 pb-12">
             <div className="max-w-7xl mx-auto space-y-8 mt-24">
               <div className="flex items-center">
                 <Button 
@@ -117,16 +123,16 @@ const FolderView = () => {
                     </div>
                   </div>
                 ) : (
-                  <QRCodeList folderId={folderId} />
+                  <QRCodeList folderId={folderId} searchQuery={searchQuery} />
                 )}
               </div>
             </div>
-          </main>
-        </div>
-
-        <Footer />
+          </div>
+        </main>
       </div>
-    </SidebarProvider>
+
+      <Footer />
+    </div>
   );
 };
 
