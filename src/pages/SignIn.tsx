@@ -1,239 +1,262 @@
-
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import FloatingCircles from "@/components/FloatingCircles";
-import Logo from "@/components/Logo";
-import { Link } from "react-router-dom";
-import Header from "@/components/Header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const { signIn, signUp, signInWithGoogle, loading, user } = useAuth();
-  const { toast } = useToast();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("signin");
-
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
+  const { signIn, signUp, signInWithGoogle, loading } = useAuth();
+  const { toast } = useToast();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError(null);
+
     if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+      setError("Please enter your email and password.");
       return;
     }
-    
+
     try {
       await signIn(email, password);
-    } catch (error) {
-      toast({
-        title: "Sign In Failed",
-        description: error instanceof Error ? error.message : "Failed to sign in",
-        variant: "destructive",
-      });
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Sign-in failed. Please check your credentials.");
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password || !confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+    setError(null);
+
+    if (!email || !password) {
+      setError("Please enter an email and password.");
       return;
     }
-    
-    if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+
     try {
-      // Set flag for new user to show welcome message
-      localStorage.setItem('isNewUser', 'true');
       await signUp(email, password);
-    } catch (error) {
+      localStorage.setItem('isNewUser', 'true');
+      navigate("/dashboard");
       toast({
-        title: "Sign Up Failed",
-        description: error instanceof Error ? error.message : "Failed to create account",
-        variant: "destructive",
+        title: "Account Created",
+        description: "Your account has been created successfully. Welcome!",
       });
+    } catch (err: any) {
+      setError(err.message || "Sign-up failed. Please try again.");
     }
   };
 
   const handleGoogleSignIn = async () => {
+    setError(null);
     try {
       await signInWithGoogle();
-    } catch (error) {
-      toast({
-        title: "Google Sign In Failed",
-        description: error instanceof Error ? error.message : "Failed to sign in with Google",
-        variant: "destructive",
-      });
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Google sign-in failed. Please try again.");
     }
   };
 
+  // Change variable references from isLoading to loading
   return (
-    <div className="min-h-screen flex flex-col">
-      <FloatingCircles />
+    <div className="min-h-screen flex flex-col bg-[#0C0B10] text-white">
       <Header />
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
-        <div className="relative hidden lg:flex items-center justify-center">
-          <Logo className="h-48 w-48" />
-        </div>
-        <div className="container mx-auto flex items-center justify-center">
-          <Card className="w-full max-w-md bg-card/50 backdrop-blur-sm">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">
-                {activeTab === "signin" ? "Sign In" : "Create Account"}
+      
+      <main className="flex-1 container mx-auto px-4 py-24">
+        <div className="max-w-md mx-auto">
+          <Card className="bg-card/50 backdrop-blur-sm border border-border">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">
+                {isSignUp ? "Create Account" : "Welcome Back"}
               </CardTitle>
-              <CardDescription className="text-center">
-                {activeTab === "signin"
-                  ? "Enter your email and password to sign in"
-                  : "Enter your email and create a password to create an account"}
+              <CardDescription>
+                {isSignUp 
+                  ? "Sign up to start creating QR codes" 
+                  : "Sign in to your account to manage your QR codes"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4">
-              <Tabs
-                defaultValue="signin"
-                className="w-full"
-                onValueChange={(value) => setActiveTab(value)}
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Sign In</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                </TabsList>
-                <TabsContent value="signin" className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <Button onClick={handleSignIn} disabled={isLoading} className="w-full">
-                    {isLoading ? "Signing In..." : "Sign In"}
-                  </Button>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
+            <CardContent>
+              <div className="space-y-4">
+                <Tabs 
+                  defaultValue="email" 
+                  className="w-full"
+                >
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="email">Email</TabsTrigger>
+                    <TabsTrigger value="google">Google</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="email" className="space-y-4">
+                    {!isSignUp ? (
+                      <form onSubmit={handleSignIn} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="password">Password</Label>
+                            <Link 
+                              to="/forgot-password" 
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Forgot Password?
+                            </Link>
+                          </div>
+                          <Input
+                            id="password"
+                            type="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                          />
+                        </div>
+                        
+                        {error && (
+                          <div className="bg-destructive/10 border border-destructive text-destructive text-sm rounded-md p-3">
+                            {error}
+                          </div>
+                        )}
+                        
+                        <Button 
+                          type="submit" 
+                          className="w-full" 
+                          disabled={loading}
+                        >
+                          {loading ? (
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                              Signing in...
+                            </div>
+                          ) : "Sign In"}
+                        </Button>
+                        
+                        <div className="text-center text-sm">
+                          Don't have an account?{" "}
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto font-normal text-primary"
+                            onClick={() => setIsSignUp(true)}
+                          >
+                            Sign Up
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleSignUp} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-email">Email</Label>
+                          <Input
+                            id="signup-email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-password">Password</Label>
+                          <Input
+                            id="signup-password"
+                            type="password"
+                            placeholder="Create a password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                          />
+                        </div>
+                        
+                        {error && (
+                          <div className="bg-destructive/10 border border-destructive text-destructive text-sm rounded-md p-3">
+                            {error}
+                          </div>
+                        )}
+                        
+                        <Button 
+                          type="submit" 
+                          className="w-full" 
+                          disabled={loading}
+                        >
+                          {loading ? (
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                              Creating account...
+                            </div>
+                          ) : "Sign Up"}
+                        </Button>
+                        
+                        <div className="text-center text-sm">
+                          Already have an account?{" "}
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto font-normal text-primary"
+                            onClick={() => setIsSignUp(false)}
+                          >
+                            Sign In
+                          </Button>
+                        </div>
+                      </form>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="google">
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Click the button below to sign in with your Google account.
+                      </p>
+                      
+                      <Button 
+                        onClick={handleGoogleSignIn} 
+                        className="w-full flex items-center justify-center"
+                        variant="outline"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                            Connecting...
+                          </div>
+                        ) : (
+                          <>
+                            <img 
+                              src="/google-icon.svg" 
+                              alt="Google" 
+                              className="w-4 h-4 mr-2" 
+                            />
+                            Continue with Google
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
-                    className="w-full"
-                  >
-                    Google
-                  </Button>
-                </TabsContent>
-                <TabsContent value="signup" className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Create a password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                  </div>
-                  <Button onClick={handleSignUp} disabled={isLoading} className="w-full">
-                    {isLoading ? "Creating Account..." : "Create Account"}
-                  </Button>
-                </TabsContent>
-              </Tabs>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </CardContent>
-            <CardFooter className="flex justify-center">
-              {activeTab === "signin" ? (
-                <p className="text-sm text-muted-foreground">
-                  Don't have an account?{" "}
-                  <Link to="#" onClick={() => setActiveTab("signup")} className="text-primary">
-                    Create one
-                  </Link>
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Already have an account?{" "}
-                  <Link to="#" onClick={() => setActiveTab("signin")} className="text-primary">
-                    Sign in
-                  </Link>
-                </p>
-              )}
-            </CardFooter>
           </Card>
         </div>
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 
@@ -21,6 +22,7 @@ export interface QRCode {
   folder_id: string | null;
   scan_count: number;
   active: boolean;
+  updated_at?: string;
 }
 
 export interface Folder {
@@ -162,8 +164,15 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
     }
 
     return data.map(item => ({
-      ...item,
+      id: item.id,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      name: item.name,
+      type: item.type,
+      content: item.content,
+      user_id: item.user_id,
       options: item.options || null,
+      folder_id: item.folder_id || null,
       scan_count: item.scan_count || 0,
       active: item.active === null ? true : item.active
     }));
@@ -188,8 +197,15 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
     }
 
     return {
-      ...data,
+      id: data.id,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      name: data.name,
+      type: data.type,
+      content: data.content,
+      user_id: data.user_id,
       options: data.options || null,
+      folder_id: data.folder_id || null,
       scan_count: data.scan_count || 0,
       active: data.active === null ? true : data.active
     };
@@ -212,7 +228,7 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
   try {
     const { data, error } = await supabase
       .from('qr_codes')
-      .insert({
+      .insert([{
         name: qrCodeData.name,
         type: qrCodeData.type,
         content: qrCodeData.content,
@@ -221,7 +237,7 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
         scan_count: qrCodeData.scan_count || 0,
         active: qrCodeData.active === undefined ? true : qrCodeData.active,
         user_id: user.id
-      })
+      }])
       .select()
       .single();
 
@@ -231,8 +247,15 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
     }
 
     return {
-      ...data,
+      id: data.id,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      name: data.name,
+      type: data.type,
+      content: data.content,
+      user_id: data.user_id,
       options: data.options || null,
+      folder_id: data.folder_id || null,
       scan_count: data.scan_count || 0,
       active: data.active === null ? true : data.active
     };
@@ -269,8 +292,15 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
     }
 
     return {
-      ...data,
+      id: data.id,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      name: data.name,
+      type: data.type,
+      content: data.content,
+      user_id: data.user_id,
       options: data.options || null,
+      folder_id: data.folder_id || null,
       scan_count: data.scan_count || 0,
       active: data.active === null ? true : data.active
     };
@@ -461,8 +491,15 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
     if (error) throw new Error(error.message);
     
     return data.map(item => ({
-      ...item,
+      id: item.id,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      name: item.name,
+      type: item.type,
+      content: item.content,
+      user_id: item.user_id,
       options: item.options || null,
+      folder_id: item.folder_id || null,
       scan_count: item.scan_count || 0,
       active: item.active === null ? true : item.active
     }));

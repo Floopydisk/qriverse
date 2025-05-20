@@ -1,18 +1,16 @@
-
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { fetchUserProfile, updateUserProfile, UserProfile } from "@/lib/api";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingCircles from "@/components/FloatingCircles";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
-import { fetchUserProfile } from "@/lib/api";
-import { useToast } from "@/components/ui/use-toast";
-
-// Import refactored components
-import ProfileInfoForm from "@/components/profile/ProfileInfoForm";
-import EmailForm from "@/components/profile/EmailForm";
-import PasswordForm from "@/components/profile/PasswordForm";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import { ProfileInfoForm } from "@/components/profile/ProfileInfoForm";
+import { EmailForm } from "@/components/profile/EmailForm";
+import { PasswordForm } from "@/components/profile/PasswordForm";
 import DeleteAccountDialog from "@/components/profile/DeleteAccountDialog";
 
 const Profile = () => {
@@ -20,7 +18,7 @@ const Profile = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   

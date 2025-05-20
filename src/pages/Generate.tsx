@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
@@ -37,7 +36,7 @@ const Generate = () => {
   const { toast } = useToast();
 
   // QR Generator hook
-  const qrGenerator = useQRGenerator({ user, editId });
+  const qrGenerator = useQrGenerator({ user, editId });
   
   // Text/URL
   const [text, setText] = useState("");
