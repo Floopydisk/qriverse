@@ -11,6 +11,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { fetchQRCode } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 
+// Import TabsContent from UI tabs component
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 // Import QR Generator Components
 import { QRNameInput } from "@/components/qr-generator/QRNameInput";
 import { QRStyleOptions } from "@/components/qr-generator/QRStyleOptions";
