@@ -1,97 +1,82 @@
-
 import { useState } from "react";
+import { updateUserProfile } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { updateUserProfile } from "@/lib/api";
-import { useQueryClient } from "@tanstack/react-query";
-import AvatarUpload from "./AvatarUpload";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ProfileInfoFormProps {
-  userId: string;
-  initialFullName: string;
-  initialUsername: string;
-  avatarUrl: string | null;
-  onAvatarChange: (url: string) => void;
+  profile: { 
+    full_name: string; 
+    username?: string;
+  } | null;
+  onProfileUpdated: () => void;
 }
 
-export default function ProfileInfoForm({
-  userId,
-  initialFullName,
-  initialUsername,
-  avatarUrl,
-  onAvatarChange
-}: ProfileInfoFormProps) {
-  const [fullName, setFullName] = useState(initialFullName);
-  const [username, setUsername] = useState(initialUsername);
+export function ProfileInfoForm({ profile, onProfileUpdated }: ProfileInfoFormProps) {
+  const [fullName, setFullName] = useState(profile?.full_name || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const handleUpdateProfile = async () => {
-    try {
-      await updateUserProfile({
-        full_name: fullName,
-        avatar_url: avatarUrl || undefined
-      });
-      
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been updated successfully"
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
-      
-    } catch (error) {
-      console.error("Error updating profile:", error);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!fullName.trim()) {
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: "Please enter your full name",
         variant: "destructive",
       });
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      const updatedProfile = await updateUserProfile({ full_name: fullName });
+      
+      if (updatedProfile) {
+        toast({
+          title: "Profile Updated",
+          description: "Your profile information has been updated successfully.",
+        });
+        
+        onProfileUpdated();
+      }
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle>Profile Information</CardTitle>
-        <CardDescription>Update your profile information and avatar</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <AvatarUpload 
-          userId={userId} 
-          fullName={fullName} 
-          avatarUrl={avatarUrl} 
-          onAvatarChange={onAvatarChange} 
-        />
-        
-        <div className="grid gap-4">
+      <CardContent className="space-y-4">
+        <form onSubmit={handleSubmit}>
           <div className="grid gap-2">
             <Label htmlFor="fullName">Full Name</Label>
             <Input
               id="fullName"
+              type="text"
+              placeholder="Enter your full name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="bg-background"
             />
           </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="bg-background"
-            />
-          </div>
-        </div>
+          <Button disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Updating..." : "Update Profile"}
+          </Button>
+        </form>
       </CardContent>
-      <CardFooter>
-        <Button onClick={handleUpdateProfile}>Update Profile</Button>
-      </CardFooter>
     </Card>
   );
 }

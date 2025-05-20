@@ -212,18 +212,16 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
   try {
     const { data, error } = await supabase
       .from('qr_codes')
-      .insert([
-        {
-          name: qrCodeData.name,
-          type: qrCodeData.type,
-          content: qrCodeData.content,
-          options: qrCodeData.options || null,
-          folder_id: qrCodeData.folder_id || null,
-          scan_count: qrCodeData.scan_count || 0,
-          active: qrCodeData.active === undefined ? true : qrCodeData.active,
-          user_id: user.id
-        }
-      ])
+      .insert({
+        name: qrCodeData.name,
+        type: qrCodeData.type,
+        content: qrCodeData.content,
+        options: qrCodeData.options || null,
+        folder_id: qrCodeData.folder_id || null,
+        scan_count: qrCodeData.scan_count || 0,
+        active: qrCodeData.active === undefined ? true : qrCodeData.active,
+        user_id: user.id
+      })
       .select()
       .single();
 

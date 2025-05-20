@@ -27,7 +27,7 @@ import { EmailQRTab } from "@/components/qr-generator/tabs/EmailQRTab";
 import { TwitterQRTab } from "@/components/qr-generator/tabs/TwitterQRTab";
 import { BitcoinQRTab } from "@/components/qr-generator/tabs/BitcoinQRTab";
 
-import { useQRGenerator } from "@/hooks/use-qr-generator";
+import useQrGenerator from "@/hooks/use-qr-generator";
 
 const Generate = () => {
   const navigate = useNavigate();

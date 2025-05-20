@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -6,11 +7,14 @@ interface AuthContextType {
   user: User | null;
   session: any;
   isLoading: boolean;
-  signIn: (email: string) => Promise<void>;
+  loading: boolean; // Added alias for isLoading for backward compatibility
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>; // Added
+  signInWithGoogle: () => Promise<void>; // Added
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -39,13 +43,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
   }, []);
 
-  const signIn = async (email: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      alert('Check your email for the magic link to sign in.');
     } catch (error: any) {
-      alert(error.error_description || error.message);
+      throw new Error(error.error_description || error.message);
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+    } catch (error: any) {
+      throw new Error(error.error_description || error.message);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      throw new Error(error.error_description || error.message);
     }
   };
 
@@ -53,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await supabase.auth.signOut();
     } catch (error: any) {
-      alert(error.error_description || error.message);
+      throw new Error(error.error_description || error.message);
     }
   };
 
@@ -61,7 +84,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     session,
     isLoading,
+    loading: isLoading, // Alias for backward compatibility
     signIn,
+    signUp,
+    signInWithGoogle,
     signOut,
   };
 
