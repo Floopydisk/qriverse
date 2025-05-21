@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -18,7 +17,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Barcode from "react-barcode";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchUserBarcodes, createBarcode, deleteBarcode, BarcodeData } from "@/lib/api";
 
 // Define the Barcode type
 interface BarcodeData {
@@ -54,25 +53,8 @@ const BarcodeGenerator = () => {
     setIsLoading(true);
     
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const user = session?.session?.user;
-      
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('barcodes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-        
-      if (error) {
-        throw error;
-      }
-      
-      setSavedBarcodes(data || []);
+      const barcodes = await fetchUserBarcodes();
+      setSavedBarcodes(barcodes);
     } catch (error) {
       console.error("Error fetching barcodes:", error);
       toast({
@@ -97,41 +79,21 @@ const BarcodeGenerator = () => {
     }
     
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const user = session?.session?.user;
-      
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to save barcodes",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('barcodes')
-        .insert([
-          {
-            name: name,
-            value: text,
-            type: type,
-            user_id: user.id
-          }
-        ])
-        .select();
-        
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Success",
-        description: "Barcode saved successfully",
+      const result = await createBarcode({
+        name: name,
+        value: text,
+        type: type
       });
       
-      // Refresh the list of saved barcodes
-      fetchSavedBarcodes();
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Barcode saved successfully",
+        });
+        
+        // Refresh the list of saved barcodes
+        fetchSavedBarcodes();
+      }
     } catch (error) {
       console.error("Error saving barcode:", error);
       toast({
@@ -143,24 +105,19 @@ const BarcodeGenerator = () => {
   };
 
   // Function to delete a saved barcode
-  const deleteBarcode = async (id: string) => {
+  const handleDeleteBarcode = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('barcodes')
-        .delete()
-        .eq('id', id);
+      const success = await deleteBarcode(id);
+      
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Barcode deleted successfully",
+        });
         
-      if (error) {
-        throw error;
+        // Update the local state to remove the deleted barcode
+        setSavedBarcodes(savedBarcodes.filter(barcode => barcode.id !== id));
       }
-      
-      toast({
-        title: "Success",
-        description: "Barcode deleted successfully",
-      });
-      
-      // Update the local state to remove the deleted barcode
-      setSavedBarcodes(savedBarcodes.filter(barcode => barcode.id !== id));
     } catch (error) {
       console.error("Error deleting barcode:", error);
       toast({
@@ -269,8 +226,8 @@ const BarcodeGenerator = () => {
         </div>
         
         {/* Main Content */}
-        <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} mb-16`}>
-          <div className="container mx-auto px-4 pt-8 pb-24">
+        <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} pb-24`}>
+          <div className="container mx-auto px-4 pt-8">
             <div className="max-w-2xl mx-auto mt-24">
               <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-8">
                 <div className="space-y-4">
@@ -389,7 +346,7 @@ const BarcodeGenerator = () => {
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => deleteBarcode(barcode.id)}
+                              onClick={() => handleDeleteBarcode(barcode.id)}
                               title="Delete"
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />

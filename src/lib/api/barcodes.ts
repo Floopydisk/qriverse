@@ -22,7 +22,7 @@ export const fetchUserBarcodes = async (): Promise<BarcodeData[]> => {
   }
 
   try {
-    // Fetch barcodes
+    // Fetch barcodes using the correct table name
     const { data: barcodes, error } = await supabase
       .from('barcodes')
       .select('*')
@@ -34,7 +34,7 @@ export const fetchUserBarcodes = async (): Promise<BarcodeData[]> => {
       return [];
     }
 
-    return barcodes || [];
+    return barcodes as BarcodeData[];
   } catch (error) {
     console.error("Unexpected error fetching barcodes:", error);
     return [];
@@ -68,7 +68,7 @@ export const createBarcode = async (barcodeData: Omit<BarcodeData, 'id' | 'creat
       return null;
     }
 
-    return data;
+    return data as BarcodeData;
   } catch (error) {
     console.error("Unexpected error creating barcode:", error);
     return null;
@@ -114,7 +114,7 @@ export const updateBarcode = async (id: string, updates: Partial<Omit<BarcodeDat
       return null;
     }
 
-    return data;
+    return data as BarcodeData;
   } catch (error) {
     console.error("Unexpected error updating barcode:", error);
     return null;
