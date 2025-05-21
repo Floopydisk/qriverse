@@ -43,13 +43,26 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const activeQrCount = qrCodes.filter(code => code.type === "dynamic" && code.active !== false).length;
   const pausedQrCount = qrCodes.filter(code => code.type === "dynamic" && code.active === false).length;
 
+  // State to manage dynamic submenu visibility
+  const [dynamicSubmenuOpen, setDynamicSubmenuOpen] = useState(
+    selectedView === "dynamic" || selectedView === "dynamic-active" || selectedView === "dynamic-paused"
+  );
+
   // Handler for menu item clicks
   const handleViewSelect = (view: string) => {
     setSelectedView(view);
     
-    // For dynamic QR subcategories, navigate appropriately
-    if (view === "dynamic" || view === "dynamic-active" || view === "dynamic-paused") {
+    // For dynamic QR categories
+    if (view === "dynamic") {
+      setDynamicSubmenuOpen(true);
       navigate("/dynamic-qr");
+    } else if (view === "dynamic-active" || view === "dynamic-paused") {
+      setDynamicSubmenuOpen(true);
+      navigate("/dynamic-qr");
+    } else if (view === "barcode") {
+      navigate("/barcode");
+    } else {
+      navigate("/dashboard");
     }
   };
 
@@ -119,15 +132,23 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             {/* Dynamic QR Codes */}
             <li className="space-y-1">
               <Button
-                variant={selectedView === "dynamic" ? "default" : "ghost"}
+                variant={
+                  selectedView === "dynamic" || 
+                  selectedView === "dynamic-active" || 
+                  selectedView === "dynamic-paused" ? "default" : "ghost"
+                }
                 className="w-full justify-start text-sm h-9"
-                onClick={() => handleViewSelect("dynamic")}
+                onClick={() => {
+                  handleViewSelect("dynamic");
+                  setDynamicSubmenuOpen(!dynamicSubmenuOpen);
+                }}
               >
                 <QrCode className="h-4 w-4 mr-2" />
                 {!sidebarCollapsed && <span>Dynamic QR Codes ({dynamicQrCount})</span>}
               </Button>
 
-              {!sidebarCollapsed && (selectedView === "dynamic" || selectedView === "dynamic-active" || selectedView === "dynamic-paused") && (
+              {/* This nested submenu is always visible when parent is selected */}
+              {!sidebarCollapsed && dynamicSubmenuOpen && (
                 <div className="pl-6 space-y-1">
                   <Button
                     variant={selectedView === "dynamic-active" ? "default" : "ghost"}

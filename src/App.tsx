@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import Index from "./pages/Index";
 import Generate from "./pages/Generate";
 import NotFound from "./pages/NotFound";
@@ -38,61 +39,63 @@ const App = () => (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/scan" element={<Scan />} />
-            <Route path="/guides" element={<Guides />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/cookie-policy" element={<CookiePolicy />} />
-            <Route path="/gdpr" element={<GdprPolicy />} />
-            
-            {/* Protected routes */}
-            <Route path="/dashboard" element={
-              <AuthGuard>
-                <Dashboard />
-              </AuthGuard>
-            } />
-            <Route path="/dashboard/folder/:folderId" element={
-              <AuthGuard>
-                <FolderView />
-              </AuthGuard>
-            } />
-            <Route path="/generate" element={
-              <AuthGuard>
-                <Generate />
-              </AuthGuard>
-            } />
-            <Route path="/barcode" element={
-              <AuthGuard>
-                <Barcode />
-              </AuthGuard>
-            } />
-            <Route path="/profile" element={
-              <AuthGuard>
-                <Profile />
-              </AuthGuard>
-            } />
-            <Route path="/dynamic-qr" element={
-              <AuthGuard>
-                <DynamicQR />
-              </AuthGuard>
-            } />
-            <Route path="/dynamic-qr/stats/:id" element={
-              <AuthGuard>
-                <DynamicQRStats />
-              </AuthGuard>
-            } />
-            <Route path="/dynamic-qr/edit/:id" element={
-              <AuthGuard>
-                <EditDynamicQR />
-              </AuthGuard>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <SidebarProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/scan" element={<Scan />} />
+              <Route path="/guides" element={<Guides />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/cookie-policy" element={<CookiePolicy />} />
+              <Route path="/gdpr" element={<GdprPolicy />} />
+              
+              {/* Protected routes */}
+              <Route path="/dashboard" element={
+                <AuthGuard>
+                  <Dashboard />
+                </AuthGuard>
+              } />
+              <Route path="/dashboard/folder/:folderId" element={
+                <AuthGuard>
+                  <FolderView />
+                </AuthGuard>
+              } />
+              <Route path="/generate" element={
+                <AuthGuard>
+                  <Generate />
+                </AuthGuard>
+              } />
+              <Route path="/barcode" element={
+                <AuthGuard>
+                  <Barcode />
+                </AuthGuard>
+              } />
+              <Route path="/profile" element={
+                <AuthGuard>
+                  <Profile />
+                </AuthGuard>
+              } />
+              <Route path="/dynamic-qr" element={
+                <AuthGuard>
+                  <DynamicQR />
+                </AuthGuard>
+              } />
+              <Route path="/dynamic-qr/stats/:id" element={
+                <AuthGuard>
+                  <DynamicQRStats />
+                </AuthGuard>
+              } />
+              <Route path="/dynamic-qr/edit/:id" element={
+                <AuthGuard>
+                  <EditDynamicQR />
+                </AuthGuard>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SidebarProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </AuthProvider>
