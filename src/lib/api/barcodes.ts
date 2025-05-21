@@ -1,15 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-
-// Define the Barcode interface
-export interface BarcodeData {
-  id: string;
-  created_at: string;
-  user_id: string;
-  name: string;
-  value: string;
-  type: string;
-}
+import { BarcodeData } from "./types";
 
 // Function to fetch all barcodes for the current user
 export const fetchUserBarcodes = async (): Promise<BarcodeData[]> => {
