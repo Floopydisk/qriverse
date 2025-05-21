@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
@@ -16,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Import QR Generator Components
 import { QRNameInput } from "@/components/qr-generator/QRNameInput";
 import { QRStyleOptions } from "@/components/qr-generator/QRStyleOptions";
-import { QRTabSelector } from "@/components/qr-generator/QRTabSelector";
+import QRTabSelector from "@/components/qr-generator/QRTabSelector";
 import { QRCodePreview } from "@/components/qr-generator/QRCodePreview";
 import { TextQRTab } from "@/components/qr-generator/tabs/TextQRTab";
 import { WifiQRTab } from "@/components/qr-generator/tabs/WifiQRTab";
