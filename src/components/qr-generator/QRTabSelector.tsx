@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QrCode, AtSign, Wifi, Phone, CreditCard, Link, MessageSquare, Twitter } from "lucide-react";
@@ -18,15 +18,26 @@ import { useToast } from "@/hooks/use-toast";
 
 interface QRTabSelectorProps {
   activeTab: string;
-  onTabChange: (tab: string) => void;
-  qrData: any;
+  onTabChange?: (tab: string) => void;
+  qrData?: any;
+  children?: ReactNode;
+  setActiveTab?: (tab: string) => void;
 }
 
-const QRTabSelector = ({ activeTab, onTabChange, qrData }: QRTabSelectorProps) => {
+const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab }: QRTabSelectorProps) => {
   const [isDynamicEnabled, setIsDynamicEnabled] = useState(false);
   const [showDynamicDialog, setShowDynamicDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Handle tab change, with fallback to setActiveTab if onTabChange is not provided
+  const handleTabChange = (value: string) => {
+    if (onTabChange) {
+      onTabChange(value);
+    } else if (setActiveTab) {
+      setActiveTab(value);
+    }
+  };
 
   // Handle the switch toggle
   const handleDynamicToggle = (checked: boolean) => {
@@ -43,20 +54,20 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData }: QRTabSelectorProps) =
     // Determine the content based on the active tab
     switch (activeTab) {
       case "url":
-        targetUrl = qrData.url || "";
+        targetUrl = qrData?.url || "";
         break;
       case "text":
-        targetUrl = qrData.text ? `data:text/plain;charset=utf-8,${encodeURIComponent(qrData.text)}` : "";
+        targetUrl = qrData?.text ? `data:text/plain;charset=utf-8,${encodeURIComponent(qrData.text)}` : "";
         break;
       case "email":
-        if (qrData.email) {
+        if (qrData?.email) {
           const subject = encodeURIComponent(qrData.emailSubject || "");
           const body = encodeURIComponent(qrData.emailBody || "");
           targetUrl = `mailto:${qrData.email}?subject=${subject}&body=${body}`;
         }
         break;
       case "sms":
-        if (qrData.phone) {
+        if (qrData?.phone) {
           const message = encodeURIComponent(qrData.message || "");
           targetUrl = `sms:${qrData.phone}?body=${message}`;
         }
@@ -78,7 +89,7 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData }: QRTabSelectorProps) =
     }
 
     // Navigate to dynamic QR page with the content
-    const name = qrData.name || "My QR Code";
+    const name = qrData?.name || "My QR Code";
     navigate(`/dynamic-qr`, { state: { name, targetUrl } });
     toast({
       title: "Switching to Dynamic QR",
@@ -103,7 +114,7 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData }: QRTabSelectorProps) =
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={onTabChange}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <TabsTrigger value="url" className="flex items-center gap-2">
               <Link className="h-4 w-4" />
@@ -140,6 +151,9 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData }: QRTabSelectorProps) =
           </TabsList>
         </Tabs>
       </div>
+
+      {/* Render the children */}
+      {children}
 
       {/* Dialog for confirming dynamic QR code conversion */}
       <Dialog open={showDynamicDialog} onOpenChange={(open) => {

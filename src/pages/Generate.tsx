@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
@@ -490,7 +489,20 @@ const Generate = () => {
                 </Button>
               </div>
               
-              <QRTabSelector activeTab={activeTab} setActiveTab={setActiveTab}>
+              <QRTabSelector 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+                qrData={{
+                  url: activeTab === "url" ? text : "",
+                  text: activeTab === "text" ? text : "",
+                  email: activeTab === "email" ? emailTo : "",
+                  emailSubject: activeTab === "email" ? emailSubject : "",
+                  emailBody: activeTab === "email" ? emailBody : "",
+                  phone: activeTab === "sms" ? smsPhone : "",
+                  message: activeTab === "sms" ? smsMessage : "",
+                  name: qrGenerator.name
+                }}
+              >
                 <div className="space-y-4">
                   <QRNameInput name={qrGenerator.name} setName={qrGenerator.setName} />
                   
