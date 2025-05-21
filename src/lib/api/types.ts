@@ -66,3 +66,13 @@ export interface DynamicQRScan {
   referrer?: string;
   user_agent?: string;
 }
+
+// Add the BarcodeData interface
+export interface BarcodeData {
+  id: string;
+  created_at: string;
+  user_id: string;
+  name: string;
+  value: string;
+  type: string;
+}

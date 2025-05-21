@@ -17,17 +17,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Barcode from "react-barcode";
-import { fetchUserBarcodes, createBarcode, deleteBarcode, BarcodeData } from "@/lib/api";
-
-// Define the Barcode type
-interface BarcodeData {
-  id: string;
-  created_at: string;
-  user_id: string;
-  name: string;
-  value: string;
-  type: string;
-}
+import { fetchUserBarcodes, createBarcode, deleteBarcode, BarcodeData, updateBarcode } from "@/lib/api";
 
 const BarcodeGenerator = () => {
   const [text, setText] = useState("");
@@ -43,7 +33,6 @@ const BarcodeGenerator = () => {
   const [savedBarcodes, setSavedBarcodes] = useState<BarcodeData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch saved barcodes on component mount
   useEffect(() => {
     fetchSavedBarcodes();
   }, []);
