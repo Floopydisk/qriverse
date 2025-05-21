@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { QRCode, ScanStat } from "./types";
 
@@ -27,25 +26,21 @@ export const fetchUserQRCodes = async (): Promise<QRCode[]> => {
 
     if (!qrCodes || qrCodes.length === 0) return [];
 
-    // Fetch scan counts for all QR codes in a single query
-    const { data: scanCounts, error: scanError } = await supabase
-      .from('qr_scans')
-      .select('qr_code_id, count(*)')
-      .in('qr_code_id', qrCodes.map(qr => qr.id))
-      .group('qr_code_id');
+    // Fetch scan counts for all QR codes individually using count()
+    const scanPromises = qrCodes.map(qr => 
+      supabase
+        .from('qr_scans')
+        .select('*', { count: 'exact', head: true })
+        .eq('qr_code_id', qr.id)
+    );
 
-    if (scanError) {
-      console.error("Error fetching scan counts:", scanError.message);
-      // Continue without scan counts
-    }
-
+    const scanResults = await Promise.all(scanPromises);
+    
     // Create a map of QR code IDs to their scan counts
     const scanCountMap: Record<string, number> = {};
-    if (scanCounts) {
-      scanCounts.forEach(item => {
-        scanCountMap[item.qr_code_id] = parseInt(item.count);
-      });
-    }
+    qrCodes.forEach((qr, index) => {
+      scanCountMap[qr.id] = scanResults[index].count || 0;
+    });
 
     return qrCodes.map(item => ({
       id: item.id,
@@ -84,11 +79,10 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
     if (!data) return null;
 
     // Fetch scan count for this QR code
-    const { data: scanCount, error: scanError } = await supabase
+    const { count, error: scanError } = await supabase
       .from('qr_scans')
-      .select('count(*)')
-      .eq('qr_code_id', id)
-      .single();
+      .select('*', { count: 'exact', head: true })
+      .eq('qr_code_id', id);
 
     if (scanError) {
       console.error("Error fetching scan count:", scanError.message);
@@ -105,7 +99,7 @@ export const fetchQRCode = async (id: string): Promise<QRCode | null> => {
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: scanCount ? parseInt(scanCount.count) : 0,
+      scan_count: count || 0,
       active: true // Default value as this isn't in the database
     };
   } catch (error) {
@@ -191,11 +185,10 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
     if (!data) return null;
 
     // Fetch scan count for this QR code
-    const { data: scanCount, error: scanError } = await supabase
+    const { count, error: scanError } = await supabase
       .from('qr_scans')
-      .select('count(*)')
-      .eq('qr_code_id', id)
-      .single();
+      .select('*', { count: 'exact', head: true })
+      .eq('qr_code_id', id);
 
     if (scanError) {
       console.error("Error fetching scan count:", scanError.message);
@@ -212,7 +205,7 @@ export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id
       user_id: data.user_id,
       options: typeof data.options === 'object' ? data.options : {},
       folder_id: data.folder_id || null,
-      scan_count: scanCount ? parseInt(scanCount.count) : 0,
+      scan_count: count || 0,
       active: true // Default value as this isn't in the database
     };
   } catch (error) {
@@ -306,25 +299,21 @@ export const fetchQRCodesInFolder = async (folderId: string): Promise<QRCode[]> 
     
     if (!data || data.length === 0) return [];
     
-    // Fetch scan counts for all QR codes in a single query
-    const { data: scanCounts, error: scanError } = await supabase
-      .from('qr_scans')
-      .select('qr_code_id, count(*)')
-      .in('qr_code_id', data.map(qr => qr.id))
-      .group('qr_code_id');
+    // Fetch scan counts for all QR codes individually using count()
+    const scanPromises = data.map(qr => 
+      supabase
+        .from('qr_scans')
+        .select('*', { count: 'exact', head: true })
+        .eq('qr_code_id', qr.id)
+    );
 
-    if (scanError) {
-      console.error("Error fetching scan counts:", scanError.message);
-      // Continue without scan counts
-    }
-
+    const scanResults = await Promise.all(scanPromises);
+    
     // Create a map of QR code IDs to their scan counts
     const scanCountMap: Record<string, number> = {};
-    if (scanCounts) {
-      scanCounts.forEach(item => {
-        scanCountMap[item.qr_code_id] = parseInt(item.count);
-      });
-    }
+    data.forEach((qr, index) => {
+      scanCountMap[qr.id] = scanResults[index].count || 0;
+    });
     
     return data.map(item => ({
       id: item.id,
