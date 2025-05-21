@@ -170,7 +170,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             )}
           </div>
           
-          {!sidebarCollapsed && <FolderList />}
+          {!sidebarCollapsed && (
+            <ul className="space-y-1">
+              <FolderList />
+            </ul>
+          )}
         </div>
       </div>
 

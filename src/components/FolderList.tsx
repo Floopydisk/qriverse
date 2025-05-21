@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { fetchUserFolders, deleteFolder, updateFolder, createFolder, Folder } from "@/lib/api";
-import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 const FolderList = () => {
   const { toast } = useToast();
@@ -111,10 +110,10 @@ const FolderList = () => {
   return (
     <>
       {folders.map((folder: Folder) => (
-        <SidebarMenuItem key={folder.id}>
-          <SidebarMenuButton 
+        <li key={folder.id} className="group/menu-item relative">
+          <button 
             onClick={() => handleOpenFolder(folder.id)}
-            className="group relative"
+            className="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-has-[[data-sidebar=menu-action]]/menu-item:pr-8"
           >
             <FolderOpen className="h-4 w-4" />
             <span>{folder.name}</span>
@@ -144,8 +143,8 @@ const FolderList = () => {
                 <Trash2 className="h-3 w-3" />
               </Button>
             </div>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+          </button>
+        </li>
       ))}
 
       {/* Edit Folder Dialog */}
