@@ -3,9 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import { fetchUserProfile, updateUserProfile, UserProfile } from "@/lib/api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -57,6 +55,35 @@ const Profile = () => {
     fetchProfile();
   }, [user, toast]);
 
+  const handleAvatarChange = async (avatarPath: string) => {
+    if (!user) return;
+    
+    try {
+      const updatedProfile = await updateUserProfile({ avatar_url: avatarPath });
+      setProfile(updatedProfile);
+      
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(avatarPath);
+        
+      if (data?.publicUrl) {
+        setAvatarUrl(data.publicUrl);
+      }
+      
+      toast({
+        title: "Avatar Updated",
+        description: "Your profile avatar has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update avatar",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -83,6 +110,21 @@ const Profile = () => {
           <h1 className="text-2xl font-bold mb-8">Account Settings</h1>
           
           <div className="space-y-8">
+            {/* Avatar Upload Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Picture</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AvatarUpload
+                  userId={user.id}
+                  fullName={profile?.full_name || ""}
+                  avatarUrl={avatarUrl}
+                  onAvatarChange={handleAvatarChange}
+                />
+              </CardContent>
+            </Card>
+            
             <ProfileInfoForm 
               profile={profile}
               onProfileUpdated={() => {

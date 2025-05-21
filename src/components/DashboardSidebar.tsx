@@ -67,7 +67,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full max-h-screen overflow-hidden">
       {/* Search Bar */}
       <div className="px-4 py-6 mt-24">
         {!sidebarCollapsed && (
