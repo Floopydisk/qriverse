@@ -1,15 +1,7 @@
 
-// Export user profile related functions
-export * from './profile';
-
-// Export QR code related functions
+// Re-export everything from the individual API files
 export * from './qr-codes';
-
-// Export folder related functions
 export * from './folders';
-
-// Export dynamic QR code related functions
+export * from './profile';
 export * from './dynamic-qr';
-
-// Export all types
-export * from './types';
+export * from './barcodes'; // Add the new barcodes export

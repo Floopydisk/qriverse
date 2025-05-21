@@ -1,7 +1,7 @@
 
 import { useState, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QrCode, AtSign, Wifi, Phone, CreditCard, Link, MessageSquare, Twitter } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -150,7 +150,7 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
             </TabsTrigger>
           </TabsList>
           
-          {/* We wrap the children inside the Tabs component */}
+          {/* We properly include the children here inside the Tabs component */}
           {children}
         </Tabs>
       </div>
