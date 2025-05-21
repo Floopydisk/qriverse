@@ -2,7 +2,7 @@
 import { useState, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { QrCode, AtSign, Wifi, Phone, CreditCard, Link, MessageSquare, Twitter } from "lucide-react";
+import { QrCode, AtSign, Wifi, Phone, CreditCard, Link, MessageSquare, Twitter, ChevronDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,6 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,8 +32,25 @@ interface QRTabSelectorProps {
 const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab }: QRTabSelectorProps) => {
   const [isDynamicEnabled, setIsDynamicEnabled] = useState(false);
   const [showDynamicDialog, setShowDynamicDialog] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Main tabs to display directly
+  const mainTabs = [
+    { id: "url", label: "URL", icon: <Link className="h-4 w-4" /> },
+    { id: "text", label: "Text", icon: <QrCode className="h-4 w-4" /> },
+    { id: "email", label: "Email", icon: <AtSign className="h-4 w-4" /> },
+  ];
+
+  // Tabs to display in the "More" dropdown
+  const moreTabs = [
+    { id: "wifi", label: "WiFi", icon: <Wifi className="h-4 w-4" /> },
+    { id: "phone", label: "Phone", icon: <Phone className="h-4 w-4" /> },
+    { id: "sms", label: "SMS", icon: <MessageSquare className="h-4 w-4" /> },
+    { id: "vcard", label: "Contact", icon: <CreditCard className="h-4 w-4" /> },
+    { id: "twitter", label: "Twitter", icon: <Twitter className="h-4 w-4" /> },
+  ];
 
   // Handle tab change, with fallback to setActiveTab if onTabChange is not provided
   const handleTabChange = (value: string) => {
@@ -36,6 +58,10 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
       onTabChange(value);
     } else if (setActiveTab) {
       setActiveTab(value);
+    }
+    // Close the more dropdown if it's open
+    if (moreOpen) {
+      setMoreOpen(false);
     }
   };
 
@@ -96,12 +122,20 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
       description: "Your content has been transferred to the dynamic QR creation page"
     });
   };
+  
+  // Find current active tab in moreTabs
+  const activeMoreTab = moreTabs.find(tab => tab.id === activeTab);
+  
+  // Determine if the active tab is in the "More" section
+  const isMoreTabActive = activeMoreTab !== undefined;
 
   return (
     <>
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-xl font-bold">QR Code Content Type</h2>
+          <h2 className="text-xl font-bold text-foreground">
+            <span className="text-primary">QR Code</span> Content Type
+          </h2>
           
           {/* Dynamic QR toggle switch */}
           <div className="flex items-center space-x-2">
@@ -115,39 +149,47 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <TabsTrigger value="url" className="flex items-center gap-2">
-              <Link className="h-4 w-4" />
-              <span className="hidden md:inline">URL</span>
-            </TabsTrigger>
-            <TabsTrigger value="text" className="flex items-center gap-2">
-              <QrCode className="h-4 w-4" />
-              <span className="hidden md:inline">Text</span>
-            </TabsTrigger>
-            <TabsTrigger value="email" className="flex items-center gap-2">
-              <AtSign className="h-4 w-4" />
-              <span className="hidden md:inline">Email</span>
-            </TabsTrigger>
-            <TabsTrigger value="wifi" className="flex items-center gap-2">
-              <Wifi className="h-4 w-4" />
-              <span className="hidden md:inline">WiFi</span>
-            </TabsTrigger>
-            <TabsTrigger value="phone" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              <span className="hidden md:inline">Phone</span>
-            </TabsTrigger>
-            <TabsTrigger value="sms" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden md:inline">SMS</span>
-            </TabsTrigger>
-            <TabsTrigger value="vcard" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              <span className="hidden md:inline">Contact</span>
-            </TabsTrigger>
-            <TabsTrigger value="twitter" className="flex items-center gap-2">
-              <Twitter className="h-4 w-4" />
-              <span className="hidden md:inline">Twitter</span>
-            </TabsTrigger>
+          <TabsList className="flex w-full">
+            {/* Main tabs */}
+            {mainTabs.map((tab) => (
+              <TabsTrigger 
+                key={tab.id} 
+                value={tab.id} 
+                className="flex-1 flex items-center justify-center gap-2"
+              >
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
+              </TabsTrigger>
+            ))}
+            
+            {/* "More" dropdown tab */}
+            <Popover open={moreOpen} onOpenChange={setMoreOpen}>
+              <PopoverTrigger asChild>
+                <TabsTrigger 
+                  value={isMoreTabActive ? activeTab : "more"}
+                  className={`flex-1 flex items-center justify-center gap-2 ${isMoreTabActive ? "data-[state=active]:bg-background data-[state=active]:text-foreground" : ""}`}
+                >
+                  {isMoreTabActive ? activeMoreTab.icon : null}
+                  <span className="hidden sm:inline">{isMoreTabActive ? activeMoreTab.label : "More"}</span>
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </TabsTrigger>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-48" align="end">
+                <div className="bg-popover rounded-md overflow-hidden">
+                  {moreTabs.map((tab) => (
+                    <Button
+                      key={tab.id}
+                      variant="ghost"
+                      className={`w-full justify-start px-3 py-2 text-sm ${activeTab === tab.id ? "bg-accent" : ""}`}
+                      onClick={() => handleTabChange(tab.id)}
+                    >
+                      {tab.icon}
+                      <span className="ml-2">{tab.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </TabsList>
           
           {/* We properly include the children here inside the Tabs component */}
