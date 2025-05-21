@@ -149,11 +149,11 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
               <span className="hidden md:inline">Twitter</span>
             </TabsTrigger>
           </TabsList>
+          
+          {/* We wrap the children inside the Tabs component */}
+          {children}
         </Tabs>
       </div>
-
-      {/* Render the children */}
-      {children}
 
       {/* Dialog for confirming dynamic QR code conversion */}
       <Dialog open={showDynamicDialog} onOpenChange={(open) => {
