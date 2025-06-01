@@ -493,21 +493,21 @@ const Generate = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <FloatingCircles />
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-6xl mx-auto">
+      <main className="container mx-auto px-4 pt-20 pb-12">
+        <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Form */}
-            <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-6">
+            <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-2xl p-6 space-y-6 shadow-lg">
               <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-foreground">
-                  <span className="text-primary">QR Code</span> Generator
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  QR Generator
                 </h1>
-                <Button variant="outline" onClick={handleScanQRClick}>
-                  <Scan className="mr-2 h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={handleScanQRClick} className="gap-2">
+                  <Scan className="h-4 w-4" />
                   Scan QR
                 </Button>
               </div>
@@ -519,27 +519,27 @@ const Generate = () => {
                 setActiveTab={setActiveTab} 
                 qrData={getCurrentQRData()}
               >
-                <div className="space-y-4 mt-4">
-                  <TabsContent value="url" className="mt-0">
-                    <TextQRTab text={text} setText={setText} />
+                <div className="space-y-6 mt-6">
+                  <TabsContent value="url" className="mt-0 space-y-0">
+                    <TextQRTab text={text} setText={setText} isUrl={true} />
                   </TabsContent>
                   
-                  <TabsContent value="text" className="mt-0">
-                    <TextQRTab text={text} setText={setText} />
+                  <TabsContent value="text" className="mt-0 space-y-0">
+                    <TextQRTab text={text} setText={setText} isUrl={false} />
                   </TabsContent>
                   
-                  <TabsContent value="email" className="mt-0">
+                  <TabsContent value="email" className="mt-0 space-y-0">
                     <EmailQRTab
                       emailTo={emailTo}
                       setEmailTo={setEmailTo}
                       emailSubject={emailSubject}
                       setEmailSubject={setEmailSubject}
                       emailBody={emailBody}
-                      setEmailBody={emailBody}
+                      setEmailBody={setEmailBody}
                     />
                   </TabsContent>
                   
-                  <TabsContent value="wifi" className="mt-0">
+                  <TabsContent value="wifi" className="mt-0 space-y-0">
                     <WifiQRTab 
                       ssid={ssid}
                       setSsid={setSsid}
@@ -552,7 +552,7 @@ const Generate = () => {
                     />
                   </TabsContent>
                   
-                  <TabsContent value="phone" className="mt-0">
+                  <TabsContent value="phone" className="mt-0 space-y-0">
                     <SmsQRTab 
                       smsPhone={smsPhone}
                       setSmsPhone={setSmsPhone}
@@ -561,7 +561,7 @@ const Generate = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="sms" className="mt-0">
+                  <TabsContent value="sms" className="mt-0 space-y-0">
                     <SmsQRTab 
                       smsPhone={smsPhone}
                       setSmsPhone={setSmsPhone}
@@ -570,7 +570,7 @@ const Generate = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="vcard" className="mt-0">
+                  <TabsContent value="vcard" className="mt-0 space-y-0">
                     <ContactQRTab
                       fullName={fullName}
                       setFullName={setFullName}
@@ -597,7 +597,7 @@ const Generate = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="twitter" className="mt-0">
+                  <TabsContent value="twitter" className="mt-0 space-y-0">
                     <TwitterQRTab 
                       twitterText={twitterText}
                       setTwitterText={setTwitterText}
@@ -608,7 +608,7 @@ const Generate = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="bitcoin" className="mt-0">
+                  <TabsContent value="bitcoin" className="mt-0 space-y-0">
                     <BitcoinQRTab 
                       bitcoinAddress={bitcoinAddress}
                       setBitcoinAddress={setBitcoinAddress}
@@ -635,17 +635,17 @@ const Generate = () => {
               />
               
               <Button 
-                className="w-full"
+                className="w-full h-12 text-lg font-semibold"
                 onClick={handleGenerate}
                 disabled={qrGenerator.isGenerating}
               >
-                <QrCode className="mr-2 h-4 w-4" />
+                <QrCode className="mr-2 h-5 w-5" />
                 {qrGenerator.isGenerating ? "Generating..." : (editId ? "Update QR Code" : "Generate QR Code")}
               </Button>
             </div>
 
             {/* Right Column - Preview */}
-            <div className="bg-card/30 backdrop-blur-sm border border-border rounded-xl p-6">
+            <div className="bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl p-6 shadow-lg">
               <QRCodePreview 
                 qrDataUrl={qrGenerator.qrDataUrl}
                 activeTab={activeTab}
