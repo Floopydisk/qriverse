@@ -11,7 +11,7 @@ import { fetchQRCode } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 
 // Import TabsContent from UI tabs component
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 
 // Import QR Generator Components
 import { QRNameInput } from "@/components/qr-generator/QRNameInput";
@@ -82,7 +82,7 @@ const Generate = () => {
   const [bitcoinLabel, setBitcoinLabel] = useState("");
   const [bitcoinMessage, setBitcoinMessage] = useState("");
 
-  const [activeTab, setActiveTab] = useState("text");
+  const [activeTab, setActiveTab] = useState("url");
   
   const { data: qrCodeData, isLoading: isLoadingQrCode } = useQuery({
     queryKey: ['qrCode', editId],
@@ -94,7 +94,6 @@ const Generate = () => {
     if (qrCodeData) {
       qrGenerator.setName(qrCodeData.name || "");
       if (qrCodeData.options && typeof qrCodeData.options === 'object') {
-        // Fix: Type guard to ensure we're working with an object
         const options = qrCodeData.options as Record<string, any>;
         qrGenerator.setQrDataUrl(options.dataUrl || "");
         qrGenerator.setDarkColor(options.darkColor || "#10B981");
@@ -103,7 +102,7 @@ const Generate = () => {
       }
 
       if (qrCodeData.type === "url" || qrCodeData.type === "text") {
-        setActiveTab("text");
+        setActiveTab(qrCodeData.type);
         setText(qrCodeData.content || "");
       } else if (qrCodeData.type === "wifi") {
         setActiveTab("wifi");
@@ -122,7 +121,7 @@ const Generate = () => {
           console.error("Failed to parse WiFi QR code:", err);
         }
       } else if (qrCodeData.type === "contact") {
-        setActiveTab("contact");
+        setActiveTab("vcard");
         try {
           const vCardString = qrCodeData.content;
           const fnMatch = vCardString.match(/FN:(.*?)(?:\r?\n|$)/);
@@ -132,7 +131,6 @@ const Generate = () => {
           const titleMatch = vCardString.match(/TITLE:(.*?)(?:\r?\n|$)/);
           const urlMatch = vCardString.match(/URL:(.*?)(?:\r?\n|$)/);
           
-          // Parse social media links
           const fbMatch = vCardString.match(/X-SOCIALPROFILE;type=facebook:(.*?)(?:\r?\n|$)/);
           const liMatch = vCardString.match(/X-SOCIALPROFILE;type=linkedin:(.*?)(?:\r?\n|$)/);
           const igMatch = vCardString.match(/X-SOCIALPROFILE;type=instagram:(.*?)(?:\r?\n|$)/);
@@ -146,7 +144,6 @@ const Generate = () => {
           if (titleMatch) setTitle(titleMatch[1]);
           if (urlMatch) setWebsite(urlMatch[1]);
           
-          // Set social media values
           if (fbMatch) setFacebookUrl(fbMatch[1]);
           if (liMatch) setLinkedinUrl(liMatch[1]);
           if (igMatch) setInstagramUrl(igMatch[1]);
@@ -270,7 +267,6 @@ const Generate = () => {
     }
 
     try {
-      // Build vCard with social media links
       const vCardLines = [
         "BEGIN:VCARD",
         "VERSION:3.0",
@@ -280,7 +276,6 @@ const Generate = () => {
         organization ? `ORG:${organization}` : "",
         title ? `TITLE:${title}` : "",
         website ? `URL:${website}` : "",
-        // Add social media links using X-SOCIALPROFILE format
         facebookUrl ? `X-SOCIALPROFILE;type=facebook:${facebookUrl}` : "",
         linkedinUrl ? `X-SOCIALPROFILE;type=linkedin:${linkedinUrl}` : "",
         instagramUrl ? `X-SOCIALPROFILE;type=instagram:${instagramUrl}` : "",
@@ -449,11 +444,11 @@ const Generate = () => {
   };
 
   const handleGenerate = () => {
-    if (activeTab === "text") {
+    if (activeTab === "url" || activeTab === "text") {
       generateTextQR();
     } else if (activeTab === "wifi") {
       generateWifiQR();
-    } else if (activeTab === "contact") {
+    } else if (activeTab === "vcard") {
       generateContactQR();
     } else if (activeTab === "sms") {
       generateSmsQR();
@@ -470,15 +465,43 @@ const Generate = () => {
     navigate("/scan");
   };
 
+  const getCurrentQRData = () => {
+    switch (activeTab) {
+      case "url":
+      case "text":
+        return {
+          url: activeTab === "url" ? text : "",
+          text: activeTab === "text" ? text : "",
+          name: qrGenerator.name
+        };
+      case "email":
+        return {
+          email: emailTo,
+          emailSubject,
+          emailBody,
+          name: qrGenerator.name
+        };
+      case "sms":
+        return {
+          phone: smsPhone,
+          message: smsMessage,
+          name: qrGenerator.name
+        };
+      default:
+        return { name: qrGenerator.name };
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <FloatingCircles />
       <Header />
       
       <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-8">
-            <div className="space-y-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column - Form */}
+            <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-foreground">
                   <span className="text-primary">QR Code</span> Generator
@@ -489,25 +512,31 @@ const Generate = () => {
                 </Button>
               </div>
               
+              <QRNameInput name={qrGenerator.name} setName={qrGenerator.setName} />
+              
               <QRTabSelector 
                 activeTab={activeTab} 
                 setActiveTab={setActiveTab} 
-                qrData={{
-                  url: activeTab === "url" ? text : "",
-                  text: activeTab === "text" ? text : "",
-                  email: activeTab === "email" ? emailTo : "",
-                  emailSubject: activeTab === "email" ? emailSubject : "",
-                  emailBody: activeTab === "email" ? emailBody : "",
-                  phone: activeTab === "sms" ? smsPhone : "",
-                  message: activeTab === "sms" ? smsMessage : "",
-                  name: qrGenerator.name
-                }}
+                qrData={getCurrentQRData()}
               >
-                <div className="space-y-4">
-                  <QRNameInput name={qrGenerator.name} setName={qrGenerator.setName} />
+                <div className="space-y-4 mt-4">
+                  <TabsContent value="url" className="mt-0">
+                    <TextQRTab text={text} setText={setText} />
+                  </TabsContent>
                   
                   <TabsContent value="text" className="mt-0">
                     <TextQRTab text={text} setText={setText} />
+                  </TabsContent>
+                  
+                  <TabsContent value="email" className="mt-0">
+                    <EmailQRTab
+                      emailTo={emailTo}
+                      setEmailTo={setEmailTo}
+                      emailSubject={emailSubject}
+                      setEmailSubject={setEmailSubject}
+                      emailBody={emailBody}
+                      setEmailBody={emailBody}
+                    />
                   </TabsContent>
                   
                   <TabsContent value="wifi" className="mt-0">
@@ -523,7 +552,25 @@ const Generate = () => {
                     />
                   </TabsContent>
                   
-                  <TabsContent value="contact" className="mt-0">
+                  <TabsContent value="phone" className="mt-0">
+                    <SmsQRTab 
+                      smsPhone={smsPhone}
+                      setSmsPhone={setSmsPhone}
+                      smsMessage={smsMessage}
+                      setSmsMessage={setSmsMessage}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="sms" className="mt-0">
+                    <SmsQRTab 
+                      smsPhone={smsPhone}
+                      setSmsPhone={setSmsPhone}
+                      smsMessage={smsMessage}
+                      setSmsMessage={setSmsMessage}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="vcard" className="mt-0">
                     <ContactQRTab
                       fullName={fullName}
                       setFullName={setFullName}
@@ -550,26 +597,6 @@ const Generate = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="sms" className="mt-0">
-                    <SmsQRTab 
-                      smsPhone={smsPhone}
-                      setSmsPhone={setSmsPhone}
-                      smsMessage={smsMessage}
-                      setSmsMessage={setSmsMessage}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="email" className="mt-0">
-                    <EmailQRTab
-                      emailTo={emailTo}
-                      setEmailTo={setEmailTo}
-                      emailSubject={emailSubject}
-                      setEmailSubject={setEmailSubject}
-                      emailBody={emailBody}
-                      setEmailBody={setEmailBody}
-                    />
-                  </TabsContent>
-
                   <TabsContent value="twitter" className="mt-0">
                     <TwitterQRTab 
                       twitterText={twitterText}
@@ -593,34 +620,38 @@ const Generate = () => {
                       setBitcoinMessage={setBitcoinMessage}
                     />
                   </TabsContent>
-                  
-                  <QRStyleOptions
-                    darkColor={qrGenerator.darkColor}
-                    setDarkColor={qrGenerator.setDarkColor}
-                    lightColor={qrGenerator.lightColor}
-                    setLightColor={qrGenerator.setLightColor}
-                    logo={qrGenerator.logo}
-                    setLogo={qrGenerator.setLogo}
-                    addLogo={qrGenerator.addLogo}
-                    setAddLogo={qrGenerator.setAddLogo}
-                  />
-                  
-                  <Button 
-                    className="w-full"
-                    onClick={handleGenerate}
-                  >
-                    <QrCode className="mr-2 h-4 w-4" />
-                    {editId ? "Update QR Code" : "Generate QR Code"}
-                  </Button>
                 </div>
               </QRTabSelector>
+              
+              <QRStyleOptions
+                darkColor={qrGenerator.darkColor}
+                setDarkColor={qrGenerator.setDarkColor}
+                lightColor={qrGenerator.lightColor}
+                setLightColor={qrGenerator.setLightColor}
+                logo={qrGenerator.logo}
+                setLogo={qrGenerator.setLogo}
+                addLogo={qrGenerator.addLogo}
+                setAddLogo={qrGenerator.setAddLogo}
+              />
+              
+              <Button 
+                className="w-full"
+                onClick={handleGenerate}
+                disabled={qrGenerator.isGenerating}
+              >
+                <QrCode className="mr-2 h-4 w-4" />
+                {qrGenerator.isGenerating ? "Generating..." : (editId ? "Update QR Code" : "Generate QR Code")}
+              </Button>
             </div>
 
-            <QRCodePreview 
-              qrDataUrl={qrGenerator.qrDataUrl}
-              activeTab={activeTab}
-              text={activeTab === "text" ? text : ""}
-            />
+            {/* Right Column - Preview */}
+            <div className="bg-card/30 backdrop-blur-sm border border-border rounded-xl p-6">
+              <QRCodePreview 
+                qrDataUrl={qrGenerator.qrDataUrl}
+                activeTab={activeTab}
+                text={activeTab === "text" || activeTab === "url" ? text : ""}
+              />
+            </div>
           </div>
         </div>
       </main>

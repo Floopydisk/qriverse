@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -47,11 +46,22 @@ export function QRCodePreview({ qrDataUrl, activeTab, text = "" }: QRCodePreview
     });
   };
 
-  if (!qrDataUrl) return null;
+  if (!qrDataUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
+        <div className="w-64 h-64 border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center">
+          <p className="text-muted-foreground">QR Code Preview</p>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Fill in the form and click "Generate QR Code" to see your QR code here
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="bg-white rounded-lg p-4 mx-auto w-fit">
+    <div className="flex flex-col items-center justify-center h-full space-y-6">
+      <div className="bg-white rounded-lg p-6 shadow-lg">
         <img
           src={qrDataUrl}
           alt="Generated QR Code"
@@ -59,11 +69,11 @@ export function QRCodePreview({ qrDataUrl, activeTab, text = "" }: QRCodePreview
         />
       </div>
 
-      <div className="flex justify-center gap-4">
-        {activeTab === "text" && (
+      <div className="flex gap-3 w-full max-w-sm">
+        {(activeTab === "text" || activeTab === "url") && text && (
           <Button
             variant="outline"
-            className="w-40"
+            className="flex-1"
             onClick={copyText}
           >
             <Copy className="mr-2 h-4 w-4" />
@@ -71,11 +81,11 @@ export function QRCodePreview({ qrDataUrl, activeTab, text = "" }: QRCodePreview
           </Button>
         )}
         <Button
-          className="w-40"
+          className="flex-1"
           onClick={downloadQR}
         >
           <Download className="mr-2 h-4 w-4" />
-          Download QR
+          Download
         </Button>
       </div>
     </div>

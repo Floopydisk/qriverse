@@ -1,7 +1,7 @@
 
 import { useState, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QrCode, AtSign, Wifi, Phone, CreditCard, Link, MessageSquare, Twitter, ChevronDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -50,6 +50,7 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
     { id: "sms", label: "SMS", icon: <MessageSquare className="h-4 w-4" /> },
     { id: "vcard", label: "Contact", icon: <CreditCard className="h-4 w-4" /> },
     { id: "twitter", label: "Twitter", icon: <Twitter className="h-4 w-4" /> },
+    { id: "bitcoin", label: "Bitcoin", icon: <CreditCard className="h-4 w-4" /> },
   ];
 
   // Handle tab change, with fallback to setActiveTab if onTabChange is not provided
@@ -98,7 +99,6 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
           targetUrl = `sms:${qrData.phone}?body=${message}`;
         }
         break;
-      // Add other cases if needed
       default:
         break;
     }
@@ -133,8 +133,8 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
     <>
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-xl font-bold text-foreground">
-            <span className="text-primary">QR Code</span> Content Type
+          <h2 className="text-lg font-semibold text-foreground">
+            Content Type
           </h2>
           
           {/* Dynamic QR toggle switch */}
@@ -144,21 +144,21 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
               checked={isDynamicEnabled}
               onCheckedChange={handleDynamicToggle}
             />
-            <Label htmlFor="dynamic-mode">Make Dynamic QR</Label>
+            <Label htmlFor="dynamic-mode" className="text-sm">Make Dynamic QR</Label>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="flex w-full">
+          <TabsList className="grid w-full grid-cols-4 h-auto">
             {/* Main tabs */}
             {mainTabs.map((tab) => (
               <TabsTrigger 
                 key={tab.id} 
                 value={tab.id} 
-                className="flex-1 flex items-center justify-center gap-2"
+                className="flex flex-col items-center gap-1 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 {tab.icon}
-                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="text-xs">{tab.label}</span>
               </TabsTrigger>
             ))}
             
@@ -167,20 +167,19 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
               <PopoverTrigger asChild>
                 <TabsTrigger 
                   value={isMoreTabActive ? activeTab : "more"}
-                  className={`flex-1 flex items-center justify-center gap-2 ${isMoreTabActive ? "data-[state=active]:bg-background data-[state=active]:text-foreground" : ""}`}
+                  className={`flex flex-col items-center gap-1 py-3 ${isMoreTabActive ? "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" : ""}`}
                 >
-                  {isMoreTabActive ? activeMoreTab.icon : null}
-                  <span className="hidden sm:inline">{isMoreTabActive ? activeMoreTab.label : "More"}</span>
-                  <ChevronDown className="h-4 w-4 ml-1" />
+                  {isMoreTabActive ? activeMoreTab.icon : <ChevronDown className="h-4 w-4" />}
+                  <span className="text-xs">{isMoreTabActive ? activeMoreTab.label : "More"}</span>
                 </TabsTrigger>
               </PopoverTrigger>
               <PopoverContent className="p-0 w-48" align="end">
-                <div className="bg-popover rounded-md overflow-hidden">
+                <div className="bg-popover rounded-md overflow-hidden border">
                   {moreTabs.map((tab) => (
                     <Button
                       key={tab.id}
                       variant="ghost"
-                      className={`w-full justify-start px-3 py-2 text-sm ${activeTab === tab.id ? "bg-accent" : ""}`}
+                      className={`w-full justify-start px-3 py-3 text-sm rounded-none ${activeTab === tab.id ? "bg-accent" : ""}`}
                       onClick={() => handleTabChange(tab.id)}
                     >
                       {tab.icon}
@@ -192,7 +191,6 @@ const QRTabSelector = ({ activeTab, onTabChange, qrData, children, setActiveTab 
             </Popover>
           </TabsList>
           
-          {/* We properly include the children here inside the Tabs component */}
           {children}
         </Tabs>
       </div>
