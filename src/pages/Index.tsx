@@ -46,11 +46,13 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-[#0C0B10] text-white">
       <Header />
       
-      <main className="flex-1">
-        <HeroSection />
-        <FeaturesSection scrolled={scrolled} />
-        <HowItWorksSection scrolled={scrolled} />
-        <CTASection scrolled={scrolled} />
+      <main className="flex-1 flex flex-col items-center justify-center px-4">
+        <div className="text-center mb-12">
+          <HeroSection />
+          <FeaturesSection scrolled={scrolled} />
+          <HowItWorksSection scrolled={scrolled} />
+          <CTASection scrolled={scrolled} />
+        </div>
       </main>
 
       <Footer />
