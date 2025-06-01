@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
@@ -35,44 +34,52 @@ export function useAvatar() {
         return null;
       }
       
-      // Generate a unique filename with user folder structure
+      // Generate a unique filename and create user-specific folder
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      // Create a path with user ID as a folder for better organization and security
+      const fileName = `avatar.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
       
       // Get current user to ensure they're authenticated
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        throw new Error("User not authenticated");
+      if (!user || user.id !== userId) {
+        throw new Error("User not authenticated or unauthorized");
       }
       
-      // Ensure the avatars bucket exists and is public
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const avatarBucket = buckets?.find(bucket => bucket.name === 'avatars');
-      
-      if (!avatarBucket) {
-        // Create the bucket if it doesn't exist
-        const { error: bucketError } = await supabase.storage.createBucket('avatars', {
-          public: true
-        });
-        if (bucketError) {
-          console.error("Error creating avatars bucket:", bucketError);
-        }
-      }
-      
-      // Upload to the avatars bucket
+      // Upload to the avatars bucket (user folder structure ensures proper RLS)
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true
+          upsert: true // This allows overwriting existing avatars
         });
       
       if (uploadError) {
         console.error("Upload error:", uploadError);
         throw uploadError;
+      }
+
+      // Get the public URL for the uploaded file
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      if (!urlData?.publicUrl) {
+        throw new Error("Failed to get public URL for uploaded image");
+      }
+
+      // Update the user's profile with the new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          avatar_url: filePath, // Store the storage path, not the full URL
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error("Profile update error:", updateError);
+        throw updateError;
       }
       
       toast({
@@ -98,6 +105,12 @@ export function useAvatar() {
   const getAvatarUrl = (path: string | null): string | null => {
     if (!path) return null;
     
+    // If it's already a full URL (from external providers like Google), return as is
+    if (path.startsWith('http')) {
+      return path;
+    }
+    
+    // Otherwise, get the public URL from Supabase storage
     const { data } = supabase.storage
       .from('avatars')
       .getPublicUrl(path);

@@ -22,19 +22,21 @@ export default function AvatarUpload({ userId, fullName, avatarUrl, onAvatarChan
     const newAvatarPath = await uploadAvatar(file, userId);
     
     if (newAvatarPath) {
-      // Get the public URL from the new path
-      const publicUrl = getAvatarUrl(newAvatarPath);
-      if (publicUrl) {
-        onAvatarChange(newAvatarPath);
-      }
+      onAvatarChange(newAvatarPath);
     }
+    
+    // Clear the input to allow re-uploading the same file
+    e.target.value = '';
   };
+
+  // Get the display URL for the avatar
+  const displayAvatarUrl = getAvatarUrl(avatarUrl);
 
   return (
     <div className="flex flex-col sm:flex-row items-center gap-6">
       <Avatar className="h-24 w-24 border-2 border-primary/20">
-        {avatarUrl ? (
-          <AvatarImage src={avatarUrl} alt={fullName || "Profile"} />
+        {displayAvatarUrl ? (
+          <AvatarImage src={displayAvatarUrl} alt={fullName || "Profile"} />
         ) : (
           <AvatarFallback className="text-lg bg-primary/10">
             {fullName ? fullName.charAt(0).toUpperCase() : <User className="h-12 w-12" />}
@@ -61,7 +63,7 @@ export default function AvatarUpload({ userId, fullName, avatarUrl, onAvatarChan
           disabled={isUploading}
         />
         <p className="text-xs text-muted-foreground">
-          Recommended: Square image, 500x500 pixels or larger
+          Recommended: Square image, 500x500 pixels or larger (max 2MB)
         </p>
       </div>
     </div>
