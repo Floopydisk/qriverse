@@ -41,11 +41,25 @@ export function useAvatar() {
       // Create a path with user ID as a folder for better organization and security
       const filePath = `${userId}/${fileName}`;
       
-      // Upload to the avatars bucket
+      // Get current user to ensure they're authenticated
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error("User not authenticated");
+      }
+      
+      // Ensure the avatars bucket exists and is public
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const avatarBucket = buckets?.find(bucket => bucket.name === 'avatars');
+      
+      if (!avatarBucket) {
+        // Create the bucket if it doesn't exist
+        const { error: bucketError } = await supabase.storage.createBucket('avatars', {
+          public: true
+        });
+        if (bucketError) {
+          console.error("Error creating avatars bucket:", bucketError);
+        }
       }
       
       // Upload to the avatars bucket
@@ -61,11 +75,6 @@ export function useAvatar() {
         throw uploadError;
       }
       
-      // Get the URL of the uploaded avatar
-      const { data: publicUrlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-        
       toast({
         title: "Avatar Updated",
         description: "Your avatar has been updated successfully"
