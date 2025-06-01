@@ -38,7 +38,7 @@
   }
 }
 
-/* Container styles for better responsive design */
+/* Improved container styles for better responsive design */
 .container {
   width: 100%;
   margin-left: auto;
@@ -47,7 +47,7 @@
   padding-right: 1rem;
 }
 
-/* Responsive adjustments */
+/* Mobile first responsive adjustments */
 @media (min-width: 640px) {
   .container {
     padding-left: 1.5rem;
@@ -55,22 +55,60 @@
   }
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 768px) {
   .container {
     padding-left: 2rem;
     padding-right: 2rem;
   }
 }
 
-/* Large screen optimizations */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1200px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1400px;
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1600px;
+    padding-left: 3.5rem;
+    padding-right: 3.5rem;
+  }
+}
+
+/* Large screen optimizations for 4K and ultra-wide displays */
 @media (min-width: 1920px) {
   .container {
-    max-width: 1800px; /* Increased max width for very large displays */
-    margin: 0 auto;
+    max-width: 1800px;
+    padding-left: 4rem;
+    padding-right: 4rem;
   }
   
   html {
     font-size: 18px; /* Slightly larger base font for better readability on large screens */
+  }
+}
+
+/* Ultra-wide and 4K display optimizations */
+@media (min-width: 2560px) {
+  .container {
+    max-width: 2400px;
+    padding-left: 5rem;
+    padding-right: 5rem;
+  }
+  
+  html {
+    font-size: 20px; /* Even larger font for ultra-wide displays */
   }
 }
 
