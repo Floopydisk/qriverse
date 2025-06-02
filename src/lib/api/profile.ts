@@ -39,7 +39,7 @@ export const fetchUserProfile = async (): Promise<UserProfile | null> => {
 };
 
 // Function to update the current user's profile
-export const updateUserProfile = async (updates: { full_name?: string; avatar_url?: string }): Promise<UserProfile | null> => {
+export const updateUserProfile = async (updates: { full_name?: string; avatar_url?: string; username?: string }): Promise<UserProfile | null> => {
   const { data: session } = await supabase.auth.getSession();
   const user = session?.session?.user;
 

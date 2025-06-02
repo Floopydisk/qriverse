@@ -1,5 +1,4 @@
 
- 
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,10 @@ const Header = () => {
             setAvatarUrl(url);
           }
           
-          if (profile?.full_name) {
+          // Changed to prioritize username over full_name
+          if (profile?.username) {
+            setDisplayName(profile.username);
+          } else if (profile?.full_name) {
             setDisplayName(profile.full_name);
           } else {
             setDisplayName('User');

@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      barcodes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+          user_id: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
       dynamic_qr_codes: {
         Row: {
           active: boolean

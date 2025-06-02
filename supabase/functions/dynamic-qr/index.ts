@@ -21,7 +21,10 @@ serve(async (req: Request) => {
 
   try {
     const url = new URL(req.url);
-    const shortCode = url.pathname.split('/').pop();
+    // Get short code from query parameter instead of pathname
+    const shortCode = url.searchParams.get('code');
+
+    console.log('Received request for short code:', shortCode);
 
     if (!shortCode) {
       return new Response(
@@ -46,6 +49,8 @@ serve(async (req: Request) => {
       );
     }
 
+    console.log('Found QR code:', qrCode.id, 'redirecting to:', qrCode.target_url);
+
     // Record scan statistics (non-blocking)
     const scanData = {
       dynamic_qr_code_id: qrCode.id,
@@ -56,9 +61,9 @@ serve(async (req: Request) => {
     // Try to get IP and location info
     try {
       const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || null;
-      scanData.ip_address = ip;
-      
       if (ip) {
+        scanData.ip_address = ip;
+        
         // Only try to get geolocation if we have an IP
         const geoResponse = await fetch(`https://ipinfo.io/${ip}/json`);
         if (geoResponse.ok) {

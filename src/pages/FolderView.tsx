@@ -67,9 +67,9 @@ const FolderView = () => {
       <FloatingCircles />
       <Header />
 
-      <div className="flex-1 flex w-full">
+      <div className="flex flex-1 w-full">
         {/* Sidebar */}
-        <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-background border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>
+        <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-background border-r border-border fixed top-0 left-0 h-screen transition-all duration-200 z-10`}>
           <DashboardSidebar 
             selectedView={selectedView}
             setSelectedView={setSelectedView}
@@ -82,7 +82,7 @@ const FolderView = () => {
         </div>
 
         {/* Main Content */}
-        <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+        <div className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
           <div className="container mx-auto px-4 pt-8 pb-12">
             <div className="max-w-7xl mx-auto space-y-8 mt-24">
               <div className="flex items-center">
@@ -128,10 +128,10 @@ const FolderView = () => {
               </div>
             </div>
           </div>
-        </main>
+          
+          <Footer />
+        </div>
       </div>
-
-      <Footer />
     </div>
   );
 };

@@ -1,15 +1,15 @@
 
-// Export user profile related functions
-export * from './profile';
-
-// Export QR code related functions
+// Re-export everything from the individual API files
 export * from './qr-codes';
-
-// Export folder related functions
 export * from './folders';
-
-// Export dynamic QR code related functions
+export * from './profile';
 export * from './dynamic-qr';
+export { 
+  fetchUserBarcodes,
+  createBarcode,
+  deleteBarcode,
+  updateBarcode
+} from './barcodes'; // Only export the functions, not the interface
 
-// Export all types
+// Export the types
 export * from './types';

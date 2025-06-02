@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +25,8 @@ import {
   MoreVertical,
   Pencil,
   Trash,
+  Play,
+  Pause,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -37,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { DynamicQRCode, deleteDynamicQRCode, getDynamicQRRedirectUrl } from '@/lib/api';
+import { DynamicQRCode, deleteDynamicQRCode, updateDynamicQRCode, getDynamicQRRedirectUrl } from '@/lib/api';
 
 interface DynamicQRCodeListProps {
   dynamicQRCodes: DynamicQRCode[];
@@ -70,12 +71,38 @@ const DynamicQRCodeList = ({ dynamicQRCodes, isLoading, onCreateNew }: DynamicQR
     },
   });
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, active }: { id: string, active: boolean }) => 
+      updateDynamicQRCode(id, { active }),
+    onSuccess: (updatedQrCode) => {
+      queryClient.invalidateQueries({ queryKey: ['dynamicQRCodes'] });
+      toast({
+        title: 'Success',
+        description: `Dynamic QR code ${updatedQrCode?.active ? 'activated' : 'paused'} successfully`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update QR code status',
+        variant: 'destructive',
+      });
+    }
+  });
+
   const handleCopyLink = (shortCode: string) => {
     const redirectUrl = getDynamicQRRedirectUrl(shortCode);
     navigator.clipboard.writeText(redirectUrl);
     toast({
       title: 'Link copied',
       description: 'QR code link copied to clipboard',
+    });
+  };
+
+  const handleToggleActive = (qrCode: DynamicQRCode) => {
+    toggleActiveMutation.mutate({
+      id: qrCode.id,
+      active: !qrCode.active
     });
   };
 
@@ -173,6 +200,19 @@ const DynamicQRCodeList = ({ dynamicQRCodes, isLoading, onCreateNew }: DynamicQR
                         <Pencil className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleToggleActive(qrCode)}>
+                        {qrCode.active ? (
+                          <>
+                            <Pause className="h-4 w-4 mr-2" />
+                            Pause
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 mr-2" />
+                            Activate
+                          </>
+                        )}
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleCopyLink(qrCode.short_code)}>
                         <Copy className="h-4 w-4 mr-2" />
                         Copy Link
@@ -219,20 +259,30 @@ const DynamicQRCodeList = ({ dynamicQRCodes, isLoading, onCreateNew }: DynamicQR
                       {qrCode.scan_count || 0} scans
                     </div>
                     <div className={`rounded-full px-2 py-0.5 flex items-center ${qrCode.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {qrCode.active ? 'Active' : 'Inactive'}
+                      {qrCode.active ? 'Active' : 'Paused'}
                     </div>
                   </div>
                 </div>
               </CardContent>
               <CardFooter className="pt-0 flex justify-between gap-2">
                 <Button 
-                  variant="outline" 
+                  variant={qrCode.active ? "destructive" : "default"}
                   size="sm" 
                   className="w-1/2"
-                  onClick={() => handleCopyLink(qrCode.short_code)}
+                  onClick={() => handleToggleActive(qrCode)}
+                  disabled={toggleActiveMutation.isPending}
                 >
-                  <Link2 className="h-3.5 w-3.5 mr-1.5" />
-                  Copy Link
+                  {qrCode.active ? (
+                    <>
+                      <Pause className="h-3.5 w-3.5 mr-1.5" />
+                      Pause
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-3.5 w-3.5 mr-1.5" />
+                      Activate
+                    </>
+                  )}
                 </Button>
                 <Button 
                   size="sm" 

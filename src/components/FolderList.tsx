@@ -13,13 +13,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { fetchUserFolders, deleteFolder, updateFolder, createFolder, Folder } from "@/lib/api";
-import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 const FolderList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editFolder, setEditFolder] = useState<{id: string, name: string} | null>(null);
+  const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
   
   const { data: folders = [], isLoading, error } = useQuery({
     queryKey: ['folders'],
@@ -111,41 +111,46 @@ const FolderList = () => {
   return (
     <>
       {folders.map((folder: Folder) => (
-        <SidebarMenuItem key={folder.id}>
-          <SidebarMenuButton 
+        <li 
+          key={folder.id} 
+          className="group relative"
+          onMouseEnter={() => setHoveredFolderId(folder.id)}
+          onMouseLeave={() => setHoveredFolderId(null)}
+        >
+          <button 
             onClick={() => handleOpenFolder(folder.id)}
-            className="group relative"
+            className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <FolderOpen className="h-4 w-4" />
             <span>{folder.name}</span>
-            
-            {/* Edit and Delete buttons positioned absolutely */}
-            <div className="absolute right-0 top-0 h-full flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEdit(folder.id, folder.name);
-                }}
-              >
-                <Edit className="h-3 w-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 text-destructive hover:text-destructive" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(folder.id);
-                }}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+          </button>
+          
+          {/* Edit and Delete buttons that show on hover */}
+          <div className={`absolute right-0 top-0 h-full flex items-center transition-opacity ${hoveredFolderId === folder.id ? 'opacity-100' : 'opacity-0'}`}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(folder.id, folder.name);
+              }}
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 text-destructive hover:text-destructive" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(folder.id);
+              }}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </li>
       ))}
 
       {/* Edit Folder Dialog */}

@@ -17,6 +17,7 @@ export interface ProfileInfoFormProps {
 
 export function ProfileInfoForm({ profile, onProfileUpdated }: ProfileInfoFormProps) {
   const [fullName, setFullName] = useState(profile?.full_name || '');
+  const [username, setUsername] = useState(profile?.username || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -35,7 +36,10 @@ export function ProfileInfoForm({ profile, onProfileUpdated }: ProfileInfoFormPr
     try {
       setIsSubmitting(true);
       
-      const updatedProfile = await updateUserProfile({ full_name: fullName });
+      const updatedProfile = await updateUserProfile({ 
+        full_name: fullName,
+        username: username.trim() || null
+      });
       
       if (updatedProfile) {
         toast({
@@ -63,16 +67,31 @@ export function ProfileInfoForm({ profile, onProfileUpdated }: ProfileInfoFormPr
       </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-2">
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input
-              id="fullName"
-              type="text"
-              placeholder="Enter your full name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-            />
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Enter your full name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Enter your username (optional)"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">This username will be visible to other users</p>
+            </div>
           </div>
+          
           <Button type="submit" disabled={isSubmitting} className="mt-4 w-full">
             {isSubmitting ? "Updating..." : "Update Profile"}
           </Button>
