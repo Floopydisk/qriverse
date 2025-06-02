@@ -9,8 +9,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Pencil, Link2 } from 'lucide-react';
-import { DynamicQRCode, getDynamicQRRedirectUrl } from '@/lib/api';
+import { Pencil, Link2, Play, Pause } from 'lucide-react';
+import { DynamicQRCode, getDynamicQRRedirectUrl, updateDynamicQRCode } from '@/lib/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 interface QRCodeDetailsProps {
   qrCode: DynamicQRCode;
@@ -18,11 +20,44 @@ interface QRCodeDetailsProps {
 }
 
 const QRCodeDetails = ({ qrCode, onEdit }: QRCodeDetailsProps) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const redirectUrl = getDynamicQRRedirectUrl(qrCode.short_code);
+  
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, active }: { id: string, active: boolean }) => 
+      updateDynamicQRCode(id, { active }),
+    onSuccess: (updatedQrCode) => {
+      queryClient.invalidateQueries({ queryKey: ['dynamicQrCode', qrCode.id] });
+      queryClient.invalidateQueries({ queryKey: ['dynamicQRCodes'] });
+      
+      toast({
+        title: 'Success',
+        description: `Dynamic QR code ${updatedQrCode?.active ? 'activated' : 'paused'} successfully`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update QR code status',
+        variant: 'destructive',
+      });
+    }
+  });
   
   const handleCopyLink = () => {
     navigator.clipboard.writeText(redirectUrl);
-    alert('Link copied to clipboard!');
+    toast({
+      title: 'Link copied',
+      description: 'QR code link copied to clipboard',
+    });
+  };
+
+  const handleToggleActive = () => {
+    toggleActiveMutation.mutate({
+      id: qrCode.id,
+      active: !qrCode.active
+    });
   };
   
   return (
@@ -79,13 +114,31 @@ const QRCodeDetails = ({ qrCode, onEdit }: QRCodeDetailsProps) => {
               variant={qrCode.active ? "default" : "secondary"} 
               className={qrCode.active ? "bg-green-500" : "bg-red-500"}
             >
-              {qrCode.active ? "Active" : "Inactive"}
+              {qrCode.active ? "Active" : "Paused"}
             </Badge>
           </div>
         </div>
       </CardContent>
       
-      <CardFooter className="border-t pt-4">
+      <CardFooter className="border-t pt-4 space-y-2">
+        <Button 
+          variant={qrCode.active ? "destructive" : "default"}
+          className="w-full" 
+          onClick={handleToggleActive}
+          disabled={toggleActiveMutation.isPending}
+        >
+          {qrCode.active ? (
+            <>
+              <Pause className="h-4 w-4 mr-2" />
+              Pause QR Code
+            </>
+          ) : (
+            <>
+              <Play className="h-4 w-4 mr-2" />
+              Activate QR Code
+            </>
+          )}
+        </Button>
         <Button 
           variant="outline" 
           className="w-full" 
