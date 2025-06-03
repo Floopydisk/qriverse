@@ -18,36 +18,69 @@ export interface QRStatData {
 
 const useDynamicQRStats = (scanStats: QRStatData | undefined): UseQRStatsResult => {
   const barChartData = useMemo(() => {
-    if (!scanStats || !scanStats.scansByDate) return [];
+    console.log('Processing bar chart data:', scanStats);
     
-    return Object.entries(scanStats.scansByDate)
+    if (!scanStats || !scanStats.scansByDate) {
+      console.log('No scan stats or scansByDate available');
+      return [];
+    }
+    
+    const chartData = Object.entries(scanStats.scansByDate)
       .map(([date, count]) => ({
-        date,
+        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         scans: count,
       }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(-14); // Last 14 days
+    
+    console.log('Processed bar chart data:', chartData);
+    return chartData;
   }, [scanStats]);
 
   const pieChartData = useMemo(() => {
-    if (!scanStats || !scanStats.scansByCountry) return [];
+    console.log('Processing pie chart data:', scanStats);
     
-    return Object.entries(scanStats.scansByCountry)
+    if (!scanStats || !scanStats.scansByCountry) {
+      console.log('No scan stats or scansByCountry available');
+      return [];
+    }
+    
+    const chartData = Object.entries(scanStats.scansByCountry)
       .map(([country, count]) => ({
         name: country,
         value: count as number,
       }))
       .sort((a, b) => b.value - a.value);
+    
+    console.log('Processed pie chart data:', chartData);
+    return chartData;
   }, [scanStats]);
 
   const firstScan = useMemo(() => {
-    if (!scanStats?.rawScans || scanStats.rawScans.length === 0) return null;
-    return scanStats.rawScans[scanStats.rawScans.length - 1];
+    console.log('Processing first scan:', scanStats?.rawScans);
+    
+    if (!scanStats?.rawScans || scanStats.rawScans.length === 0) {
+      console.log('No raw scans available');
+      return null;
+    }
+    
+    // Since scans are ordered by scanned_at descending, the first scan chronologically is the last in the array
+    const chronologicallyFirstScan = scanStats.rawScans[scanStats.rawScans.length - 1];
+    console.log('First scan found:', chronologicallyFirstScan);
+    return chronologicallyFirstScan;
   }, [scanStats]);
 
   const uniqueCountries = useMemo(() => {
-    if (!scanStats?.scansByCountry) return 0;
-    return Object.keys(scanStats.scansByCountry).length;
+    console.log('Processing unique countries:', scanStats?.scansByCountry);
+    
+    if (!scanStats?.scansByCountry) {
+      console.log('No scansByCountry available');
+      return 0;
+    }
+    
+    const count = Object.keys(scanStats.scansByCountry).length;
+    console.log('Unique countries count:', count);
+    return count;
   }, [scanStats]);
 
   return {

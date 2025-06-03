@@ -170,8 +170,10 @@ export const fetchDynamicQRCode = async (id: string): Promise<DynamicQRCode | nu
 // Function to fetch scan stats for a dynamic QR code
 export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
   try {
-    console.log('Fetching scan stats for QR code:', qrCodeId);
+    console.log('=== FETCHING SCAN STATS ===');
+    console.log('QR Code ID:', qrCodeId);
     
+    // Fetch all scans for this QR code
     const { data: rawScans, error: scansError } = await supabase
       .from('dynamic_qr_scans')
       .select('*')
@@ -183,18 +185,31 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
       throw new Error(scansError.message);
     }
 
-    console.log('Raw scans data:', rawScans);
+    console.log('Raw scans fetched:', {
+      count: rawScans?.length || 0,
+      scans: rawScans
+    });
 
-    // Process the raw scan data to extract statistics
+    // Initialize the result structure
+    let totalScans = 0;
     const scansByDate: Record<string, number> = {};
     const scansByCountry: Record<string, number> = {};
-    let totalScans = 0;
 
     if (rawScans && rawScans.length > 0) {
       totalScans = rawScans.length;
+      console.log('Processing', totalScans, 'scans...');
 
-      // Process scans by date
-      rawScans.forEach((scan) => {
+      // Process each scan
+      rawScans.forEach((scan, index) => {
+        console.log(`Processing scan ${index + 1}:`, {
+          id: scan.id,
+          scanned_at: scan.scanned_at,
+          country: scan.country,
+          city: scan.city,
+          ip_address: scan.ip_address
+        });
+
+        // Process scans by date
         const date = new Date(scan.scanned_at).toISOString().split('T')[0];
         scansByDate[date] = (scansByDate[date] || 0) + 1;
 
@@ -204,6 +219,8 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
           scansByCountry[country] = (scansByCountry[country] || 0) + 1;
         }
       });
+    } else {
+      console.log('No scans found for this QR code');
     }
 
     const result = {
@@ -213,7 +230,15 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
       rawScans: rawScans || []
     };
 
-    console.log('Processed scan stats:', result);
+    console.log('Final scan stats result:', {
+      totalScans: result.totalScans,
+      scansByDateKeys: Object.keys(result.scansByDate),
+      scansByDateValues: Object.values(result.scansByDate),
+      scansByCountryKeys: Object.keys(result.scansByCountry),
+      scansByCountryValues: Object.values(result.scansByCountry),
+      rawScansLength: result.rawScans.length
+    });
+
     return result;
   } catch (error) {
     console.error('Error fetching scan stats for dynamic QR code:', error);
