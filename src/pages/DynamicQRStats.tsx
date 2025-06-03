@@ -37,16 +37,30 @@ const DynamicQRStats = () => {
     enabled: !!id,
   });
 
-  const { data: scanStats, isLoading: isLoadingStats } = useQuery({
+  const { data: scanStats, isLoading: isLoadingStats, error: statsError } = useQuery({
     queryKey: ['dynamicQrStats', id],
     queryFn: () => id ? fetchDynamicQRCodeScanStats(id) : null,
     enabled: !!id,
+    refetchInterval: 30000, // Refetch every 30 seconds to get fresh data
+  });
+
+  console.log('DynamicQRStats render:', {
+    id,
+    qrCode,
+    scanStats,
+    isLoadingQrCode,
+    isLoadingStats,
+    statsError
   });
 
   // Process statistics data using the custom hook
   const { barChartData, pieChartData, firstScan, uniqueCountries } = useDynamicQRStats(scanStats);
 
   const isLoading = isLoadingQrCode || isLoadingStats;
+
+  if (statsError) {
+    console.error('Stats error:', statsError);
+  }
 
   if (!qrCode && !isLoading) {
     return (
@@ -98,6 +112,19 @@ const DynamicQRStats = () => {
               Back to Dynamic QR Codes
             </Button>
           </div>
+          
+          {/* Debug Info (remove this in production) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
+              <p><strong>Debug Info:</strong></p>
+              <p>Total Scans: {scanStats?.totalScans || 0}</p>
+              <p>Raw Scans Length: {scanStats?.rawScans?.length || 0}</p>
+              <p>Bar Chart Data Length: {barChartData.length}</p>
+              <p>Pie Chart Data Length: {pieChartData.length}</p>
+              <p>Loading: {isLoading.toString()}</p>
+              <p>Error: {statsError ? statsError.message : 'None'}</p>
+            </div>
+          )}
           
           {/* Mobile Layout */}
           <div className="lg:hidden space-y-6">

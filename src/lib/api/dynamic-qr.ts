@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicQRCode, DynamicQRScan } from "./types";
 
@@ -174,14 +173,7 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
     console.log('=== FETCHING SCAN STATS ===');
     console.log('QR Code ID:', qrCodeId);
     
-    // First, let's check if there are any scans at all for this QR code
-    const { count: totalCount, error: countError } = await supabase
-      .from('dynamic_qr_scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('dynamic_qr_code_id', qrCodeId);
-
-    console.log('Total scan count check:', { totalCount, countError });
-
+    // Fetch all scans for this QR code
     const { data: rawScans, error: scansError } = await supabase
       .from('dynamic_qr_scans')
       .select('*')
@@ -198,16 +190,16 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
       scans: rawScans
     });
 
-    // Process the raw scan data to extract statistics
+    // Initialize the result structure
+    let totalScans = 0;
     const scansByDate: Record<string, number> = {};
     const scansByCountry: Record<string, number> = {};
-    let totalScans = 0;
 
     if (rawScans && rawScans.length > 0) {
       totalScans = rawScans.length;
       console.log('Processing', totalScans, 'scans...');
 
-      // Process scans by date
+      // Process each scan
       rawScans.forEach((scan, index) => {
         console.log(`Processing scan ${index + 1}:`, {
           id: scan.id,
@@ -217,6 +209,7 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
           ip_address: scan.ip_address
         });
 
+        // Process scans by date
         const date = new Date(scan.scanned_at).toISOString().split('T')[0];
         scansByDate[date] = (scansByDate[date] || 0) + 1;
 
@@ -237,10 +230,12 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
       rawScans: rawScans || []
     };
 
-    console.log('Processed scan stats result:', {
+    console.log('Final scan stats result:', {
       totalScans: result.totalScans,
-      dateKeys: Object.keys(result.scansByDate),
-      countryKeys: Object.keys(result.scansByCountry),
+      scansByDateKeys: Object.keys(result.scansByDate),
+      scansByDateValues: Object.values(result.scansByDate),
+      scansByCountryKeys: Object.keys(result.scansByCountry),
+      scansByCountryValues: Object.values(result.scansByCountry),
       rawScansLength: result.rawScans.length
     });
 
