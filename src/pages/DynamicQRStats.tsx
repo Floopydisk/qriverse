@@ -2,7 +2,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Menu } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -69,17 +74,85 @@ const DynamicQRStats = () => {
       <Header />
       
       <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-6xl mx-auto">
-          <Button
-            variant="ghost"
-            className="mb-4"
-            onClick={() => navigate('/dynamic-qr')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dynamic QR Codes
-          </Button>
+        <div className="max-w-7xl mx-auto">
+          {/* Mobile Navigation */}
+          <div className="flex items-center justify-between mb-6 lg:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dynamic-qr')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden lg:block">
+            <Button
+              variant="ghost"
+              className="mb-4"
+              onClick={() => navigate('/dynamic-qr')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dynamic QR Codes
+            </Button>
+          </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Mobile Layout */}
+          <div className="lg:hidden space-y-6">
+            {/* Mobile QR Code Details Sheet */}
+            <div className="flex justify-center">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full max-w-xs">
+                    <Menu className="mr-2 h-4 w-4" />
+                    View QR Details
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[80vh]">
+                  <div className="py-4">
+                    {isLoading ? (
+                      <QRCodeDetailsSkeleton />
+                    ) : (
+                      <QRCodeDetails 
+                        qrCode={qrCode!} 
+                        onEdit={() => {
+                          navigate(`/dynamic-qr/edit/${qrCode!.id}`);
+                        }}
+                      />
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Mobile Stats */}
+            {isLoading ? (
+              <>
+                <StatsSummaryCardsSkeleton />
+                <DetailedStatsSectionSkeleton />
+              </>
+            ) : (
+              <>
+                <StatsSummaryCards 
+                  totalScans={scanStats?.totalScans || 0}
+                  uniqueCountries={uniqueCountries}
+                  firstScan={firstScan}
+                />
+                
+                <DetailedStatsSection
+                  barChartData={barChartData}
+                  pieChartData={pieChartData}
+                  scans={scanStats?.rawScans || []}
+                  colors={COLORS}
+                />
+              </>
+            )}
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6">
             <div className="lg:col-span-1">
               {isLoading ? (
                 <QRCodeDetailsSkeleton />
