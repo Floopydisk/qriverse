@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicQRCode, DynamicQRScan } from "./types";
 
@@ -15,7 +14,10 @@ export const fetchUserDynamicQRCodes = async (): Promise<DynamicQRCode[]> => {
   try {
     const { data, error } = await supabase
       .from('dynamic_qr_codes')
-      .select('*, dynamic_qr_scans(count)')
+      .select(`
+        *,
+        dynamic_qr_scans(count)
+      `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -24,10 +26,27 @@ export const fetchUserDynamicQRCodes = async (): Promise<DynamicQRCode[]> => {
       return [];
     }
 
-    return data.map((item: any) => ({
-      ...item,
-      scan_count: item.dynamic_qr_scans?.[0]?.count || 0
-    })) || [];
+    // Transform the data to include scan_count
+    const transformedData = await Promise.all(
+      (data || []).map(async (item: any) => {
+        // Get the actual scan count
+        const { count, error: countError } = await supabase
+          .from('dynamic_qr_scans')
+          .select('*', { count: 'exact', head: true })
+          .eq('dynamic_qr_code_id', item.id);
+
+        if (countError) {
+          console.error('Error getting scan count:', countError);
+        }
+
+        return {
+          ...item,
+          scan_count: count || 0
+        };
+      })
+    );
+
+    return transformedData;
   } catch (error) {
     console.error("Unexpected error fetching dynamic QR codes:", error);
     return [];
@@ -119,7 +138,7 @@ export const fetchDynamicQRCode = async (id: string): Promise<DynamicQRCode | nu
   try {
     const { data, error } = await supabase
       .from('dynamic_qr_codes')
-      .select('*, dynamic_qr_scans(count)')
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -128,9 +147,19 @@ export const fetchDynamicQRCode = async (id: string): Promise<DynamicQRCode | nu
       return null;
     }
 
+    // Get the scan count separately
+    const { count, error: countError } = await supabase
+      .from('dynamic_qr_scans')
+      .select('*', { count: 'exact', head: true })
+      .eq('dynamic_qr_code_id', id);
+
+    if (countError) {
+      console.error('Error getting scan count:', countError);
+    }
+
     return {
       ...data,
-      scan_count: data.dynamic_qr_scans?.[0]?.count || 0
+      scan_count: count || 0
     };
   } catch (error) {
     console.error("Unexpected error fetching dynamic QR code:", error);
@@ -141,13 +170,20 @@ export const fetchDynamicQRCode = async (id: string): Promise<DynamicQRCode | nu
 // Function to fetch scan stats for a dynamic QR code
 export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
   try {
+    console.log('Fetching scan stats for QR code:', qrCodeId);
+    
     const { data: rawScans, error: scansError } = await supabase
       .from('dynamic_qr_scans')
       .select('*')
       .eq('dynamic_qr_code_id', qrCodeId)
       .order('scanned_at', { ascending: false });
 
-    if (scansError) throw new Error(scansError.message);
+    if (scansError) {
+      console.error('Error fetching scans:', scansError);
+      throw new Error(scansError.message);
+    }
+
+    console.log('Raw scans data:', rawScans);
 
     // Process the raw scan data to extract statistics
     const scansByDate: Record<string, number> = {};
@@ -170,12 +206,15 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
       });
     }
 
-    return {
+    const result = {
       totalScans,
       scansByDate,
       scansByCountry,
       rawScans: rawScans || []
     };
+
+    console.log('Processed scan stats:', result);
+    return result;
   } catch (error) {
     console.error('Error fetching scan stats for dynamic QR code:', error);
     throw error;

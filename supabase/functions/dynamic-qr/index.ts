@@ -27,6 +27,7 @@ serve(async (req: Request) => {
     console.log('Received request for short code:', shortCode);
 
     if (!shortCode) {
+      console.log('No short code provided in request');
       return new Response(
         JSON.stringify({ error: 'No short code provided' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -43,6 +44,23 @@ serve(async (req: Request) => {
 
     if (qrCodeError || !qrCode) {
       console.error('Error retrieving QR code:', qrCodeError);
+      console.log('Searching for short code:', shortCode);
+      
+      // Let's also check if the code exists but is inactive
+      const { data: inactiveCode } = await supabase
+        .from('dynamic_qr_codes')
+        .select('*')
+        .eq('short_code', shortCode)
+        .single();
+        
+      if (inactiveCode && !inactiveCode.active) {
+        console.log('QR code found but is inactive:', inactiveCode.id);
+        return new Response(
+          JSON.stringify({ error: 'QR code is paused' }),
+          { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: 'QR code not found or inactive' }),
         { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -51,50 +69,74 @@ serve(async (req: Request) => {
 
     console.log('Found QR code:', qrCode.id, 'redirecting to:', qrCode.target_url);
 
-    // Record scan statistics (non-blocking)
-    const scanData = {
+    // Prepare scan data
+    const scanData: any = {
       dynamic_qr_code_id: qrCode.id,
       user_agent: req.headers.get('user-agent') || null,
       referrer: req.headers.get('referer') || null,
+      scanned_at: new Date().toISOString(),
     };
 
     // Try to get IP and location info
     try {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || null;
-      if (ip) {
+      // Get IP from various headers
+      const forwardedFor = req.headers.get('x-forwarded-for');
+      const realIp = req.headers.get('x-real-ip');
+      const cfConnectingIp = req.headers.get('cf-connecting-ip');
+      
+      const ip = forwardedFor?.split(',')[0] || realIp || cfConnectingIp || null;
+      
+      console.log('Detected IP:', ip);
+      
+      if (ip && ip !== '127.0.0.1' && ip !== 'localhost') {
         scanData.ip_address = ip;
         
-        // Only try to get geolocation if we have an IP
-        const geoResponse = await fetch(`https://ipinfo.io/${ip}/json`);
-        if (geoResponse.ok) {
-          const geoData = await geoResponse.json();
-          scanData.country = geoData.country || null;
-          scanData.city = geoData.city || null;
+        // Try to get geolocation using a free service
+        try {
+          const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city,lat,lon`, {
+            timeout: 3000, // 3 second timeout
+          });
           
-          // Parse loc string (lat,lng) if available
-          if (geoData.loc) {
-            const [lat, lng] = geoData.loc.split(',');
-            scanData.latitude = parseFloat(lat);
-            scanData.longitude = parseFloat(lng);
+          if (geoResponse.ok) {
+            const geoData = await geoResponse.json();
+            console.log('Geo data received:', geoData);
+            
+            if (geoData.status === 'success') {
+              scanData.country = geoData.country || null;
+              scanData.city = geoData.city || null;
+              scanData.latitude = geoData.lat || null;
+              scanData.longitude = geoData.lon || null;
+            }
+          } else {
+            console.log('Geo API response not ok:', geoResponse.status);
           }
+        } catch (geoError) {
+          console.log('Error getting geolocation (non-blocking):', geoError);
         }
+      } else {
+        console.log('IP not suitable for geolocation:', ip);
       }
-    } catch (geoError) {
-      // Log but don't fail if geolocation fails
-      console.error('Error getting geolocation:', geoError);
+    } catch (ipError) {
+      console.log('Error processing IP data (non-blocking):', ipError);
     }
 
+    console.log('Preparing to insert scan data:', scanData);
+
     // Insert scan record
-    const { error: scanError } = await supabase
+    const { data: insertedScan, error: scanError } = await supabase
       .from('dynamic_qr_scans')
-      .insert([scanData]);
+      .insert([scanData])
+      .select()
+      .single();
 
     if (scanError) {
       console.error('Error recording scan:', scanError);
-      // Continue with redirect even if scan recording fails
+      console.error('Scan data that failed:', scanData);
+    } else {
+      console.log('Scan recorded successfully:', insertedScan?.id);
     }
 
-    // Redirect to the target URL
+    // Redirect to the target URL regardless of scan recording success
     return new Response(null, {
       status: 302,
       headers: {

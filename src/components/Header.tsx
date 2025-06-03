@@ -10,7 +10,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Barcode, QrCode, User, LogOut, Settings, Home } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Barcode, QrCode, User, LogOut, Settings, Home, Menu } from "lucide-react";
 import Logo from "./Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { useAvatar } from "@/hooks/use-avatar";
@@ -26,6 +33,7 @@ const Header = () => {
   const { getAvatarUrl } = useAvatar();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isHomePage = location.pathname === "/";
 
@@ -53,7 +61,6 @@ const Header = () => {
             setAvatarUrl(url);
           }
           
-          // Changed to prioritize username over full_name
           if (profile?.username) {
             setDisplayName(profile.username);
           } else if (profile?.full_name) {
@@ -74,21 +81,34 @@ const Header = () => {
     try {
       await signOut();
       navigate("/");
+      setMobileMenuOpen(false);
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
 
-  // Add debugging console logs
-  console.log("User authenticated:", !!user);
-  console.log("Current path:", location.pathname);
-  console.log("Is homepage:", isHomePage);
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
+  };
+
+  const navigationItems = [
+    { path: "/dashboard", label: "Dashboard", icon: Home },
+    { path: "/dynamic-qr", label: "Dynamic QR", icon: QrCode },
+    { path: "/generate", label: "Create QR", icon: QrCode },
+    { path: "/barcode", label: "Create Barcode", icon: Barcode },
+  ];
+
+  const guestNavigationItems = [
+    { path: "/guides", label: "Guides" },
+    { path: "/scan", label: "Scan" },
+  ];
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled || !isHomePage
-          ? "bg-background/90 backdrop-blur-md shadow-sm"
+          ? "bg-background/95 backdrop-blur-md shadow-sm border-b"
           : "bg-transparent"
       }`}
     >
@@ -103,92 +123,164 @@ const Header = () => {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <div className="hidden md:flex md:items-center md:gap-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/dashboard">
-                    <Home className="h-4 w-4 mr-1" />
-                    Dashboard
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/dynamic-qr">
-                    <QrCode className="h-4 w-4 mr-1" />
-                    Dynamic QR
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/generate">
-                    <QrCode className="h-4 w-4 mr-1" />
-                    Create QR
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/barcode">
-                    <Barcode className="h-4 w-4 mr-1" />
-                    Create Barcode
-                  </Link>
-                </Button>
+              {/* Desktop Navigation */}
+              <div className="hidden lg:flex lg:items-center lg:gap-2">
+                {navigationItems.map((item) => (
+                  <Button key={item.path} variant="ghost" size="sm" asChild>
+                    <Link to={item.path}>
+                      <item.icon className="h-4 w-4 mr-1" />
+                      {item.label}
+                    </Link>
+                  </Button>
+                ))}
               </div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 px-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={avatarUrl || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {(displayName || user.email || "U").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden md:inline">Hi, {displayName}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    <Home className="h-4 w-4 mr-2" />
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/dynamic-qr")}>
-                    <QrCode className="h-4 w-4 mr-2" />
-                    Dynamic QR
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/generate")}>
-                    <QrCode className="h-4 w-4 mr-2" />
-                    Create QR Code
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/barcode")}>
-                    <Barcode className="h-4 w-4 mr-2" />
-                    Create Barcode
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/profile")}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Mobile Navigation Sheet */}
+              <div className="lg:hidden">
+                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-80 px-4">
+                    <SheetHeader className="pb-6">
+                      <SheetTitle className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={avatarUrl || undefined} />
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            {(displayName || user.email || "U").charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>Hi, {displayName}</span>
+                      </SheetTitle>
+                    </SheetHeader>
+                    
+                    <div className="flex flex-col space-y-2">
+                      {navigationItems.map((item) => (
+                        <Button
+                          key={item.path}
+                          variant="ghost"
+                          className="justify-start h-12 text-base"
+                          onClick={() => handleNavigation(item.path)}
+                        >
+                          <item.icon className="h-5 w-5 mr-3" />
+                          {item.label}
+                        </Button>
+                      ))}
+                      
+                      <div className="border-t pt-4 mt-4">
+                        <Button
+                          variant="ghost"
+                          className="justify-start h-12 text-base w-full"
+                          onClick={() => handleNavigation("/profile")}
+                        >
+                          <Settings className="h-5 w-5 mr-3" />
+                          Settings
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="justify-start h-12 text-base w-full text-red-600 hover:text-red-700"
+                          onClick={handleSignOut}
+                        >
+                          <LogOut className="h-5 w-5 mr-3" />
+                          Sign out
+                        </Button>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+
+              {/* Desktop User Menu */}
+              <div className="hidden lg:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 px-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={avatarUrl || undefined} />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {(displayName || user.email || "U").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden xl:inline">Hi, {displayName}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {navigationItems.map((item) => (
+                      <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)}>
+                        <item.icon className="h-4 w-4 mr-2" />
+                        {item.label}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </>
           ) : (
             <>
-              {/* Add navigation links for non-authenticated users */}
+              {/* Guest Navigation */}
               <div className="hidden md:flex md:items-center md:gap-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/guides">
-                    Guides
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/scan">
-                    Scan
-                  </Link>
-                </Button>
+                {guestNavigationItems.map((item) => (
+                  <Button key={item.path} variant="ghost" size="sm" asChild>
+                    <Link to={item.path}>
+                      {item.label}
+                    </Link>
+                  </Button>
+                ))}
               </div>
-              <Button size="sm" className="flex items-center" asChild>
+
+              {/* Mobile Guest Menu */}
+              <div className="md:hidden">
+                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-80 px-4">
+                    <SheetHeader className="pb-6">
+                      <SheetTitle>Menu</SheetTitle>
+                    </SheetHeader>
+                    
+                    <div className="flex flex-col space-y-2">
+                      {guestNavigationItems.map((item) => (
+                        <Button
+                          key={item.path}
+                          variant="ghost"
+                          className="justify-start h-12 text-base"
+                          onClick={() => handleNavigation(item.path)}
+                        >
+                          {item.label}
+                        </Button>
+                      ))}
+                      
+                      <div className="border-t pt-4 mt-4">
+                        <Button
+                          className="w-full h-12 text-base"
+                          onClick={() => handleNavigation("/signin")}
+                        >
+                          <User className="h-5 w-5 mr-3" />
+                          Sign in
+                        </Button>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+
+              <Button size="sm" className="hidden md:flex items-center" asChild>
                 <Link to="/signin">
                   <User className="h-4 w-4 mr-1" />
                   Sign in

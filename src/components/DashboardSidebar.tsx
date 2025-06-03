@@ -5,7 +5,7 @@ import { Search, List, QrCode, Barcode, CheckCircle2, PauseCircle, Folder, Folde
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUserQRCodes, fetchUserFolders } from "@/lib/api";
+import { fetchUserQRCodes, fetchUserFolders, fetchUserDynamicQRCodes } from "@/lib/api";
 import FolderList from "@/components/FolderList";
 
 interface DashboardSidebarProps {
@@ -35,13 +35,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     queryFn: fetchUserQRCodes
   });
 
+  // Fetch dynamic QR codes separately
+  const { data: dynamicQRCodes = [] } = useQuery({
+    queryKey: ['dynamicQRCodes'],
+    queryFn: fetchUserDynamicQRCodes
+  });
+
   // Get counts for different types of QR codes
   const allCodesCount = qrCodes.length;
   const barcodeCount = qrCodes.filter(code => code.type === "barcode").length;
   const staticQrCount = qrCodes.filter(code => code.type !== "dynamic" && code.type !== "barcode").length;
-  const dynamicQrCount = qrCodes.filter(code => code.type === "dynamic").length;
-  const activeQrCount = qrCodes.filter(code => code.type === "dynamic" && code.active !== false).length;
-  const pausedQrCount = qrCodes.filter(code => code.type === "dynamic" && code.active === false).length;
+  const dynamicQrCount = dynamicQRCodes.length;
+  const activeQrCount = dynamicQRCodes.filter(code => code.active !== false).length;
+  const pausedQrCount = dynamicQRCodes.filter(code => code.active === false).length;
 
   // State to manage dynamic submenu visibility
   const [dynamicSubmenuOpen, setDynamicSubmenuOpen] = useState(
@@ -69,7 +75,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   return (
     <div className="flex flex-col h-full max-h-screen overflow-hidden">
       {/* Search Bar */}
-      <div className="px-4 py-6 mt-24">
+      <div className={`px-4 py-6 mt-16 md:mt-24 ${sidebarCollapsed ? 'px-2' : ''}`}>
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2">
             <div className="relative w-full">
@@ -83,24 +89,34 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </div>
           </div>
         )}
+        {sidebarCollapsed && (
+          <div className="flex justify-center">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Main Menu Content */}
       <div className="flex-1 overflow-auto px-2">
         {/* MY CODES Section */}
         <div className="mb-4">
-          <h3 className="px-2 text-xs font-medium text-muted-foreground mb-2">
-            {!sidebarCollapsed && "MY CODES"}
-          </h3>
+          {!sidebarCollapsed && (
+            <h3 className="px-2 text-xs font-medium text-muted-foreground mb-2">
+              MY CODES
+            </h3>
+          )}
           <ul className="space-y-1">
             {/* All Codes */}
             <li>
               <Button
                 variant={selectedView === "all" ? "default" : "ghost"}
-                className="w-full justify-start text-sm h-9"
+                className={`w-full justify-start text-sm ${sidebarCollapsed ? 'h-10 px-2' : 'h-9'}`}
                 onClick={() => handleViewSelect("all")}
+                title={sidebarCollapsed ? `All (${allCodesCount})` : undefined}
               >
-                <List className="h-4 w-4 mr-2" />
+                <List className="h-4 w-4 mr-2 flex-shrink-0" />
                 {!sidebarCollapsed && <span>All ({allCodesCount})</span>}
               </Button>
             </li>
@@ -109,10 +125,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <li>
               <Button
                 variant={selectedView === "barcode" ? "default" : "ghost"}
-                className="w-full justify-start text-sm h-9"
+                className={`w-full justify-start text-sm ${sidebarCollapsed ? 'h-10 px-2' : 'h-9'}`}
                 onClick={() => handleViewSelect("barcode")}
+                title={sidebarCollapsed ? `Barcodes (${barcodeCount})` : undefined}
               >
-                <Barcode className="h-4 w-4 mr-2" />
+                <Barcode className="h-4 w-4 mr-2 flex-shrink-0" />
                 {!sidebarCollapsed && <span>Barcodes ({barcodeCount})</span>}
               </Button>
             </li>
@@ -121,10 +138,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <li>
               <Button
                 variant={selectedView === "static" ? "default" : "ghost"}
-                className="w-full justify-start text-sm h-9"
+                className={`w-full justify-start text-sm ${sidebarCollapsed ? 'h-10 px-2' : 'h-9'}`}
                 onClick={() => handleViewSelect("static")}
+                title={sidebarCollapsed ? `Static QR Codes (${staticQrCount})` : undefined}
               >
-                <QrCode className="h-4 w-4 mr-2" />
+                <QrCode className="h-4 w-4 mr-2 flex-shrink-0" />
                 {!sidebarCollapsed && <span>Static QR Codes ({staticQrCount})</span>}
               </Button>
             </li>
@@ -137,17 +155,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   selectedView === "dynamic-active" || 
                   selectedView === "dynamic-paused" ? "default" : "ghost"
                 }
-                className="w-full justify-start text-sm h-9"
+                className={`w-full justify-start text-sm ${sidebarCollapsed ? 'h-10 px-2' : 'h-9'}`}
                 onClick={() => {
                   handleViewSelect("dynamic");
                   setDynamicSubmenuOpen(!dynamicSubmenuOpen);
                 }}
+                title={sidebarCollapsed ? `Dynamic QR Codes (${dynamicQrCount})` : undefined}
               >
-                <QrCode className="h-4 w-4 mr-2" />
+                <QrCode className="h-4 w-4 mr-2 flex-shrink-0" />
                 {!sidebarCollapsed && <span>Dynamic QR Codes ({dynamicQrCount})</span>}
               </Button>
 
-              {/* This nested submenu is always visible when parent is selected */}
+              {/* Dynamic submenu */}
               {!sidebarCollapsed && dynamicSubmenuOpen && (
                 <div className="pl-6 space-y-1">
                   <Button
@@ -174,12 +193,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
 
         {/* MY FOLDERS Section */}
-        <div className="mb-4">
-          <div className="flex justify-between items-center px-2 mb-2">
-            <h3 className="text-xs font-medium text-muted-foreground">
-              {!sidebarCollapsed && "MY FOLDERS"}
-            </h3>
-            {!sidebarCollapsed && (
+        {!sidebarCollapsed && (
+          <div className="mb-4">
+            <div className="flex justify-between items-center px-2 mb-2">
+              <h3 className="text-xs font-medium text-muted-foreground">
+                MY FOLDERS
+              </h3>
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -188,15 +207,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               >
                 <Plus className="h-4 w-4" />
               </Button>
-            )}
-          </div>
-          
-          {!sidebarCollapsed && (
+            </div>
+            
             <ul className="space-y-1">
               <FolderList />
             </ul>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Sidebar Footer - Collapse/Expand Button */}
