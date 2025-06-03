@@ -94,7 +94,7 @@ serve(async (req: Request) => {
         // Try to get geolocation using a free service
         try {
           const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city,lat,lon`, {
-            timeout: 3000, // 3 second timeout
+            timeout: 9000, // 9 second timeout
           });
           
           if (geoResponse.ok) {
