@@ -26,7 +26,7 @@ import DynamicQRStats from "./pages/DynamicQRStats";
 import EditDynamicQR from "./pages/EditDynamicQR";
 
 
-import { Analytics } from "@vercel/analytics/next"
+// import { Analytics } from "@vercel/analytics/next"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,17 +38,16 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <HashRouter>
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <SidebarProvider>
-            <Toaster />
-            <Sonner />
-            <Analytics />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/signin" element={<SignIn />} />
+    <HashRouter>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <SidebarProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/signin" element={<SignIn />} />
               <Route path="/scan" element={<Scan />} />
               <Route path="/guides" element={<Guides />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
