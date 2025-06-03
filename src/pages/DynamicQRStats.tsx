@@ -57,7 +57,10 @@ const DynamicQRStats = () => {
   const { barChartData, pieChartData, firstScan, uniqueCountries } = useDynamicQRStats(scanStats);
 
   const isLoading = isLoadingQrCode || isLoadingStats;
-
+console.log("scanStats", scanStats);
+console.log("barChartData", barChartData);
+console.log("pieChartData", pieChartData);
+console.log("firstScan", firstScan);
   if (statsError) {
     console.error('Stats error:', statsError);
   }
