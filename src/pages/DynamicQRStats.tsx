@@ -31,25 +31,34 @@ const DynamicQRStats = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: qrCode, isLoading: isLoadingQrCode } = useQuery({
+  console.log('DynamicQRStats component mounted with ID:', id);
+
+  const { data: qrCode, isLoading: isLoadingQrCode, error: qrCodeError } = useQuery({
     queryKey: ['dynamicQrCode', id],
-    queryFn: () => id ? fetchDynamicQRCode(id) : null,
+    queryFn: () => {
+      console.log('Fetching QR code data for ID:', id);
+      return id ? fetchDynamicQRCode(id) : null;
+    },
     enabled: !!id,
   });
 
   const { data: scanStats, isLoading: isLoadingStats, error: statsError } = useQuery({
     queryKey: ['dynamicQrStats', id],
-    queryFn: () => id ? fetchDynamicQRCodeScanStats(id) : null,
+    queryFn: () => {
+      console.log('Fetching scan stats for ID:', id);
+      return id ? fetchDynamicQRCodeScanStats(id) : null;
+    },
     enabled: !!id,
     refetchInterval: 30000, // Refetch every 30 seconds to get fresh data
   });
 
-  console.log('DynamicQRStats render:', {
+  console.log('Component state:', {
     id,
     qrCode,
     scanStats,
     isLoadingQrCode,
     isLoadingStats,
+    qrCodeError,
     statsError
   });
 
@@ -57,10 +66,19 @@ const DynamicQRStats = () => {
   const { barChartData, pieChartData, firstScan, uniqueCountries } = useDynamicQRStats(scanStats);
 
   const isLoading = isLoadingQrCode || isLoadingStats;
-console.log("scanStats", scanStats);
-console.log("barChartData", barChartData);
-console.log("pieChartData", pieChartData);
-console.log("firstScan", firstScan);
+
+  console.log('Processed stats:', {
+    barChartDataLength: barChartData.length,
+    pieChartDataLength: pieChartData.length,
+    firstScan,
+    uniqueCountries,
+    isLoading
+  });
+
+  if (qrCodeError) {
+    console.error('QR Code error:', qrCodeError);
+  }
+
   if (statsError) {
     console.error('Stats error:', statsError);
   }
@@ -116,16 +134,25 @@ console.log("firstScan", firstScan);
             </Button>
           </div>
           
-          {/* Debug Info (remove this in production) */}
+          {/* Debug Info - Enhanced for better troubleshooting */}
           {process.env.NODE_ENV === 'development' && (
             <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
               <p><strong>Debug Info:</strong></p>
+              <p>QR Code ID: {id}</p>
+              <p>QR Code Loaded: {qrCode ? 'Yes' : 'No'}</p>
+              <p>QR Code Name: {qrCode?.name || 'N/A'}</p>
               <p>Total Scans: {scanStats?.totalScans || 0}</p>
               <p>Raw Scans Length: {scanStats?.rawScans?.length || 0}</p>
+              <p>Scans by Date Keys: {scanStats?.scansByDate ? Object.keys(scanStats.scansByDate).join(', ') : 'None'}</p>
+              <p>Scans by Country Keys: {scanStats?.scansByCountry ? Object.keys(scanStats.scansByCountry).join(', ') : 'None'}</p>
               <p>Bar Chart Data Length: {barChartData.length}</p>
               <p>Pie Chart Data Length: {pieChartData.length}</p>
-              <p>Loading: {isLoading.toString()}</p>
-              <p>Error: {statsError ? statsError.message : 'None'}</p>
+              <p>Unique Countries: {uniqueCountries}</p>
+              <p>First Scan: {firstScan ? new Date(firstScan.scanned_at).toLocaleString() : 'None'}</p>
+              <p>Loading QR Code: {isLoadingQrCode.toString()}</p>
+              <p>Loading Stats: {isLoadingStats.toString()}</p>
+              <p>QR Code Error: {qrCodeError ? qrCodeError.message : 'None'}</p>
+              <p>Stats Error: {statsError ? statsError.message : 'None'}</p>
             </div>
           )}
           

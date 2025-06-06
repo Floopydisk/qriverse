@@ -17,78 +17,104 @@ export interface QRStatData {
 }
 
 const useDynamicQRStats = (scanStats: QRStatData | undefined): UseQRStatsResult => {
+  console.log('useDynamicQRStats called with:', scanStats);
+
   const barChartData = useMemo(() => {
-    console.log('Processing bar chart data:', scanStats);
+    console.log('Processing bar chart data...');
     
     if (!scanStats || !scanStats.scansByDate) {
-      console.log('No scan stats or scansByDate available');
+      console.log('No scan stats or scansByDate available for bar chart');
       return [];
     }
     
+    console.log('scansByDate entries:', Object.entries(scanStats.scansByDate));
+    
     const chartData = Object.entries(scanStats.scansByDate)
-      .map(([date, count]) => ({
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        scans: count,
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map(([date, count]) => {
+        const formattedDate = new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        console.log(`Converting date ${date} to ${formattedDate}, count: ${count}`);
+        return {
+          date: formattedDate,
+          scans: count,
+        };
+      })
+      .sort((a, b) => {
+        // Sort by actual date, not formatted string
+        const dateA = Object.entries(scanStats.scansByDate).find(([_, count]) => count === a.scans)?.[0];
+        const dateB = Object.entries(scanStats.scansByDate).find(([_, count]) => count === b.scans)?.[0];
+        return new Date(dateA || '').getTime() - new Date(dateB || '').getTime();
+      })
       .slice(-14); // Last 14 days
     
-    console.log('Processed bar chart data:', chartData);
+    console.log('Final bar chart data:', chartData);
     return chartData;
   }, [scanStats]);
 
   const pieChartData = useMemo(() => {
-    console.log('Processing pie chart data:', scanStats);
+    console.log('Processing pie chart data...');
     
     if (!scanStats || !scanStats.scansByCountry) {
-      console.log('No scan stats or scansByCountry available');
+      console.log('No scan stats or scansByCountry available for pie chart');
       return [];
     }
     
+    console.log('scansByCountry entries:', Object.entries(scanStats.scansByCountry));
+    
     const chartData = Object.entries(scanStats.scansByCountry)
-      .map(([country, count]) => ({
-        name: country,
-        value: count as number,
-      }))
+      .map(([country, count]) => {
+        console.log(`Country: ${country}, Count: ${count}`);
+        return {
+          name: country,
+          value: count as number,
+        };
+      })
       .sort((a, b) => b.value - a.value);
     
-    console.log('Processed pie chart data:', chartData);
+    console.log('Final pie chart data:', chartData);
     return chartData;
   }, [scanStats]);
 
   const firstScan = useMemo(() => {
-    console.log('Processing first scan:', scanStats?.rawScans);
+    console.log('Processing first scan...');
     
     if (!scanStats?.rawScans || scanStats.rawScans.length === 0) {
-      console.log('No raw scans available');
+      console.log('No raw scans available for first scan');
       return null;
     }
     
+    console.log('Available scans:', scanStats.rawScans.length);
+    console.log('Scans ordered by scanned_at (desc):', scanStats.rawScans.map(s => s.scanned_at));
+    
     // Since scans are ordered by scanned_at descending, the first scan chronologically is the last in the array
     const chronologicallyFirstScan = scanStats.rawScans[scanStats.rawScans.length - 1];
-    console.log('First scan found:', chronologicallyFirstScan);
+    console.log('First scan chronologically:', chronologicallyFirstScan);
     return chronologicallyFirstScan;
   }, [scanStats]);
 
   const uniqueCountries = useMemo(() => {
-    console.log('Processing unique countries:', scanStats?.scansByCountry);
+    console.log('Processing unique countries...');
     
     if (!scanStats?.scansByCountry) {
-      console.log('No scansByCountry available');
+      console.log('No scansByCountry available for unique countries');
       return 0;
     }
     
-    const count = Object.keys(scanStats.scansByCountry).length;
+    const countries = Object.keys(scanStats.scansByCountry);
+    console.log('Unique countries:', countries);
+    const count = countries.length;
     console.log('Unique countries count:', count);
     return count;
   }, [scanStats]);
 
-  return {
+  const result = {
     barChartData,
     pieChartData,
     firstScan,
     uniqueCountries,
   };
+
+  console.log('useDynamicQRStats result:', result);
+  return result;
 };
 
 export default useDynamicQRStats;
