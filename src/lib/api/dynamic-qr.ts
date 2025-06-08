@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicQRCode, DynamicQRScan } from "./types";
 
@@ -29,39 +28,27 @@ export const fetchUserDynamicQRCodes = async (): Promise<DynamicQRCode[]> => {
 
     console.log("Raw QR codes data:", qrCodes);
 
-    // Then, fetch scan counts for all QR codes in a single query
-    const { data: scanCounts, error: scanCountsError } = await supabase
-      .from("dynamic_qr_scans")
-      .select("dynamic_qr_code_id, count")
-      .in(
-        "dynamic_qr_code_id",
-        qrCodes.map((qr) => qr.id)
-      )
-      .group("dynamic_qr_code_id");
+    // Then, get scan counts for each QR code individually
+    const qrCodesWithScans = await Promise.all(
+      qrCodes.map(async (qrCode) => {
+        const { count, error: countError } = await supabase
+          .from("dynamic_qr_scans")
+          .select("*", { count: "exact", head: true })
+          .eq("dynamic_qr_code_id", qrCode.id);
 
-    if (scanCountsError) {
-      console.error("Error fetching scan counts:", scanCountsError);
-      throw scanCountsError;
-    }
+        if (countError) {
+          console.error("Error fetching scan count for QR code:", qrCode.id, countError);
+        }
 
-    console.log("Scan counts data:", scanCounts);
-
-    // Create a map of QR code IDs to their scan counts
-    const scanCountMap = new Map(
-      scanCounts?.map((item) => [
-        item.dynamic_qr_code_id,
-        parseInt(item.count),
-      ]) || []
+        return {
+          ...qrCode,
+          scan_count: count || 0,
+        };
+      })
     );
 
-    // Combine the data
-    const transformedData = qrCodes.map((qrCode) => ({
-      ...qrCode,
-      scan_count: scanCountMap.get(qrCode.id) || 0,
-    }));
-
-    console.log("Transformed data with scan counts:", transformedData);
-    return transformedData;
+    console.log("Transformed data with scan counts:", qrCodesWithScans);
+    return qrCodesWithScans;
   } catch (error) {
     console.error("Unexpected error fetching dynamic QR codes:", error);
     throw error;
