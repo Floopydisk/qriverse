@@ -31,21 +31,31 @@ const DynamicQRStats = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: qrCode, isLoading: isLoadingQrCode, error: qrCodeError } = useQuery({
+  // Fetch QR code details
+  const { 
+    data: qrCode, 
+    isLoading: isLoadingQrCode, 
+    error: qrCodeError,
+    isError: isQrCodeError 
+  } = useQuery({
     queryKey: ['dynamicQrCode', id],
-    queryFn: () => {
-      return id ? fetchDynamicQRCode(id) : null;
-    },
+    queryFn: () => fetchDynamicQRCode(id!),
     enabled: !!id,
+    retry: 1,
   });
 
-  const { data: scanStats, isLoading: isLoadingStats, error: statsError } = useQuery({
+  // Fetch scan statistics
+  const { 
+    data: scanStats, 
+    isLoading: isLoadingStats, 
+    error: statsError,
+    isError: isStatsError 
+  } = useQuery({
     queryKey: ['dynamicQrStats', id],
-    queryFn: () => {
-      return id ? fetchDynamicQRCodeScanStats(id) : null;
-    },
+    queryFn: () => fetchDynamicQRCodeScanStats(id!),
     enabled: !!id,
-    refetchInterval: 30000, // Refetch every 30 seconds to get fresh data
+    retry: 1,
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   // Process statistics data using the custom hook
@@ -53,14 +63,28 @@ const DynamicQRStats = () => {
 
   const isLoading = isLoadingQrCode || isLoadingStats;
 
-  if (qrCodeError) {
-    console.error('QR Code error:', qrCodeError);
+  // Handle errors
+  if (isQrCodeError || isStatsError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600">Error</h1>
+            <p className="text-muted-foreground mt-2">
+              {qrCodeError?.message || statsError?.message || "Failed to load QR code data"}
+            </p>
+            <Button onClick={() => navigate('/dynamic-qr')} className="mt-4">
+              Back to Dynamic QR Codes
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
-  if (statsError) {
-    console.error('Stats error:', statsError);
-  }
-
+  // Handle QR code not found
   if (!qrCode && !isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -127,14 +151,12 @@ const DynamicQRStats = () => {
                   <div className="py-4">
                     {isLoading ? (
                       <QRCodeDetailsSkeleton />
-                    ) : (
+                    ) : qrCode ? (
                       <QRCodeDetails 
-                        qrCode={qrCode!} 
-                        onEdit={() => {
-                          navigate(`/dynamic-qr/edit/${qrCode!.id}`);
-                        }}
+                        qrCode={qrCode} 
+                        onEdit={() => navigate(`/dynamic-qr/edit/${qrCode.id}`)}
                       />
-                    )}
+                    ) : null}
                   </div>
                 </SheetContent>
               </Sheet>
@@ -169,12 +191,12 @@ const DynamicQRStats = () => {
             <div className="lg:col-span-1">
               {isLoading ? (
                 <QRCodeDetailsSkeleton />
-              ) : (
+              ) : qrCode ? (
                 <QRCodeDetails 
-                  qrCode={qrCode!} 
-                  onEdit={() => navigate(`/dynamic-qr/edit/${qrCode!.id}`)} 
+                  qrCode={qrCode} 
+                  onEdit={() => navigate(`/dynamic-qr/edit/${qrCode.id}`)} 
                 />
-              )}
+              ) : null}
             </div>
             
             <div className="lg:col-span-2 space-y-6">

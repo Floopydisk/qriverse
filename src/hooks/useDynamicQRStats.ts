@@ -2,13 +2,6 @@
 import { useMemo } from 'react';
 import { DynamicQRScan } from '@/lib/api';
 
-interface UseQRStatsResult {
-  barChartData: Array<{ date: string; scans: number }>;
-  pieChartData: Array<{ name: string; value: number }>;
-  firstScan: DynamicQRScan | null;
-  uniqueCountries: number;
-}
-
 export interface QRStatData {
   totalScans: number;
   scansByDate: Record<string, number>;
@@ -16,44 +9,45 @@ export interface QRStatData {
   rawScans: DynamicQRScan[];
 }
 
+interface UseQRStatsResult {
+  barChartData: Array<{ date: string; scans: number }>;
+  pieChartData: Array<{ name: string; value: number }>;
+  firstScan: DynamicQRScan | null;
+  uniqueCountries: number;
+}
+
 const useDynamicQRStats = (scanStats: QRStatData | undefined): UseQRStatsResult => {
   const barChartData = useMemo(() => {
-    if (!scanStats || !scanStats.scansByDate) {
+    if (!scanStats?.scansByDate) {
       return [];
     }
     
-    const chartData = Object.entries(scanStats.scansByDate)
-      .map(([date, count]) => {
-        const formattedDate = new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        return {
-          date: formattedDate,
-          scans: count,
-        };
-      })
-      .sort((a, b) => {
-        // Sort by actual date, not formatted string
-        const dateA = Object.entries(scanStats.scansByDate).find(([_, count]) => count === a.scans)?.[0];
-        const dateB = Object.entries(scanStats.scansByDate).find(([_, count]) => count === b.scans)?.[0];
-        return new Date(dateA || '').getTime() - new Date(dateB || '').getTime();
-      })
-      .slice(-14); // Last 14 days
-    
-    return chartData;
+    // Get last 14 days of data
+    const sortedEntries = Object.entries(scanStats.scansByDate)
+      .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+      .slice(-14);
+
+    return sortedEntries.map(([date, count]) => ({
+      date: new Date(date).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      }),
+      scans: count,
+    }));
   }, [scanStats]);
 
   const pieChartData = useMemo(() => {
-    if (!scanStats || !scanStats.scansByCountry) {
+    if (!scanStats?.scansByCountry) {
       return [];
     }
     
-    const chartData = Object.entries(scanStats.scansByCountry)
+    return Object.entries(scanStats.scansByCountry)
       .map(([country, count]) => ({
         name: country,
-        value: count as number,
+        value: count,
       }))
-      .sort((a, b) => b.value - a.value);
-    
-    return chartData;
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10); // Top 10 countries
   }, [scanStats]);
 
   const firstScan = useMemo(() => {
@@ -61,9 +55,12 @@ const useDynamicQRStats = (scanStats: QRStatData | undefined): UseQRStatsResult 
       return null;
     }
     
-    // Since scans are ordered by scanned_at descending, the first scan chronologically is the last in the array
-    const chronologicallyFirstScan = scanStats.rawScans[scanStats.rawScans.length - 1];
-    return chronologicallyFirstScan;
+    // Find the earliest scan
+    const sortedScans = [...scanStats.rawScans].sort(
+      (a, b) => new Date(a.scanned_at).getTime() - new Date(b.scanned_at).getTime()
+    );
+    
+    return sortedScans[0];
   }, [scanStats]);
 
   const uniqueCountries = useMemo(() => {
@@ -71,8 +68,7 @@ const useDynamicQRStats = (scanStats: QRStatData | undefined): UseQRStatsResult 
       return 0;
     }
     
-    const countries = Object.keys(scanStats.scansByCountry);
-    return countries.length;
+    return Object.keys(scanStats.scansByCountry).length;
   }, [scanStats]);
 
   return {
