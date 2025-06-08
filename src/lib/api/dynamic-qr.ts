@@ -14,67 +14,52 @@ export const fetchUserDynamicQRCodes = async (): Promise<DynamicQRCode[]> => {
   try {
     console.log("Fetching dynamic QR codes for user:", user.id);
 
-    const { data, error } = await supabase
+    // First, fetch all QR codes
+    const { data: qrCodes, error: qrCodesError } = await supabase
       .from("dynamic_qr_codes")
-      .select(
-        `
-        *,
-        dynamic_qr_scans(count)
-      `
-      )
+      .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching dynamic QR codes:", error.message);
-      throw error;
+    if (qrCodesError) {
+      console.error("Error fetching QR codes:", qrCodesError);
+      throw qrCodesError;
     }
 
-    console.log("Raw data from database:", data);
+    console.log("Raw QR codes data:", qrCodes);
 
-    // Transform the data to include scan_count
-    const transformedData = await Promise.all(
-      (data || []).map(async (item: any) => {
-        try {
-          // Get the actual scan count
-          const { count, error: countError } = await supabase
-            .from("dynamic_qr_scans")
-            .select("*", { count: "exact", head: true })
-            .eq("dynamic_qr_code_id", item.id);
+    // Then, fetch scan counts for all QR codes in a single query
+    const { data: scanCounts, error: scanCountsError } = await supabase
+      .from("dynamic_qr_scans")
+      .select("dynamic_qr_code_id, count")
+      .in(
+        "dynamic_qr_code_id",
+        qrCodes.map((qr) => qr.id)
+      )
+      .group("dynamic_qr_code_id");
 
-          if (countError) {
-            console.error(
-              "Error getting scan count for QR code",
-              item.id,
-              ":",
-              countError
-            );
-            return {
-              ...item,
-              scan_count: 0,
-            };
-          }
+    if (scanCountsError) {
+      console.error("Error fetching scan counts:", scanCountsError);
+      throw scanCountsError;
+    }
 
-          return {
-            ...item,
-            scan_count: count || 0,
-          };
-        } catch (transformError) {
-          console.error(
-            "Error transforming QR code data for",
-            item.id,
-            ":",
-            transformError
-          );
-          return {
-            ...item,
-            scan_count: 0,
-          };
-        }
-      })
+    console.log("Scan counts data:", scanCounts);
+
+    // Create a map of QR code IDs to their scan counts
+    const scanCountMap = new Map(
+      scanCounts?.map((item) => [
+        item.dynamic_qr_code_id,
+        parseInt(item.count),
+      ]) || []
     );
 
-    console.log("Transformed data:", transformedData);
+    // Combine the data
+    const transformedData = qrCodes.map((qrCode) => ({
+      ...qrCode,
+      scan_count: scanCountMap.get(qrCode.id) || 0,
+    }));
+
+    console.log("Transformed data with scan counts:", transformedData);
     return transformedData;
   } catch (error) {
     console.error("Unexpected error fetching dynamic QR codes:", error);

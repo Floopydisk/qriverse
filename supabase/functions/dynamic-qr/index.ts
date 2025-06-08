@@ -97,7 +97,7 @@ serve(async (req: Request) => {
       ip_address?: string;
     } = {
       dynamic_qr_code_id: qrCode.id,
-      scanned_at: new Date().toISOString(),
+      scanned_at: new Date().toISOString().replace("Z", "+00:00"),
     };
 
     // Add optional fields if available
