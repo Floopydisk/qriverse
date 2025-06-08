@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -54,7 +53,11 @@ const DynamicQR = () => {
     refetch,
   } = useQuery({
     queryKey: ['dynamicQRCodes'],
-    queryFn: fetchUserDynamicQRCodes,
+    queryFn: async () => {
+      const data = await fetchUserDynamicQRCodes();
+      console.log('Fetched dynamic QR codes:', data);
+      return data;
+    },
   });
 
   const handleCreateQRCode = async (e: React.FormEvent) => {

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicQRCode, DynamicQRScan } from "./types";
 
@@ -9,53 +8,85 @@ export const fetchUserDynamicQRCodes = async (): Promise<DynamicQRCode[]> => {
 
   if (!user) {
     console.error("No user session found.");
-    return [];
+    throw new Error("No user session found");
   }
 
   try {
+    console.log("Fetching dynamic QR codes for user:", user.id);
+
     const { data, error } = await supabase
-      .from('dynamic_qr_codes')
-      .select(`
+      .from("dynamic_qr_codes")
+      .select(
+        `
         *,
         dynamic_qr_scans(count)
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      `
+      )
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching dynamic QR codes:", error.message);
-      return [];
+      throw error;
     }
+
+    console.log("Raw data from database:", data);
 
     // Transform the data to include scan_count
     const transformedData = await Promise.all(
       (data || []).map(async (item: any) => {
-        // Get the actual scan count
-        const { count, error: countError } = await supabase
-          .from('dynamic_qr_scans')
-          .select('*', { count: 'exact', head: true })
-          .eq('dynamic_qr_code_id', item.id);
+        try {
+          // Get the actual scan count
+          const { count, error: countError } = await supabase
+            .from("dynamic_qr_scans")
+            .select("*", { count: "exact", head: true })
+            .eq("dynamic_qr_code_id", item.id);
 
-        if (countError) {
-          console.error('Error getting scan count:', countError);
+          if (countError) {
+            console.error(
+              "Error getting scan count for QR code",
+              item.id,
+              ":",
+              countError
+            );
+            return {
+              ...item,
+              scan_count: 0,
+            };
+          }
+
+          return {
+            ...item,
+            scan_count: count || 0,
+          };
+        } catch (transformError) {
+          console.error(
+            "Error transforming QR code data for",
+            item.id,
+            ":",
+            transformError
+          );
+          return {
+            ...item,
+            scan_count: 0,
+          };
         }
-
-        return {
-          ...item,
-          scan_count: count || 0
-        };
       })
     );
 
+    console.log("Transformed data:", transformedData);
     return transformedData;
   } catch (error) {
     console.error("Unexpected error fetching dynamic QR codes:", error);
-    return [];
+    throw error;
   }
 };
 
 // Function to create a new dynamic QR code
-export const createDynamicQRCode = async (name: string, targetUrl: string): Promise<DynamicQRCode | null> => {
+export const createDynamicQRCode = async (
+  name: string,
+  targetUrl: string
+): Promise<DynamicQRCode | null> => {
   const { data: session } = await supabase.auth.getSession();
   const user = session?.session?.user;
 
@@ -69,15 +100,17 @@ export const createDynamicQRCode = async (name: string, targetUrl: string): Prom
     const shortCode = generateShortCode();
 
     const { data, error } = await supabase
-      .from('dynamic_qr_codes')
-      .insert([{
-        name,
-        target_url: targetUrl,
-        short_code: shortCode,
-        user_id: user.id,
-        active: true
-      }])
-      .select('*')
+      .from("dynamic_qr_codes")
+      .insert([
+        {
+          name,
+          target_url: targetUrl,
+          short_code: shortCode,
+          user_id: user.id,
+          active: true,
+        },
+      ])
+      .select("*")
       .single();
 
     if (error) {
@@ -93,13 +126,16 @@ export const createDynamicQRCode = async (name: string, targetUrl: string): Prom
 };
 
 // Function to update an existing dynamic QR code
-export const updateDynamicQRCode = async (id: string, updates: { name?: string; target_url?: string; active?: boolean }): Promise<DynamicQRCode | null> => {
+export const updateDynamicQRCode = async (
+  id: string,
+  updates: { name?: string; target_url?: string; active?: boolean }
+): Promise<DynamicQRCode | null> => {
   try {
     const { data, error } = await supabase
-      .from('dynamic_qr_codes')
+      .from("dynamic_qr_codes")
       .update(updates)
-      .eq('id', id)
-      .select('*')
+      .eq("id", id)
+      .select("*")
       .single();
 
     if (error) {
@@ -118,9 +154,9 @@ export const updateDynamicQRCode = async (id: string, updates: { name?: string; 
 export const deleteDynamicQRCode = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('dynamic_qr_codes')
+      .from("dynamic_qr_codes")
       .delete()
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) {
       console.error("Error deleting dynamic QR code:", error.message);
@@ -135,15 +171,17 @@ export const deleteDynamicQRCode = async (id: string): Promise<boolean> => {
 };
 
 // Function to fetch a specific dynamic QR code
-export const fetchDynamicQRCode = async (id: string): Promise<DynamicQRCode | null> => {
+export const fetchDynamicQRCode = async (
+  id: string
+): Promise<DynamicQRCode | null> => {
   try {
-    console.log('=== FETCHING DYNAMIC QR CODE ===');
-    console.log('QR Code ID:', id);
-    
+    console.log("=== FETCHING DYNAMIC QR CODE ===");
+    console.log("QR Code ID:", id);
+
     const { data, error } = await supabase
-      .from('dynamic_qr_codes')
-      .select('*')
-      .eq('id', id)
+      .from("dynamic_qr_codes")
+      .select("*")
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -151,23 +189,23 @@ export const fetchDynamicQRCode = async (id: string): Promise<DynamicQRCode | nu
       return null;
     }
 
-    console.log('QR Code found:', data);
+    console.log("QR Code found:", data);
 
     // Get the scan count separately
     const { count, error: countError } = await supabase
-      .from('dynamic_qr_scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('dynamic_qr_code_id', id);
+      .from("dynamic_qr_scans")
+      .select("*", { count: "exact", head: true })
+      .eq("dynamic_qr_code_id", id);
 
     if (countError) {
-      console.error('Error getting scan count:', countError);
+      console.error("Error getting scan count:", countError);
     }
 
-    console.log('Scan count:', count);
+    console.log("Scan count:", count);
 
     return {
       ...data,
-      scan_count: count || 0
+      scan_count: count || 0,
     };
   } catch (error) {
     console.error("Unexpected error fetching dynamic QR code:", error);
@@ -178,56 +216,57 @@ export const fetchDynamicQRCode = async (id: string): Promise<DynamicQRCode | nu
 // Function to fetch scan stats for a dynamic QR code
 export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
   try {
-    console.log('=== FETCHING SCAN STATS ===');
-    console.log('QR Code ID:', qrCodeId);
-    
+    console.log("=== FETCHING SCAN STATS ===");
+    console.log("QR Code ID:", qrCodeId);
+
     // First, verify the QR code exists
     const { data: qrCodeCheck, error: qrCodeError } = await supabase
-      .from('dynamic_qr_codes')
-      .select('id, name, short_code')
-      .eq('id', qrCodeId)
+      .from("dynamic_qr_codes")
+      .select("id, name, short_code")
+      .eq("id", qrCodeId)
       .single();
 
     if (qrCodeError) {
-      console.error('QR Code verification error:', qrCodeError);
+      console.error("QR Code verification error:", qrCodeError);
       throw new Error(`QR Code not found: ${qrCodeError.message}`);
     }
 
-    console.log('QR Code verified:', qrCodeCheck);
-    
+    console.log("QR Code verified:", qrCodeCheck);
+
     // Debug: Let's check ALL scans in the table first
     const { data: allScans, error: allScansError } = await supabase
-      .from('dynamic_qr_scans')
-      .select('*')
+      .from("dynamic_qr_scans")
+      .select("*")
       .limit(10);
 
     if (allScansError) {
-      console.error('Error fetching all scans:', allScansError);
+      console.error("Error fetching all scans:", allScansError);
     } else {
-      console.log('ALL SCANS IN TABLE (first 10):', allScans);
-      console.log('Total scans found:', allScans?.length || 0);
-      
+      console.log("ALL SCANS IN TABLE (first 10):", allScans);
+      console.log("Total scans found:", allScans?.length || 0);
+
       // Check if any scans have our QR code ID
-      const matchingScans = allScans?.filter(scan => scan.dynamic_qr_code_id === qrCodeId) || [];
-      console.log('MATCHING SCANS for our QR ID:', matchingScans);
+      const matchingScans =
+        allScans?.filter((scan) => scan.dynamic_qr_code_id === qrCodeId) || [];
+      console.log("MATCHING SCANS for our QR ID:", matchingScans);
     }
-    
+
     // Fetch all scans for this QR code with exact ID match
     const { data: rawScans, error: scansError } = await supabase
-      .from('dynamic_qr_scans')
-      .select('*')
-      .eq('dynamic_qr_code_id', qrCodeId)
-      .order('scanned_at', { ascending: false });
+      .from("dynamic_qr_scans")
+      .select("*")
+      .eq("dynamic_qr_code_id", qrCodeId)
+      .order("scanned_at", { ascending: false });
 
     if (scansError) {
-      console.error('Error fetching scans:', scansError);
+      console.error("Error fetching scans:", scansError);
       throw new Error(`Failed to fetch scans: ${scansError.message}`);
     }
 
-    console.log('Raw scans query result:', {
+    console.log("Raw scans query result:", {
       count: rawScans?.length || 0,
       firstScan: rawScans?.[0] || null,
-      scans: rawScans
+      scans: rawScans,
     });
 
     // Initialize the result structure
@@ -237,7 +276,7 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
 
     if (rawScans && rawScans.length > 0) {
       totalScans = rawScans.length;
-      console.log('Processing', totalScans, 'scans...');
+      console.log("Processing", totalScans, "scans...");
 
       // Process each scan
       rawScans.forEach((scan, index) => {
@@ -247,11 +286,11 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
           country: scan.country,
           city: scan.city,
           ip_address: scan.ip_address,
-          dynamic_qr_code_id: scan.dynamic_qr_code_id
+          dynamic_qr_code_id: scan.dynamic_qr_code_id,
         });
 
         // Process scans by date
-        const date = new Date(scan.scanned_at).toISOString().split('T')[0];
+        const date = new Date(scan.scanned_at).toISOString().split("T")[0];
         scansByDate[date] = (scansByDate[date] || 0) + 1;
         console.log(`Date ${date}: ${scansByDate[date]} scans`);
 
@@ -261,49 +300,54 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
           scansByCountry[country] = (scansByCountry[country] || 0) + 1;
           console.log(`Country ${country}: ${scansByCountry[country]} scans`);
         } else {
-          console.log('Scan has no country data');
+          console.log("Scan has no country data");
         }
       });
     } else {
-      console.log('No scans found for this QR code');
+      console.log("No scans found for this QR code");
     }
 
     const result = {
       totalScans,
       scansByDate,
       scansByCountry,
-      rawScans: rawScans || []
+      rawScans: rawScans || [],
     };
 
-    console.log('Final scan stats result:', {
+    console.log("Final scan stats result:", {
       totalScans: result.totalScans,
       scansByDateEntries: Object.entries(result.scansByDate),
       scansByCountryEntries: Object.entries(result.scansByCountry),
-      rawScansLength: result.rawScans.length
+      rawScansLength: result.rawScans.length,
     });
 
     return result;
   } catch (error) {
-    console.error('Error fetching scan stats for dynamic QR code:', error);
+    console.error("Error fetching scan stats for dynamic QR code:", error);
     throw error;
   }
 };
 
 // Function to get the redirect URL for a dynamic QR code
 export const getDynamicQRRedirectUrl = (shortCode: string): string => {
-  // This should be replaced with the actual URL of your deployed edge function
-  return `https://kienjbeckgfsajjxjqhs.supabase.co/functions/v1/dynamic-qr?code=${shortCode}`;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl) {
+    console.error("VITE_SUPABASE_URL environment variable is not set");
+    return "";
+  }
+  return `${supabaseUrl}/functions/v1/dynamic-qr?code=${shortCode}`;
 };
 
 // Helper function to generate a random short code
 const generateShortCode = (): string => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
   const length = 8;
-  
+
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
-  
+
   return result;
 };

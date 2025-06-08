@@ -53,6 +53,8 @@ const DynamicQRCodeList = ({ dynamicQRCodes, isLoading, onCreateNew }: DynamicQR
   const [qrToDelete, setQrToDelete] = useState<string | null>(null);
   const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
 
+  console.log('DynamicQRCodeList received data:', { dynamicQRCodes, isLoading });
+
   const deleteMutation = useMutation({
     mutationFn: deleteDynamicQRCode,
     onSuccess: () => {
