@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicQRCode, DynamicQRScan } from "./types";
 
@@ -160,9 +161,6 @@ export const fetchDynamicQRCode = async (
   id: string
 ): Promise<DynamicQRCode | null> => {
   try {
-    console.log("=== FETCHING DYNAMIC QR CODE ===");
-    console.log("QR Code ID:", id);
-
     const { data, error } = await supabase
       .from("dynamic_qr_codes")
       .select("*")
@@ -174,8 +172,6 @@ export const fetchDynamicQRCode = async (
       return null;
     }
 
-    console.log("QR Code found:", data);
-
     // Get the scan count separately
     const { count, error: countError } = await supabase
       .from("dynamic_qr_scans")
@@ -185,8 +181,6 @@ export const fetchDynamicQRCode = async (
     if (countError) {
       console.error("Error getting scan count:", countError);
     }
-
-    console.log("Scan count:", count);
 
     return {
       ...data,
@@ -201,9 +195,6 @@ export const fetchDynamicQRCode = async (
 // Function to fetch scan stats for a dynamic QR code
 export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
   try {
-    console.log("=== FETCHING SCAN STATS ===");
-    console.log("QR Code ID:", qrCodeId);
-
     // First, verify the QR code exists
     const { data: qrCodeCheck, error: qrCodeError } = await supabase
       .from("dynamic_qr_codes")
@@ -216,27 +207,7 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
       throw new Error(`QR Code not found: ${qrCodeError.message}`);
     }
 
-    console.log("QR Code verified:", qrCodeCheck);
-
-    // Debug: Let's check ALL scans in the table first
-    const { data: allScans, error: allScansError } = await supabase
-      .from("dynamic_qr_scans")
-      .select("*")
-      .limit(10);
-
-    if (allScansError) {
-      console.error("Error fetching all scans:", allScansError);
-    } else {
-      console.log("ALL SCANS IN TABLE (first 10):", allScans);
-      console.log("Total scans found:", allScans?.length || 0);
-
-      // Check if any scans have our QR code ID
-      const matchingScans =
-        allScans?.filter((scan) => scan.dynamic_qr_code_id === qrCodeId) || [];
-      console.log("MATCHING SCANS for our QR ID:", matchingScans);
-    }
-
-    // Fetch all scans for this QR code with exact ID match
+    // Fetch all scans for this QR code
     const { data: rawScans, error: scansError } = await supabase
       .from("dynamic_qr_scans")
       .select("*")
@@ -248,12 +219,6 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
       throw new Error(`Failed to fetch scans: ${scansError.message}`);
     }
 
-    console.log("Raw scans query result:", {
-      count: rawScans?.length || 0,
-      firstScan: rawScans?.[0] || null,
-      scans: rawScans,
-    });
-
     // Initialize the result structure
     let totalScans = 0;
     const scansByDate: Record<string, number> = {};
@@ -261,52 +226,27 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
 
     if (rawScans && rawScans.length > 0) {
       totalScans = rawScans.length;
-      console.log("Processing", totalScans, "scans...");
 
       // Process each scan
-      rawScans.forEach((scan, index) => {
-        console.log(`Processing scan ${index + 1}:`, {
-          id: scan.id,
-          scanned_at: scan.scanned_at,
-          country: scan.country,
-          city: scan.city,
-          ip_address: scan.ip_address,
-          dynamic_qr_code_id: scan.dynamic_qr_code_id,
-        });
-
+      rawScans.forEach((scan) => {
         // Process scans by date
         const date = new Date(scan.scanned_at).toISOString().split("T")[0];
         scansByDate[date] = (scansByDate[date] || 0) + 1;
-        console.log(`Date ${date}: ${scansByDate[date]} scans`);
 
         // Process scans by country
         if (scan.country) {
           const country = scan.country;
           scansByCountry[country] = (scansByCountry[country] || 0) + 1;
-          console.log(`Country ${country}: ${scansByCountry[country]} scans`);
-        } else {
-          console.log("Scan has no country data");
         }
       });
-    } else {
-      console.log("No scans found for this QR code");
     }
 
-    const result = {
+    return {
       totalScans,
       scansByDate,
       scansByCountry,
       rawScans: rawScans || [],
     };
-
-    console.log("Final scan stats result:", {
-      totalScans: result.totalScans,
-      scansByDateEntries: Object.entries(result.scansByDate),
-      scansByCountryEntries: Object.entries(result.scansByCountry),
-      rawScansLength: result.rawScans.length,
-    });
-
-    return result;
   } catch (error) {
     console.error("Error fetching scan stats for dynamic QR code:", error);
     throw error;
