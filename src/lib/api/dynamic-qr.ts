@@ -195,7 +195,24 @@ export const fetchDynamicQRCodeScanStats = async (qrCodeId: string) => {
 
     console.log('QR Code verified:', qrCodeCheck);
     
-    // Fetch all scans for this QR code
+    // Debug: Let's check ALL scans in the table first
+    const { data: allScans, error: allScansError } = await supabase
+      .from('dynamic_qr_scans')
+      .select('*')
+      .limit(10);
+
+    if (allScansError) {
+      console.error('Error fetching all scans:', allScansError);
+    } else {
+      console.log('ALL SCANS IN TABLE (first 10):', allScans);
+      console.log('Total scans found:', allScans?.length || 0);
+      
+      // Check if any scans have our QR code ID
+      const matchingScans = allScans?.filter(scan => scan.dynamic_qr_code_id === qrCodeId) || [];
+      console.log('MATCHING SCANS for our QR ID:', matchingScans);
+    }
+    
+    // Fetch all scans for this QR code with exact ID match
     const { data: rawScans, error: scansError } = await supabase
       .from('dynamic_qr_scans')
       .select('*')
