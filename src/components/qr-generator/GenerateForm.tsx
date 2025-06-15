@@ -18,7 +18,6 @@ interface GenerateFormProps {
   onScanClick: () => void;
   editId: string | null;
   getCurrentQRData: () => any;
-  // ... keep existing code (all form state props)
   text: string;
   setText: (text: string) => void;
   ssid: string;
@@ -114,31 +113,40 @@ export function GenerateForm({
         setDarkColor={qrGenerator.setDarkColor}
         lightColor={qrGenerator.lightColor}
         setLightColor={qrGenerator.setLightColor}
-        logo={qrGenerator.logo}
-        setLogo={qrGenerator.setLogo}
-        addLogo={qrGenerator.addLogo}
-        setAddLogo={qrGenerator.setAddLogo}
-      />
-      
-      <QRPatternSelector
-        pattern={qrGenerator.pattern}
-        setPattern={qrGenerator.setPattern}
-      />
-      
-      <QRAdvancedColorOptions
         eyeColor={qrGenerator.eyeColor}
         setEyeColor={qrGenerator.setEyeColor}
         patternColor={qrGenerator.patternColor}
         setPatternColor={qrGenerator.setPatternColor}
         backgroundColor={qrGenerator.backgroundColor}
         setBackgroundColor={qrGenerator.setBackgroundColor}
-        eyeRadius={qrGenerator.eyeRadius}
-        setEyeRadius={qrGenerator.setEyeRadius}
-      />
-      
-      <QRTemplateSelector
+        pattern={qrGenerator.pattern}
+        setPattern={qrGenerator.setPattern}
         template={qrGenerator.template}
         setTemplate={qrGenerator.setTemplate}
+        eyeRadius={qrGenerator.eyeRadius}
+        setEyeRadius={qrGenerator.setEyeRadius}
+        // Gradient props
+        useGradient={qrGenerator.useGradient}
+        setUseGradient={qrGenerator.setUseGradient}
+        gradientType={qrGenerator.gradientType}
+        setGradientType={qrGenerator.setGradientType}
+        gradientDirection={qrGenerator.gradientDirection}
+        setGradientDirection={qrGenerator.setGradientDirection}
+        gradientStartColor={qrGenerator.gradientStartColor}
+        setGradientStartColor={qrGenerator.setGradientStartColor}
+        gradientEndColor={qrGenerator.gradientEndColor}
+        setGradientEndColor={qrGenerator.setGradientEndColor}
+        gradientTarget={qrGenerator.gradientTarget}
+        setGradientTarget={qrGenerator.setGradientTarget}
+        // Transparency props
+        backgroundTransparent={qrGenerator.backgroundTransparent}
+        setBackgroundTransparent={qrGenerator.setBackgroundTransparent}
+        foregroundTransparent={qrGenerator.foregroundTransparent}
+        setForegroundTransparent={qrGenerator.setForegroundTransparent}
+        backgroundOpacity={qrGenerator.backgroundOpacity}
+        setBackgroundOpacity={qrGenerator.setBackgroundOpacity}
+        foregroundOpacity={qrGenerator.foregroundOpacity}
+        setForegroundOpacity={qrGenerator.setForegroundOpacity}
       />
       
       <EnhancedLogoOptions
