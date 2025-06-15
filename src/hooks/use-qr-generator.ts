@@ -1,9 +1,8 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createQRCode, updateQRCode } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
-import { generateShapedQR } from "@/utils/qr-shapes";
+import { generateStyledQR } from "@/utils/qr-styler";
 import { integrateLogoIntoQR } from "@/utils/qr-logo-integration";
 import { handleQRCodeStorage } from "@/utils/qr-generator";
 
@@ -14,12 +13,11 @@ const useQrGenerator = () => {
   // Form state
   const [name, setName] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
-  const [darkColor, setDarkColor] = useState("#10B981");
+  const [darkColor, setDarkColor] = useState("#000000");
   const [lightColor, setLightColor] = useState("#FFFFFF");
   const [addLogo, setAddLogo] = useState(false);
   const [logo, setLogo] = useState("");
-  const [frameStyle, setFrameStyle] = useState("none");
-  const [shape, setShape] = useState("square");
+  const [template, setTemplate] = useState("square");
   const [logoStyle, setLogoStyle] = useState("integrated");
   const [logoSize, setLogoSize] = useState(0.25);
   const [preserveAspectRatio, setPreserveAspectRatio] = useState(true);
@@ -33,13 +31,13 @@ const useQrGenerator = () => {
     }
 
     try {
-      // Generate shaped QR code
-      const qrCode = await generateShapedQR(content, {
+      // Generate styled QR code
+      const qrCode = await generateStyledQR(content, {
         darkColor,
         lightColor,
         width: 400,
         margin: 2,
-        shape: shape as any,
+        template: template as any,
         cornerRadius: 20
       });
 
@@ -61,7 +59,7 @@ const useQrGenerator = () => {
     } catch (error) {
       console.error("Error generating QR preview:", error);
     }
-  }, [darkColor, lightColor, addLogo, logo, shape, logoStyle, logoSize, preserveAspectRatio]);
+  }, [darkColor, lightColor, addLogo, logo, template, logoStyle, logoSize, preserveAspectRatio]);
 
   const saveQRCode = useCallback(async (content: string, type: string) => {
     if (!user) {
@@ -111,8 +109,7 @@ const useQrGenerator = () => {
           darkColor,
           lightColor,
           hasLogo: addLogo,
-          frameStyle,
-          shape,
+          template,
           logoStyle,
           logoSize,
           preserveAspectRatio,
@@ -151,7 +148,7 @@ const useQrGenerator = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, name, qrDataUrl, darkColor, lightColor, addLogo, frameStyle, shape, logoStyle, logoSize, preserveAspectRatio, editId, toast]);
+  }, [user, name, qrDataUrl, darkColor, lightColor, addLogo, template, logoStyle, logoSize, preserveAspectRatio, editId, toast]);
 
   return {
     // State
@@ -161,8 +158,7 @@ const useQrGenerator = () => {
     lightColor,
     addLogo,
     logo,
-    frameStyle,
-    shape,
+    template,
     logoStyle,
     logoSize,
     preserveAspectRatio,
@@ -176,8 +172,7 @@ const useQrGenerator = () => {
     setLightColor,
     setAddLogo,
     setLogo,
-    setFrameStyle,
-    setShape,
+    setTemplate,
     setLogoStyle,
     setLogoSize,
     setPreserveAspectRatio,

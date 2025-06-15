@@ -90,10 +90,10 @@ const Generate = () => {
       if (qrCodeData.options && typeof qrCodeData.options === 'object') {
         const options = qrCodeData.options as Record<string, any>;
         qrGenerator.setQrDataUrl(options.dataUrl || "");
-        qrGenerator.setDarkColor(options.darkColor || "#10B981");
+        qrGenerator.setDarkColor(options.darkColor || "#000000");
         qrGenerator.setLightColor(options.lightColor || "#FFFFFF");
         qrGenerator.setAddLogo(options.hasLogo || false);
-        qrGenerator.setFrameStyle(options.frameStyle || "none");
+        qrGenerator.setTemplate(options.template || "square");
       }
 
       if (qrCodeData.type === "url" || qrCodeData.type === "text") {
@@ -206,7 +206,7 @@ const Generate = () => {
         }
       }
     }
-  }, [qrCodeData]); // Only depend on qrCodeData, not on the generator functions
+  }, [qrCodeData, qrGenerator]); // Only depend on qrCodeData and qrGenerator setters
 
   // Real-time preview generation - separate effect for preview updates
   useEffect(() => {
@@ -288,8 +288,7 @@ const Generate = () => {
     organization, title, website, facebookUrl, linkedinUrl, instagramUrl, 
     twitterUrl, youtubeUrl, smsPhone, smsMessage, emailTo, emailSubject, emailBody,
     twitterText, twitterShareUrl, twitterHashtags, bitcoinAddress, bitcoinAmount,
-    bitcoinLabel, bitcoinMessage, qrGenerator.darkColor, qrGenerator.lightColor,
-    qrGenerator.addLogo, qrGenerator.logo, qrGenerator.generatePreview
+    bitcoinLabel, bitcoinMessage, qrGenerator
   ]);
 
   const handleScanQRClick = () => {
@@ -415,7 +414,6 @@ const Generate = () => {
               qrDataUrl={qrGenerator.qrDataUrl}
               activeTab={activeTab}
               text={text}
-              frameStyle={qrGenerator.frameStyle}
             />
           </div>
         </div>

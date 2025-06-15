@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Copy, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -7,10 +6,9 @@ interface QRCodePreviewProps {
   qrDataUrl: string;
   activeTab: string;
   text?: string;
-  frameStyle?: string;
 }
 
-export function QRCodePreview({ qrDataUrl, activeTab, text = "", frameStyle = "none" }: QRCodePreviewProps) {
+export function QRCodePreview({ qrDataUrl, activeTab, text = "" }: QRCodePreviewProps) {
   const { toast } = useToast();
 
   const copyText = async () => {
@@ -60,19 +58,13 @@ export function QRCodePreview({ qrDataUrl, activeTab, text = "", frameStyle = "n
     );
   }
 
-  // Frame classes/styles
-  let wrapClass = "bg-white rounded-lg p-6 shadow-lg";
-  if (frameStyle === "rounded") wrapClass += " rounded-2xl border border-green-500";
-  if (frameStyle === "circle") wrapClass += " rounded-full border-4 border-green-600 p-3";
-  if (frameStyle === "border") wrapClass += " border-4 border-green-500";
-
   return (
     <div className="flex flex-col items-center justify-center h-full space-y-6">
-      <div className={wrapClass} style={frameStyle === "circle" ? { aspectRatio: "1/1" } : {}}>
+      <div className="bg-white rounded-lg p-4 shadow-lg">
         <img
           src={qrDataUrl}
           alt="Generated QR Code"
-          className={frameStyle === "circle" ? "w-56 h-56 rounded-full" : "w-64 h-64"}
+          className="w-64 h-64"
         />
       </div>
 
