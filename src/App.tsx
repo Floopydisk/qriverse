@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,9 +23,7 @@ import FolderView from "./pages/FolderView";
 import DynamicQR from "./pages/DynamicQR";
 import DynamicQRStats from "./pages/DynamicQRStats";
 import EditDynamicQR from "./pages/EditDynamicQR";
-
-
-// import { Analytics } from "@vercel/analytics/next"
+import Teams from "./pages/Teams";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +76,16 @@ const App = () => (
               <Route path="/profile" element={
                 <AuthGuard>
                   <Profile />
+                </AuthGuard>
+              } />
+              <Route path="/teams" element={
+                <AuthGuard>
+                  <Teams />
+                </AuthGuard>
+              } />
+              <Route path="/teams/:teamId" element={
+                <AuthGuard>
+                  <TeamDetail />
                 </AuthGuard>
               } />
               <Route path="/dynamic-qr" element={

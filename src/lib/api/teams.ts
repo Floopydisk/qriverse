@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
@@ -101,7 +100,7 @@ export const removeMember = async (membershipId: string): Promise<void> => {
   if (error) throw error;
 };
 
-// Team invitation operations
+// Team invitation operations with email notifications
 export const inviteToTeam = async (teamId: string, email: string, role: UserRole = 'member'): Promise<TeamInvitation> => {
   const { data: session } = await supabase.auth.getSession();
   const user = session?.session?.user;
@@ -110,6 +109,7 @@ export const inviteToTeam = async (teamId: string, email: string, role: UserRole
     throw new Error('User not authenticated');
   }
 
+  // Create the invitation
   const { data, error } = await supabase
     .from('team_invitations')
     .insert({ 
@@ -122,6 +122,37 @@ export const inviteToTeam = async (teamId: string, email: string, role: UserRole
     .single();
 
   if (error) throw error;
+
+  // Get team details for email
+  const { data: team } = await supabase
+    .from('teams')
+    .select('name')
+    .eq('id', teamId)
+    .single();
+
+  // Get user profile for inviter name
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+
+  // Send invitation email
+  try {
+    await supabase.functions.invoke('send-team-invitation', {
+      body: {
+        email,
+        teamName: team?.name || 'Unknown Team',
+        inviterName: profile?.full_name || user.email,
+        invitationToken: data.token,
+        role,
+      },
+    });
+  } catch (emailError) {
+    console.error('Failed to send invitation email:', emailError);
+    // Don't throw error here as the invitation was created successfully
+  }
+
   return data;
 };
 
@@ -163,4 +194,16 @@ export const getUserTeamRole = async (teamId: string): Promise<UserRole | null> 
 
   if (error) return null;
   return data?.role || null;
+};
+
+// Fetch QR codes for a specific team
+export const fetchQRCodesInTeam = async (teamId: string): Promise<any[]> => {
+  const { data, error } = await supabase
+    .from('qr_codes')
+    .select('*')
+    .eq('team_id', teamId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
 };
