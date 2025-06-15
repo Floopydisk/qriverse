@@ -3,7 +3,9 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createQRCode, updateQRCode } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
-import { generateQRCode, addLogoToQR, handleQRCodeStorage } from "@/utils/qr-generator";
+import { generateShapedQR } from "@/utils/qr-shapes";
+import { integrateLogoIntoQR } from "@/utils/qr-logo-integration";
+import { handleQRCodeStorage } from "@/utils/qr-generator";
 
 const useQrGenerator = () => {
   const { toast } = useToast();
@@ -17,6 +19,10 @@ const useQrGenerator = () => {
   const [addLogo, setAddLogo] = useState(false);
   const [logo, setLogo] = useState("");
   const [frameStyle, setFrameStyle] = useState("none");
+  const [shape, setShape] = useState("square");
+  const [logoStyle, setLogoStyle] = useState("integrated");
+  const [logoSize, setLogoSize] = useState(0.25);
+  const [preserveAspectRatio, setPreserveAspectRatio] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -27,24 +33,35 @@ const useQrGenerator = () => {
     }
 
     try {
-      const qrCode = await generateQRCode(content, {
+      // Generate shaped QR code
+      const qrCode = await generateShapedQR(content, {
         darkColor,
         lightColor,
         width: 400,
-        margin: 2
+        margin: 2,
+        shape: shape as any,
+        cornerRadius: 20
       });
 
+      // Add logo if enabled
       if (addLogo && logo) {
-        addLogoToQR(qrCode, content, logo, (finalQR) => {
-          setQrDataUrl(finalQR);
+        const finalQR = await integrateLogoIntoQR(qrCode, logo, {
+          logoSize,
+          preserveAspectRatio,
+          logoStyle: logoStyle as any,
+          padding: 8,
+          borderRadius: 8,
+          borderColor: lightColor,
+          borderWidth: 4
         });
+        setQrDataUrl(finalQR);
       } else {
         setQrDataUrl(qrCode);
       }
     } catch (error) {
       console.error("Error generating QR preview:", error);
     }
-  }, [darkColor, lightColor, addLogo, logo]);
+  }, [darkColor, lightColor, addLogo, logo, shape, logoStyle, logoSize, preserveAspectRatio]);
 
   const saveQRCode = useCallback(async (content: string, type: string) => {
     if (!user) {
@@ -95,6 +112,10 @@ const useQrGenerator = () => {
           lightColor,
           hasLogo: addLogo,
           frameStyle,
+          shape,
+          logoStyle,
+          logoSize,
+          preserveAspectRatio,
           dataUrl: qrDataUrl, // Keep as fallback
           storagePath: storagePath || undefined // Only set if upload succeeded
         },
@@ -130,7 +151,7 @@ const useQrGenerator = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, name, qrDataUrl, darkColor, lightColor, addLogo, frameStyle, editId, toast]);
+  }, [user, name, qrDataUrl, darkColor, lightColor, addLogo, frameStyle, shape, logoStyle, logoSize, preserveAspectRatio, editId, toast]);
 
   return {
     // State
@@ -141,6 +162,10 @@ const useQrGenerator = () => {
     addLogo,
     logo,
     frameStyle,
+    shape,
+    logoStyle,
+    logoSize,
+    preserveAspectRatio,
     isGenerating,
     editId,
 
@@ -152,6 +177,10 @@ const useQrGenerator = () => {
     setAddLogo,
     setLogo,
     setFrameStyle,
+    setShape,
+    setLogoStyle,
+    setLogoSize,
+    setPreserveAspectRatio,
     setEditId,
 
     // Actions

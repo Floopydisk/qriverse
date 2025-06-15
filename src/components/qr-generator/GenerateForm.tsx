@@ -5,6 +5,8 @@ import { QRNameInput } from "@/components/qr-generator/QRNameInput";
 import { QRStyleOptions } from "@/components/qr-generator/QRStyleOptions";
 import QRTabSelector from "@/components/qr-generator/QRTabSelector";
 import { QRFrameSelector } from "@/components/qr-generator/QRFrameSelector";
+import { QRShapeSelector } from "@/components/qr-generator/QRShapeSelector";
+import { EnhancedLogoOptions } from "@/components/qr-generator/EnhancedLogoOptions";
 import { QRContentTabs } from "@/components/qr-generator/QRContentTabs";
 import useQrGenerator from "@/hooks/use-qr-generator";
 
@@ -16,7 +18,7 @@ interface GenerateFormProps {
   onScanClick: () => void;
   editId: string | null;
   getCurrentQRData: () => any;
-  // Form state props
+  // ... keep existing code (all form state props)
   text: string;
   setText: (text: string) => void;
   ssid: string;
@@ -116,6 +118,24 @@ export function GenerateForm({
         setLogo={qrGenerator.setLogo}
         addLogo={qrGenerator.addLogo}
         setAddLogo={qrGenerator.setAddLogo}
+      />
+      
+      <QRShapeSelector
+        shape={qrGenerator.shape}
+        setShape={qrGenerator.setShape}
+      />
+      
+      <EnhancedLogoOptions
+        logo={qrGenerator.logo}
+        setLogo={qrGenerator.setLogo}
+        addLogo={qrGenerator.addLogo}
+        setAddLogo={qrGenerator.setAddLogo}
+        logoStyle={qrGenerator.logoStyle}
+        setLogoStyle={qrGenerator.setLogoStyle}
+        logoSize={qrGenerator.logoSize}
+        setLogoSize={qrGenerator.setLogoSize}
+        preserveAspectRatio={qrGenerator.preserveAspectRatio}
+        setPreserveAspectRatio={qrGenerator.setPreserveAspectRatio}
       />
       
       <QRFrameSelector
