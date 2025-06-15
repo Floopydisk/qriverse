@@ -1,12 +1,17 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { acceptInvitation, cancelInvitation } from '@/lib/api/teams';
 
 const TeamInvitations = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ['team-invitations'],
     queryFn: async () => {
@@ -28,6 +33,55 @@ const TeamInvitations = () => {
       return data || [];
     },
   });
+
+  const acceptMutation = useMutation({
+    mutationFn: async (token: string) => {
+      await acceptInvitation(token);
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Team invitation accepted successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to accept invitation',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const declineMutation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      await cancelInvitation(invitationId);
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Team invitation declined',
+      });
+      queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to decline invitation',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleAccept = (token: string) => {
+    acceptMutation.mutate(token);
+  };
+
+  const handleDecline = (invitationId: string) => {
+    declineMutation.mutate(invitationId);
+  };
 
   if (isLoading) {
     return (
@@ -77,13 +131,24 @@ const TeamInvitations = () => {
           
           <CardContent>
             <div className="flex gap-2">
-              <Button size="sm" className="flex-1">
+              <Button 
+                size="sm" 
+                className="flex-1"
+                onClick={() => handleAccept(invitation.token)}
+                disabled={acceptMutation.isPending}
+              >
                 <Check className="mr-2 h-4 w-4" />
-                Accept
+                {acceptMutation.isPending ? 'Accepting...' : 'Accept'}
               </Button>
-              <Button size="sm" variant="outline" className="flex-1">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => handleDecline(invitation.id)}
+                disabled={declineMutation.isPending}
+              >
                 <X className="mr-2 h-4 w-4" />
-                Decline
+                {declineMutation.isPending ? 'Declining...' : 'Decline'}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2">

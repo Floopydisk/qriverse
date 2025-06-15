@@ -398,6 +398,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_team_invitation: {
+        Args: { invitation_token: string }
+        Returns: undefined
+      }
       get_user_team_role: {
         Args: { team_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["user_role"]
