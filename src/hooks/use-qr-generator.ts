@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createQRCode } from "@/lib/api";
@@ -12,6 +11,7 @@ const useQrGenerator = (initialData = {}) => {
   const [logo, setLogo] = useState("");
   const [addLogo, setAddLogo] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [frameStyle, setFrameStyle] = useState("none");
   const { toast } = useToast();
 
   const validateAndGenerate = async (content, errorMessage) => {
@@ -31,6 +31,7 @@ const useQrGenerator = (initialData = {}) => {
         lightColor,
         width: 400,
         margin: 2,
+        frameStyle,
       });
 
       setQrDataUrl(dataUrl);
@@ -73,6 +74,7 @@ const useQrGenerator = (initialData = {}) => {
           darkColor,
           lightColor,
           hasLogo: addLogo,
+          frameStyle, // <-- include frame style in db options
         },
         folder_id: null,
         scan_count: 0,
@@ -127,7 +129,9 @@ const useQrGenerator = (initialData = {}) => {
     setAddLogo,
     isGenerating,
     validateAndGenerate,
-    saveQRCodeToDatabase
+    saveQRCodeToDatabase,
+    frameStyle,
+    setFrameStyle
   };
 };
 

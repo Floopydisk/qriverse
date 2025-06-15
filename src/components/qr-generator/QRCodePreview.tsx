@@ -7,9 +7,10 @@ interface QRCodePreviewProps {
   qrDataUrl: string;
   activeTab: string;
   text?: string;
+  frameStyle?: string;
 }
 
-export function QRCodePreview({ qrDataUrl, activeTab, text = "" }: QRCodePreviewProps) {
+export function QRCodePreview({ qrDataUrl, activeTab, text = "", frameStyle = "none" }: QRCodePreviewProps) {
   const { toast } = useToast();
 
   const copyText = async () => {
@@ -59,13 +60,19 @@ export function QRCodePreview({ qrDataUrl, activeTab, text = "" }: QRCodePreview
     );
   }
 
+  // Frame classes/styles
+  let wrapClass = "bg-white rounded-lg p-6 shadow-lg";
+  if (frameStyle === "rounded") wrapClass += " rounded-2xl border border-green-500";
+  if (frameStyle === "circle") wrapClass += " rounded-full border-4 border-green-600 p-3";
+  if (frameStyle === "border") wrapClass += " border-4 border-green-500";
+
   return (
     <div className="flex flex-col items-center justify-center h-full space-y-6">
-      <div className="bg-white rounded-lg p-6 shadow-lg">
+      <div className={wrapClass} style={frameStyle === "circle" ? { aspectRatio: "1/1" } : {}}>
         <img
           src={qrDataUrl}
           alt="Generated QR Code"
-          className="w-64 h-64"
+          className={frameStyle === "circle" ? "w-56 h-56 rounded-full" : "w-64 h-64"}
         />
       </div>
 

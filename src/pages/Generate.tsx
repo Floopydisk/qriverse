@@ -25,6 +25,7 @@ import { SmsQRTab } from "@/components/qr-generator/tabs/SmsQRTab";
 import { EmailQRTab } from "@/components/qr-generator/tabs/EmailQRTab";
 import { TwitterQRTab } from "@/components/qr-generator/tabs/TwitterQRTab";
 import { BitcoinQRTab } from "@/components/qr-generator/tabs/BitcoinQRTab";
+import { QRFrameSelector } from "@/components/qr-generator/QRFrameSelector";
 
 import useQrGenerator from "@/hooks/use-qr-generator";
 
@@ -496,7 +497,6 @@ const Generate = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <FloatingCircles />
       <Header />
-      
       <main className="container mx-auto px-4 pt-20 pb-12">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -633,7 +633,11 @@ const Generate = () => {
                 addLogo={qrGenerator.addLogo}
                 setAddLogo={qrGenerator.setAddLogo}
               />
-              
+              <QRFrameSelector
+                frameStyle={qrGenerator.frameStyle}
+                setFrameStyle={qrGenerator.setFrameStyle}
+              />
+
               <Button 
                 className="w-full h-12 text-lg font-semibold"
                 onClick={handleGenerate}
@@ -650,12 +654,12 @@ const Generate = () => {
                 qrDataUrl={qrGenerator.qrDataUrl}
                 activeTab={activeTab}
                 text={activeTab === "text" || activeTab === "url" ? text : ""}
+                frameStyle={qrGenerator.frameStyle}
               />
             </div>
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
