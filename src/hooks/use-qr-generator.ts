@@ -30,8 +30,7 @@ const useQrGenerator = (initialData = {}) => {
         darkColor,
         lightColor,
         width: 400,
-        margin: 2,
-        frameStyle,
+        margin: 2
       });
 
       setQrDataUrl(dataUrl);
