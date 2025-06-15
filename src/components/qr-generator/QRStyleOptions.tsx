@@ -1,161 +1,133 @@
 
-import { useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { Upload, Trash } from "lucide-react";
+import { QRAdvancedColorOptions } from "./QRAdvancedColorOptions";
+import { QRPatternSelector } from "./QRPatternSelector";
+import { QRTemplateSelector } from "./QRTemplateSelector";
 
 interface QRStyleOptionsProps {
   darkColor: string;
   setDarkColor: (color: string) => void;
   lightColor: string;
   setLightColor: (color: string) => void;
-  logo: string | null;
-  setLogo: (logo: string | null) => void;
-  addLogo: boolean;
-  setAddLogo: (add: boolean) => void;
+  eyeColor: string;
+  setEyeColor: (color: string) => void;
+  patternColor: string;
+  setPatternColor: (color: string) => void;
+  backgroundColor: string;
+  setBackgroundColor: (color: string) => void;
+  pattern: string;
+  setPattern: (pattern: string) => void;
+  template: string;
+  setTemplate: (template: string) => void;
+  eyeRadius: number;
+  setEyeRadius: (radius: number) => void;
+  // Gradient props
+  useGradient: boolean;
+  setUseGradient: (use: boolean) => void;
+  gradientType: 'linear' | 'radial';
+  setGradientType: (type: 'linear' | 'radial') => void;
+  gradientDirection: string;
+  setGradientDirection: (direction: string) => void;
+  gradientStartColor: string;
+  setGradientStartColor: (color: string) => void;
+  gradientEndColor: string;
+  setGradientEndColor: (color: string) => void;
+  gradientTarget: 'foreground' | 'background';
+  setGradientTarget: (target: 'foreground' | 'background') => void;
+  // Transparency props
+  backgroundTransparent: boolean;
+  setBackgroundTransparent: (transparent: boolean) => void;
+  foregroundTransparent: boolean;
+  setForegroundTransparent: (transparent: boolean) => void;
+  backgroundOpacity: number;
+  setBackgroundOpacity: (opacity: number) => void;
+  foregroundOpacity: number;
+  setForegroundOpacity: (opacity: number) => void;
 }
 
-export function QRStyleOptions({ 
-  darkColor, 
-  setDarkColor, 
-  lightColor, 
+export function QRStyleOptions({
+  darkColor,
+  setDarkColor,
+  lightColor,
   setLightColor,
-  logo,
-  setLogo,
-  addLogo,
-  setAddLogo
+  eyeColor,
+  setEyeColor,
+  patternColor,
+  setPatternColor,
+  backgroundColor,
+  setBackgroundColor,
+  pattern,
+  setPattern,
+  template,
+  setTemplate,
+  eyeRadius,
+  setEyeRadius,
+  // Gradient props
+  useGradient,
+  setUseGradient,
+  gradientType,
+  setGradientType,
+  gradientDirection,
+  setGradientDirection,
+  gradientStartColor,
+  setGradientStartColor,
+  gradientEndColor,
+  setGradientEndColor,
+  gradientTarget,
+  setGradientTarget,
+  // Transparency props
+  backgroundTransparent,
+  setBackgroundTransparent,
+  foregroundTransparent,
+  setForegroundTransparent,
+  backgroundOpacity,
+  setBackgroundOpacity,
+  foregroundOpacity,
+  setForegroundOpacity
 }: QRStyleOptionsProps) {
-  const { toast } = useToast();
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target && typeof event.target.result === "string") {
-          setLogo(event.target.result);
-          setAddLogo(true);
-          toast({
-            title: "Logo uploaded",
-            description: "Your logo has been uploaded successfully",
-          });
-        }
-      };
-      reader.readAsDataURL(e.target.files[0]);
-    }
-  };
-
-  const removeLogo = () => {
-    setLogo(null);
-    setAddLogo(false);
-    toast({
-      title: "Logo removed",
-      description: "Your logo has been removed",
-    });
-  };
-
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div className="space-y-2">
-          <Label htmlFor="darkColor">QR Code Color</Label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              id="darkColor"
-              value={darkColor}
-              onChange={(e) => setDarkColor(e.target.value)}
-              className="w-10 h-10 rounded cursor-pointer"
-            />
-            <Input
-              type="text"
-              value={darkColor}
-              onChange={(e) => setDarkColor(e.target.value)}
-              className="flex-1"
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="lightColor">Background Color</Label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              id="lightColor"
-              value={lightColor}
-              onChange={(e) => setLightColor(e.target.value)}
-              className="w-10 h-10 rounded cursor-pointer"
-            />
-            <Input
-              type="text"
-              value={lightColor}
-              onChange={(e) => setLightColor(e.target.value)}
-              className="flex-1"
-            />
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <QRPatternSelector
+        pattern={pattern}
+        setPattern={setPattern}
+      />
       
-      <div className="space-y-2">
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="addLogo" 
-            checked={addLogo} 
-            onCheckedChange={(checked) => {
-              setAddLogo(checked === true);
-              if (checked === false) {
-                setLogo(null);
-              }
-            }}
-          />
-          <Label htmlFor="addLogo">Add Logo to Center</Label>
-        </div>
-        
-        {addLogo && (
-          <div className="flex flex-col space-y-2">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => document.getElementById('logo-upload')?.click()}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {logo ? "Change Logo" : "Upload Logo"}
-              </Button>
-              
-              {logo && (
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={removeLogo}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            
-            <input
-              id="logo-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleLogoUpload}
-            />
-            
-            {logo && (
-              <div className="flex justify-center">
-                <img
-                  src={logo}
-                  alt="Logo preview"
-                  className="h-16 w-16 object-contain border rounded"
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </>
+      <QRTemplateSelector
+        template={template}
+        setTemplate={setTemplate}
+      />
+      
+      <QRAdvancedColorOptions
+        eyeColor={eyeColor}
+        setEyeColor={setEyeColor}
+        patternColor={patternColor}
+        setPatternColor={setPatternColor}
+        backgroundColor={backgroundColor}
+        setBackgroundColor={setBackgroundColor}
+        eyeRadius={eyeRadius}
+        setEyeRadius={setEyeRadius}
+        // Gradient props
+        useGradient={useGradient}
+        setUseGradient={setUseGradient}
+        gradientType={gradientType}
+        setGradientType={setGradientType}
+        gradientDirection={gradientDirection}
+        setGradientDirection={setGradientDirection}
+        gradientStartColor={gradientStartColor}
+        setGradientStartColor={setGradientStartColor}
+        gradientEndColor={gradientEndColor}
+        setGradientEndColor={setGradientEndColor}
+        gradientTarget={gradientTarget}
+        setGradientTarget={setGradientTarget}
+        // Transparency props
+        backgroundTransparent={backgroundTransparent}
+        setBackgroundTransparent={setBackgroundTransparent}
+        foregroundTransparent={foregroundTransparent}
+        setForegroundTransparent={setForegroundTransparent}
+        backgroundOpacity={backgroundOpacity}
+        setBackgroundOpacity={setBackgroundOpacity}
+        foregroundOpacity={foregroundOpacity}
+        setForegroundOpacity={setForegroundOpacity}
+      />
+    </div>
   );
 }

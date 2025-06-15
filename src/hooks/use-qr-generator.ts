@@ -30,6 +30,20 @@ const useQrGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
+  // Gradient options
+  const [useGradient, setUseGradient] = useState(false);
+  const [gradientType, setGradientType] = useState<'linear' | 'radial'>('linear');
+  const [gradientDirection, setGradientDirection] = useState('0deg');
+  const [gradientStartColor, setGradientStartColor] = useState('#000000');
+  const [gradientEndColor, setGradientEndColor] = useState('#666666');
+  const [gradientTarget, setGradientTarget] = useState<'foreground' | 'background'>('foreground');
+
+  // Transparency options
+  const [backgroundTransparent, setBackgroundTransparent] = useState(false);
+  const [foregroundTransparent, setForegroundTransparent] = useState(false);
+  const [backgroundOpacity, setBackgroundOpacity] = useState(100);
+  const [foregroundOpacity, setForegroundOpacity] = useState(100);
+
   const generatePreview = useCallback(async (content: string) => {
     if (!content.trim()) {
       setQrDataUrl("");
@@ -49,7 +63,19 @@ const useQrGenerator = () => {
         cornerRadius: 20,
         eyeRadius,
         qrStyle: pattern === 'dots' ? 'dots' : pattern === 'fluid' ? 'fluid' : 'squares',
-        eyeStyle: pattern === 'circle' || pattern === 'dots' ? 'circle' : 'square'
+        eyeStyle: pattern === 'circle' || pattern === 'dots' ? 'circle' : 'square',
+        // Gradient options
+        useGradient,
+        gradientType,
+        gradientDirection,
+        gradientStartColor,
+        gradientEndColor,
+        gradientTarget,
+        // Transparency options
+        backgroundTransparent,
+        foregroundTransparent,
+        backgroundOpacity,
+        foregroundOpacity
       });
 
       // Add logo if enabled
@@ -70,7 +96,7 @@ const useQrGenerator = () => {
     } catch (error) {
       console.error("Error generating QR preview:", error);
     }
-  }, [patternColor, backgroundColor, eyeColor, pattern, eyeRadius, addLogo, logo, template, logoStyle, logoSize, preserveAspectRatio]);
+  }, [patternColor, backgroundColor, eyeColor, pattern, eyeRadius, addLogo, logo, template, logoStyle, logoSize, preserveAspectRatio, useGradient, gradientType, gradientDirection, gradientStartColor, gradientEndColor, gradientTarget, backgroundTransparent, foregroundTransparent, backgroundOpacity, foregroundOpacity]);
 
   const saveQRCode = useCallback(async (content: string, type: string) => {
     if (!user) {
@@ -130,7 +156,19 @@ const useQrGenerator = () => {
           logoSize,
           preserveAspectRatio,
           dataUrl: qrDataUrl, // Keep as fallback
-          storagePath: storagePath || undefined // Only set if upload succeeded
+          storagePath: storagePath || undefined, // Only set if upload succeeded
+          // Gradient options
+          useGradient,
+          gradientType,
+          gradientDirection,
+          gradientStartColor,
+          gradientEndColor,
+          gradientTarget,
+          // Transparency options
+          backgroundTransparent,
+          foregroundTransparent,
+          backgroundOpacity,
+          foregroundOpacity
         },
         folder_id: null,
         active: true,
@@ -164,7 +202,7 @@ const useQrGenerator = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, name, qrDataUrl, darkColor, lightColor, eyeColor, patternColor, backgroundColor, pattern, eyeRadius, addLogo, template, logoStyle, logoSize, preserveAspectRatio, editId, toast]);
+  }, [user, name, qrDataUrl, darkColor, lightColor, eyeColor, patternColor, backgroundColor, pattern, eyeRadius, addLogo, template, logoStyle, logoSize, preserveAspectRatio, editId, toast, useGradient, gradientType, gradientDirection, gradientStartColor, gradientEndColor, gradientTarget, backgroundTransparent, foregroundTransparent, backgroundOpacity, foregroundOpacity]);
 
   return {
     // State
@@ -186,6 +224,20 @@ const useQrGenerator = () => {
     isGenerating,
     editId,
 
+    // Gradient state
+    useGradient,
+    gradientType,
+    gradientDirection,
+    gradientStartColor,
+    gradientEndColor,
+    gradientTarget,
+
+    // Transparency state
+    backgroundTransparent,
+    foregroundTransparent,
+    backgroundOpacity,
+    foregroundOpacity,
+
     // Setters
     setName,
     setQrDataUrl,
@@ -203,6 +255,20 @@ const useQrGenerator = () => {
     setLogoSize,
     setPreserveAspectRatio,
     setEditId,
+
+    // Gradient setters
+    setUseGradient,
+    setGradientType,
+    setGradientDirection,
+    setGradientStartColor,
+    setGradientEndColor,
+    setGradientTarget,
+
+    // Transparency setters
+    setBackgroundTransparent,
+    setForegroundTransparent,
+    setBackgroundOpacity,
+    setForegroundOpacity,
 
     // Actions
     generatePreview,

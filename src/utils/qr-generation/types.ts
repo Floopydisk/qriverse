@@ -11,6 +11,18 @@ export interface QRStyleOptions {
   eyeRadius?: number;
   qrStyle?: 'squares' | 'dots' | 'fluid';
   eyeStyle?: 'square' | 'circle';
+  // Gradient options
+  useGradient?: boolean;
+  gradientType?: 'linear' | 'radial';
+  gradientDirection?: string;
+  gradientStartColor?: string;
+  gradientEndColor?: string;
+  gradientTarget?: 'foreground' | 'background';
+  // Transparency options
+  backgroundTransparent?: boolean;
+  foregroundTransparent?: boolean;
+  backgroundOpacity?: number;
+  foregroundOpacity?: number;
 }
 
 export type QRMappedStyle = 'squares' | 'dots' | 'fluid';
