@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createQRCode, updateQRCode } from "@/lib/api";
@@ -15,6 +16,10 @@ const useQrGenerator = () => {
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [darkColor, setDarkColor] = useState("#000000");
   const [lightColor, setLightColor] = useState("#FFFFFF");
+  const [eyeColor, setEyeColor] = useState("#000000");
+  const [patternColor, setPatternColor] = useState("#000000");
+  const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
+  const [pattern, setPattern] = useState("square");
   const [addLogo, setAddLogo] = useState(false);
   const [logo, setLogo] = useState("");
   const [template, setTemplate] = useState("square");
@@ -33,8 +38,10 @@ const useQrGenerator = () => {
     try {
       // Generate styled QR code
       const qrCode = await generateStyledQR(content, {
-        darkColor,
-        lightColor,
+        darkColor: patternColor,
+        lightColor: backgroundColor,
+        eyeColor,
+        pattern: pattern as any,
         width: 400,
         margin: 2,
         template: template as any,
@@ -49,7 +56,7 @@ const useQrGenerator = () => {
           logoStyle: logoStyle as any,
           padding: 8,
           borderRadius: 8,
-          borderColor: lightColor,
+          borderColor: backgroundColor,
           borderWidth: 4
         });
         setQrDataUrl(finalQR);
@@ -59,7 +66,7 @@ const useQrGenerator = () => {
     } catch (error) {
       console.error("Error generating QR preview:", error);
     }
-  }, [darkColor, lightColor, addLogo, logo, template, logoStyle, logoSize, preserveAspectRatio]);
+  }, [patternColor, backgroundColor, eyeColor, pattern, addLogo, logo, template, logoStyle, logoSize, preserveAspectRatio]);
 
   const saveQRCode = useCallback(async (content: string, type: string) => {
     if (!user) {
@@ -108,6 +115,10 @@ const useQrGenerator = () => {
         options: {
           darkColor,
           lightColor,
+          eyeColor,
+          patternColor,
+          backgroundColor,
+          pattern,
           hasLogo: addLogo,
           template,
           logoStyle,
@@ -148,7 +159,7 @@ const useQrGenerator = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, name, qrDataUrl, darkColor, lightColor, addLogo, template, logoStyle, logoSize, preserveAspectRatio, editId, toast]);
+  }, [user, name, qrDataUrl, darkColor, lightColor, eyeColor, patternColor, backgroundColor, pattern, addLogo, template, logoStyle, logoSize, preserveAspectRatio, editId, toast]);
 
   return {
     // State
@@ -156,6 +167,10 @@ const useQrGenerator = () => {
     qrDataUrl,
     darkColor,
     lightColor,
+    eyeColor,
+    patternColor,
+    backgroundColor,
+    pattern,
     addLogo,
     logo,
     template,
@@ -170,6 +185,10 @@ const useQrGenerator = () => {
     setQrDataUrl,
     setDarkColor,
     setLightColor,
+    setEyeColor,
+    setPatternColor,
+    setBackgroundColor,
+    setPattern,
     setAddLogo,
     setLogo,
     setTemplate,

@@ -1,9 +1,12 @@
+
 import { Button } from "@/components/ui/button";
 import { QrCode, Scan } from "lucide-react";
 import { QRNameInput } from "@/components/qr-generator/QRNameInput";
 import { QRStyleOptions } from "@/components/qr-generator/QRStyleOptions";
 import QRTabSelector from "@/components/qr-generator/QRTabSelector";
 import { QRTemplateSelector } from "@/components/qr-generator/QRTemplateSelector";
+import { QRPatternSelector } from "@/components/qr-generator/QRPatternSelector";
+import { QRAdvancedColorOptions } from "@/components/qr-generator/QRAdvancedColorOptions";
 import { EnhancedLogoOptions } from "@/components/qr-generator/EnhancedLogoOptions";
 import { QRContentTabs } from "@/components/qr-generator/QRContentTabs";
 import useQrGenerator from "@/hooks/use-qr-generator";
@@ -116,6 +119,20 @@ export function GenerateForm({
         setLogo={qrGenerator.setLogo}
         addLogo={qrGenerator.addLogo}
         setAddLogo={qrGenerator.setAddLogo}
+      />
+      
+      <QRPatternSelector
+        pattern={qrGenerator.pattern}
+        setPattern={qrGenerator.setPattern}
+      />
+      
+      <QRAdvancedColorOptions
+        eyeColor={qrGenerator.eyeColor}
+        setEyeColor={qrGenerator.setEyeColor}
+        patternColor={qrGenerator.patternColor}
+        setPatternColor={qrGenerator.setPatternColor}
+        backgroundColor={qrGenerator.backgroundColor}
+        setBackgroundColor={qrGenerator.setBackgroundColor}
       />
       
       <QRTemplateSelector
