@@ -38,13 +38,23 @@ export function useQRGenerationLogic(
   const { toast } = useToast();
 
   const generateTextQR = async () => {
-    const result = await qrGenerator.validateAndGenerate(
-      formData.text,
-      "Please enter some text to generate a QR code"
-    );
+    if (!formData.text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter some text to generate a QR code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await qrGenerator.generatePreview(formData.text);
+    const result = await qrGenerator.saveQRCode(formData.text, "text");
     
     if (result) {
-      qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, result.type);
+      toast({
+        title: "Success",
+        description: "QR code generated successfully",
+      });
     }
   };
 
@@ -63,13 +73,14 @@ export function useQRGenerationLogic(
         formData.hidden ? "true" : "false"
       };;`;
       
-      const result = await qrGenerator.validateAndGenerate(
-        wifiString,
-        "Please enter the network name (SSID)"
-      );
+      await qrGenerator.generatePreview(wifiString);
+      const result = await qrGenerator.saveQRCode(wifiString, "wifi");
       
       if (result) {
-        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "wifi");
+        toast({
+          title: "Success",
+          description: "WiFi QR code generated successfully",
+        });
       }
     } catch (err) {
       toast({
@@ -108,13 +119,14 @@ export function useQRGenerationLogic(
         "END:VCARD"
       ].filter(Boolean).join("\n");
       
-      const result = await qrGenerator.validateAndGenerate(
-        vCardLines,
-        "Please enter at least a name"
-      );
+      await qrGenerator.generatePreview(vCardLines);
+      const result = await qrGenerator.saveQRCode(vCardLines, "contact");
       
       if (result) {
-        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "contact");
+        toast({
+          title: "Success",
+          description: "Contact QR code generated successfully",
+        });
       }
     } catch (err) {
       toast({
@@ -138,13 +150,14 @@ export function useQRGenerationLogic(
     try {
       const smsString = `SMSTO:${formData.smsPhone}:${formData.smsMessage}`;
       
-      const result = await qrGenerator.validateAndGenerate(
-        smsString,
-        "Please enter a phone number"
-      );
+      await qrGenerator.generatePreview(smsString);
+      const result = await qrGenerator.saveQRCode(smsString, "sms");
       
       if (result) {
-        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "sms");
+        toast({
+          title: "Success",
+          description: "SMS QR code generated successfully",
+        });
       }
     } catch (err) {
       toast({
@@ -175,13 +188,14 @@ export function useQRGenerationLogic(
         if (formData.emailBody) emailString += `body=${encodeURIComponent(formData.emailBody)}`;
       }
       
-      const result = await qrGenerator.validateAndGenerate(
-        emailString,
-        "Please enter an email address"
-      );
+      await qrGenerator.generatePreview(emailString);
+      const result = await qrGenerator.saveQRCode(emailString, "email");
       
       if (result) {
-        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "email");
+        toast({
+          title: "Success",
+          description: "Email QR code generated successfully",
+        });
       }
     } catch (err) {
       toast({
@@ -211,13 +225,14 @@ export function useQRGenerationLogic(
       if ((formData.twitterText || formData.twitterShareUrl) && formData.twitterHashtags) twitterString += '&';
       if (formData.twitterHashtags) twitterString += `hashtags=${encodeURIComponent(formData.twitterHashtags.replace(/#/g, '').replace(/\s+/g, ','))}`;
       
-      const result = await qrGenerator.validateAndGenerate(
-        twitterString,
-        "Please enter at least one Twitter field"
-      );
+      await qrGenerator.generatePreview(twitterString);
+      const result = await qrGenerator.saveQRCode(twitterString, "twitter");
       
       if (result) {
-        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "twitter");
+        toast({
+          title: "Success",
+          description: "Twitter QR code generated successfully",
+        });
       }
     } catch (err) {
       toast({
@@ -250,13 +265,14 @@ export function useQRGenerationLogic(
         if (formData.bitcoinMessage) bitcoinString += `message=${encodeURIComponent(formData.bitcoinMessage)}`;
       }
       
-      const result = await qrGenerator.validateAndGenerate(
-        bitcoinString,
-        "Please enter a Bitcoin address"
-      );
+      await qrGenerator.generatePreview(bitcoinString);
+      const result = await qrGenerator.saveQRCode(bitcoinString, "bitcoin");
       
       if (result) {
-        qrGenerator.saveQRCodeToDatabase(result.dataUrl, result.content, "bitcoin");
+        toast({
+          title: "Success",
+          description: "Bitcoin QR code generated successfully",
+        });
       }
     } catch (err) {
       toast({

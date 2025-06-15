@@ -97,7 +97,10 @@ const useQrGenerator = () => {
           frameStyle,
           dataUrl: qrDataUrl, // Keep as fallback
           storagePath: storagePath || undefined // Only set if upload succeeded
-        }
+        },
+        folder_id: null,
+        active: true,
+        scan_count: 0
       };
 
       let result;
