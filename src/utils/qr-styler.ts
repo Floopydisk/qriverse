@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { QRCode } from 'react-qrcode-logo';
 
@@ -88,32 +87,35 @@ export const generateStyledQR = async (
       const root = ReactDOM.createRoot(tempDiv);
       
       root.render(
-        React.createElement(QRCode, {
-          ...qrProps,
-          ref: (canvas: HTMLCanvasElement) => {
-            if (canvas) {
-              setTimeout(() => {
-                try {
-                  let finalCanvas = canvas;
-                  
-                  // Apply template shapes if needed
-                  if (template !== 'square') {
-                    finalCanvas = applyTemplateShape(canvas, template, cornerRadius);
-                  }
-                  
-                  const dataUrl = finalCanvas.toDataURL("image/png");
-                  document.body.removeChild(container);
-                  resolve(dataUrl);
-                } catch (error) {
-                  console.error("Error generating QR code:", error);
-                  document.body.removeChild(container);
-                  resolve("");
-                }
-              }, 100);
-            }
-          }
-        })
+        React.createElement(QRCode, qrProps)
       );
+
+      // Wait for the component to render and then find the canvas
+      setTimeout(() => {
+        try {
+          const canvas = tempDiv.querySelector('canvas') as HTMLCanvasElement;
+          if (canvas) {
+            let finalCanvas = canvas;
+            
+            // Apply template shapes if needed
+            if (template !== 'square') {
+              finalCanvas = applyTemplateShape(canvas, template, cornerRadius);
+            }
+            
+            const dataUrl = finalCanvas.toDataURL("image/png");
+            document.body.removeChild(container);
+            resolve(dataUrl);
+          } else {
+            console.error("Canvas not found in QR code component");
+            document.body.removeChild(container);
+            resolve("");
+          }
+        } catch (error) {
+          console.error("Error generating QR code:", error);
+          document.body.removeChild(container);
+          resolve("");
+        }
+      }, 200); // Increased timeout to ensure rendering is complete
     });
   });
 };
