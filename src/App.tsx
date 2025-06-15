@@ -24,6 +24,7 @@ import DynamicQR from "./pages/DynamicQR";
 import DynamicQRStats from "./pages/DynamicQRStats";
 import EditDynamicQR from "./pages/EditDynamicQR";
 import Teams from "./pages/Teams";
+import TeamDetail from "./pages/TeamDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,71 +46,71 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/signin" element={<SignIn />} />
-              <Route path="/scan" element={<Scan />} />
-              <Route path="/guides" element={<Guides />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/cookie-policy" element={<CookiePolicy />} />
-              <Route path="/gdpr" element={<GdprPolicy />} />
-              
-              {/* Protected routes */}
-              <Route path="/dashboard" element={
-                <AuthGuard>
-                  <Dashboard />
-                </AuthGuard>
-              } />
-              <Route path="/dashboard/folder/:folderId" element={
-                <AuthGuard>
-                  <FolderView />
-                </AuthGuard>
-              } />
-              <Route path="/generate" element={
-                <AuthGuard>
-                  <Generate />
-                </AuthGuard>
-              } />
-              <Route path="/barcode" element={
-                <AuthGuard>
-                  <Barcode />
-                </AuthGuard>
-              } />
-              <Route path="/profile" element={
-                <AuthGuard>
-                  <Profile />
-                </AuthGuard>
-              } />
-              <Route path="/teams" element={
-                <AuthGuard>
-                  <Teams />
-                </AuthGuard>
-              } />
-              <Route path="/teams/:teamId" element={
-                <AuthGuard>
-                  <TeamDetail />
-                </AuthGuard>
-              } />
-              <Route path="/dynamic-qr" element={
-                <AuthGuard>
-                  <DynamicQR />
-                </AuthGuard>
-              } />
-              <Route path="/dynamic-qr/stats/:id" element={
-                <AuthGuard>
-                  <DynamicQRStats />
-                </AuthGuard>
-              } />
-              <Route path="/dynamic-qr/edit/:id" element={
-                <AuthGuard>
-                  <EditDynamicQR />
-                </AuthGuard>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </SidebarProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </AuthProvider>
-  </HashRouter>
+                <Route path="/scan" element={<Scan />} />
+                <Route path="/guides" element={<Guides />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
+                <Route path="/gdpr" element={<GdprPolicy />} />
+                
+                {/* Protected routes */}
+                <Route path="/dashboard" element={
+                  <AuthGuard>
+                    <Dashboard />
+                  </AuthGuard>
+                } />
+                <Route path="/dashboard/folder/:folderId" element={
+                  <AuthGuard>
+                    <FolderView />
+                  </AuthGuard>
+                } />
+                <Route path="/generate" element={
+                  <AuthGuard>
+                    <Generate />
+                  </AuthGuard>
+                } />
+                <Route path="/barcode" element={
+                  <AuthGuard>
+                    <Barcode />
+                  </AuthGuard>
+                } />
+                <Route path="/profile" element={
+                  <AuthGuard>
+                    <Profile />
+                  </AuthGuard>
+                } />
+                <Route path="/teams" element={
+                  <AuthGuard>
+                    <Teams />
+                  </AuthGuard>
+                } />
+                <Route path="/teams/:teamId" element={
+                  <AuthGuard>
+                    <TeamDetail />
+                  </AuthGuard>
+                } />
+                <Route path="/dynamic-qr" element={
+                  <AuthGuard>
+                    <DynamicQR />
+                  </AuthGuard>
+                } />
+                <Route path="/dynamic-qr/stats/:id" element={
+                  <AuthGuard>
+                    <DynamicQRStats />
+                  </AuthGuard>
+                } />
+                <Route path="/dynamic-qr/edit/:id" element={
+                  <AuthGuard>
+                    <EditDynamicQR />
+                  </AuthGuard>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </SidebarProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </HashRouter>
 );
 
 export default App;
