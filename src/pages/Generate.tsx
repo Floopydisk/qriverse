@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -16,6 +16,7 @@ const Generate = () => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const { user } = useAuth();
+  const hasLoadedData = useRef(false);
 
   // QR Generator hook
   const qrGenerator = useQrGenerator();
@@ -63,7 +64,7 @@ const Generate = () => {
   // Generation logic hook
   const { handleGenerate } = useQRGenerationLogic(qrGenerator, formData);
 
-  const { data: qrCodeData } = useQuery({
+  const { data: qrCodeData, isLoading } = useQuery({
     queryKey: ['qrCode', editId],
     queryFn: () => editId ? fetchQRCode(editId) : null,
     enabled: !!editId
@@ -73,12 +74,18 @@ const Generate = () => {
   useEffect(() => {
     if (editId) {
       qrGenerator.setEditId(editId);
+      hasLoadedData.current = false; // Reset flag when switching to edit mode
+    } else {
+      hasLoadedData.current = false; // Reset flag when creating new QR
     }
   }, [editId, qrGenerator]);
 
-  // Load QR code data for editing
+  // Load QR code data for editing - only run once when data is first loaded
   useEffect(() => {
-    if (qrCodeData) {
+    if (qrCodeData && !hasLoadedData.current) {
+      console.log("Loading QR code data for editing:", qrCodeData);
+      hasLoadedData.current = true; // Set flag to prevent reloading
+      
       qrGenerator.setName(qrCodeData.name || "");
       if (qrCodeData.options && typeof qrCodeData.options === 'object') {
         const options = qrCodeData.options as Record<string, any>;
@@ -199,9 +206,9 @@ const Generate = () => {
         }
       }
     }
-  }, [qrCodeData, qrGenerator]);
+  }, [qrCodeData]); // Only depend on qrCodeData, not on the generator functions
 
-  // Real-time preview generation
+  // Real-time preview generation - separate effect for preview updates
   useEffect(() => {
     const generateCurrentPreview = () => {
       let content = "";
@@ -282,7 +289,7 @@ const Generate = () => {
     twitterUrl, youtubeUrl, smsPhone, smsMessage, emailTo, emailSubject, emailBody,
     twitterText, twitterShareUrl, twitterHashtags, bitcoinAddress, bitcoinAmount,
     bitcoinLabel, bitcoinMessage, qrGenerator.darkColor, qrGenerator.lightColor,
-    qrGenerator.addLogo, qrGenerator.logo, qrGenerator
+    qrGenerator.addLogo, qrGenerator.logo, qrGenerator.generatePreview
   ]);
 
   const handleScanQRClick = () => {
@@ -315,6 +322,19 @@ const Generate = () => {
         return { name: qrGenerator.name };
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+        <FloatingCircles />
+        <Header />
+        <main className="container mx-auto px-4 pt-20 pb-12 flex items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
