@@ -1,6 +1,7 @@
-import { useState } from "react";
+
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { createQRCode } from "@/lib/api";
+import { createQRCode, updateQRCode } from "@/lib/api";
 import { generateQRCode, addLogoToQR } from "@/utils/qr-generator";
 
 const useQrGenerator = (initialData = {}) => {
@@ -12,7 +13,36 @@ const useQrGenerator = (initialData = {}) => {
   const [addLogo, setAddLogo] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [frameStyle, setFrameStyle] = useState("none");
+  const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Real-time preview generation
+  const generatePreview = useCallback(async (content: string) => {
+    if (!content) {
+      setQrDataUrl("");
+      return;
+    }
+
+    try {
+      const dataUrl = await generateQRCode(content, {
+        darkColor,
+        lightColor,
+        width: 400,
+        margin: 2
+      });
+
+      if (addLogo && logo) {
+        addLogoToQR(dataUrl, content, logo, (finalQR) => {
+          setQrDataUrl(finalQR);
+        });
+      } else {
+        setQrDataUrl(dataUrl);
+      }
+    } catch (error) {
+      console.error("Preview generation error:", error);
+      setQrDataUrl("");
+    }
+  }, [darkColor, lightColor, addLogo, logo]);
 
   const validateAndGenerate = async (content, errorMessage) => {
     if (!content) {
@@ -33,10 +63,21 @@ const useQrGenerator = (initialData = {}) => {
         margin: 2
       });
 
-      setQrDataUrl(dataUrl);
+      let finalDataUrl = dataUrl;
+      
+      if (addLogo && logo) {
+        await new Promise((resolve) => {
+          addLogoToQR(dataUrl, content, logo, (finalQR) => {
+            finalDataUrl = finalQR;
+            resolve(finalQR);
+          });
+        });
+      }
+
+      setQrDataUrl(finalDataUrl);
 
       return {
-        dataUrl,
+        dataUrl: finalDataUrl,
         content,
         type: determineContentType(content),
       };
@@ -73,30 +114,38 @@ const useQrGenerator = (initialData = {}) => {
           darkColor,
           lightColor,
           hasLogo: addLogo,
-          frameStyle, // <-- include frame style in db options
+          frameStyle,
         },
         folder_id: null,
         scan_count: 0,
         active: true
       };
 
-      const result = await createQRCode(qrCodeData);
+      let result;
+      if (editId) {
+        result = await updateQRCode(editId, qrCodeData);
+      } else {
+        result = await createQRCode(qrCodeData);
+      }
 
       if (result) {
         toast({
           title: "Success",
-          description: "QR code saved successfully",
+          description: editId ? "QR code updated successfully" : "QR code saved successfully",
         });
-        // Reset the form
-        setName("");
-        setQrDataUrl("");
-        setLogo("");
+        
+        if (!editId) {
+          // Reset the form only for new QR codes
+          setName("");
+          setQrDataUrl("");
+          setLogo("");
+        }
       }
     } catch (error) {
       console.error("Error saving QR code:", error);
       toast({
         title: "Error",
-        description: "Failed to save QR code",
+        description: editId ? "Failed to update QR code" : "Failed to save QR code",
         variant: "destructive",
       });
     }
@@ -130,7 +179,10 @@ const useQrGenerator = (initialData = {}) => {
     validateAndGenerate,
     saveQRCodeToDatabase,
     frameStyle,
-    setFrameStyle
+    setFrameStyle,
+    generatePreview,
+    editId,
+    setEditId
   };
 };
 

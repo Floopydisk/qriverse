@@ -159,59 +159,16 @@ export const createQRCode = async (qrCodeData: Omit<QRCode, 'id' | 'created_at' 
 };
 
 // Function to update an existing QR code
-export const updateQRCode = async (id: string, updates: Partial<Omit<QRCode, 'id' | 'created_at' | 'user_id'>>): Promise<QRCode | null> => {
-  try {
-    const updateData: any = {};
-    
-    // Only include fields that are provided in updates
-    if (updates.name !== undefined) updateData.name = updates.name;
-    if (updates.type !== undefined) updateData.type = updates.type;
-    if (updates.content !== undefined) updateData.content = updates.content;
-    if (updates.options !== undefined) updateData.options = updates.options;
-    if (updates.folder_id !== undefined) updateData.folder_id = updates.folder_id;
-    
-    const { data, error } = await supabase
-      .from('qr_codes')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+export const updateQRCode = async (id: string, qrCodeData: any) => {
+  const { data, error } = await supabase
+    .from('qr_codes')
+    .update(qrCodeData)
+    .eq('id', id)
+    .select()
+    .single();
 
-    if (error) {
-      console.error("Error updating QR code:", error.message);
-      return null;
-    }
-
-    if (!data) return null;
-
-    // Fetch scan count for this QR code
-    const { count, error: scanError } = await supabase
-      .from('qr_scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('qr_code_id', id);
-
-    if (scanError) {
-      console.error("Error fetching scan count:", scanError.message);
-      // Continue without scan count
-    }
-
-    return {
-      id: data.id,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      name: data.name,
-      type: data.type,
-      content: data.content,
-      user_id: data.user_id,
-      options: typeof data.options === 'object' ? data.options : {},
-      folder_id: data.folder_id || null,
-      scan_count: count || 0,
-      active: true // Default value as this isn't in the database
-    };
-  } catch (error) {
-    console.error("Unexpected error updating QR code:", error);
-    return null;
-  }
+  if (error) throw error;
+  return data;
 };
 
 // Function to delete a QR code

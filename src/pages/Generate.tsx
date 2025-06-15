@@ -91,6 +91,14 @@ const Generate = () => {
     enabled: !!editId
   });
 
+  // Set edit ID when in edit mode
+  useEffect(() => {
+    if (editId) {
+      qrGenerator.setEditId(editId);
+    }
+  }, [editId, qrGenerator]);
+
+  // Load QR code data for editing
   useEffect(() => {
     if (qrCodeData) {
       qrGenerator.setName(qrCodeData.name || "");
@@ -100,6 +108,7 @@ const Generate = () => {
         qrGenerator.setDarkColor(options.darkColor || "#10B981");
         qrGenerator.setLightColor(options.lightColor || "#FFFFFF");
         qrGenerator.setAddLogo(options.hasLogo || false);
+        qrGenerator.setFrameStyle(options.frameStyle || "none");
       }
 
       if (qrCodeData.type === "url" || qrCodeData.type === "text") {
@@ -213,6 +222,90 @@ const Generate = () => {
       }
     }
   }, [qrCodeData, qrGenerator]);
+
+  // Real-time preview generation
+  useEffect(() => {
+    const generateCurrentPreview = () => {
+      let content = "";
+      
+      if (activeTab === "url" || activeTab === "text") {
+        content = text;
+      } else if (activeTab === "wifi") {
+        if (ssid) {
+          content = `WIFI:T:${encryption};S:${ssid};P:${password};H:${hidden ? "true" : "false"};;`;
+        }
+      } else if (activeTab === "vcard") {
+        if (fullName) {
+          const vCardLines = [
+            "BEGIN:VCARD",
+            "VERSION:3.0",
+            `FN:${fullName}`,
+            email ? `EMAIL:${email}` : "",
+            phone ? `TEL:${phone}` : "",
+            organization ? `ORG:${organization}` : "",
+            title ? `TITLE:${title}` : "",
+            website ? `URL:${website}` : "",
+            facebookUrl ? `X-SOCIALPROFILE;type=facebook:${facebookUrl}` : "",
+            linkedinUrl ? `X-SOCIALPROFILE;type=linkedin:${linkedinUrl}` : "",
+            instagramUrl ? `X-SOCIALPROFILE;type=instagram:${instagramUrl}` : "",
+            twitterUrl ? `X-SOCIALPROFILE;type=twitter:${twitterUrl}` : "",
+            youtubeUrl ? `X-SOCIALPROFILE;type=youtube:${youtubeUrl}` : "",
+            "END:VCARD"
+          ].filter(Boolean).join("\n");
+          content = vCardLines;
+        }
+      } else if (activeTab === "sms") {
+        if (smsPhone) {
+          content = `SMSTO:${smsPhone}:${smsMessage}`;
+        }
+      } else if (activeTab === "email") {
+        if (emailTo) {
+          let emailString = `MAILTO:${emailTo}`;
+          if (emailSubject || emailBody) {
+            emailString += '?';
+            if (emailSubject) emailString += `subject=${encodeURIComponent(emailSubject)}`;
+            if (emailSubject && emailBody) emailString += '&';
+            if (emailBody) emailString += `body=${encodeURIComponent(emailBody)}`;
+          }
+          content = emailString;
+        }
+      } else if (activeTab === "twitter") {
+        if (twitterText || twitterShareUrl || twitterHashtags) {
+          let twitterString = "https://twitter.com/intent/tweet?";
+          if (twitterText) twitterString += `text=${encodeURIComponent(twitterText)}`;
+          if (twitterText && twitterShareUrl) twitterString += '&';
+          if (twitterShareUrl) twitterString += `url=${encodeURIComponent(twitterShareUrl)}`;
+          if ((twitterText || twitterShareUrl) && twitterHashtags) twitterString += '&';
+          if (twitterHashtags) twitterString += `hashtags=${encodeURIComponent(twitterHashtags.replace(/#/g, '').replace(/\s+/g, ','))}`;
+          content = twitterString;
+        }
+      } else if (activeTab === "bitcoin") {
+        if (bitcoinAddress) {
+          let bitcoinString = `bitcoin:${bitcoinAddress}`;
+          if (bitcoinAmount || bitcoinLabel || bitcoinMessage) {
+            bitcoinString += '?';
+            if (bitcoinAmount) bitcoinString += `amount=${bitcoinAmount}`;
+            if (bitcoinAmount && (bitcoinLabel || bitcoinMessage)) bitcoinString += '&';
+            if (bitcoinLabel) bitcoinString += `label=${encodeURIComponent(bitcoinLabel)}`;
+            if ((bitcoinAmount || bitcoinLabel) && bitcoinMessage) bitcoinString += '&';
+            if (bitcoinMessage) bitcoinString += `message=${encodeURIComponent(bitcoinMessage)}`;
+          }
+          content = bitcoinString;
+        }
+      }
+
+      qrGenerator.generatePreview(content);
+    };
+
+    generateCurrentPreview();
+  }, [
+    activeTab, text, ssid, password, encryption, hidden, fullName, email, phone, 
+    organization, title, website, facebookUrl, linkedinUrl, instagramUrl, 
+    twitterUrl, youtubeUrl, smsPhone, smsMessage, emailTo, emailSubject, emailBody,
+    twitterText, twitterShareUrl, twitterHashtags, bitcoinAddress, bitcoinAmount,
+    bitcoinLabel, bitcoinMessage, qrGenerator.darkColor, qrGenerator.lightColor,
+    qrGenerator.addLogo, qrGenerator.logo, qrGenerator
+  ]);
 
   const generateTextQR = async () => {
     const result = await qrGenerator.validateAndGenerate(
