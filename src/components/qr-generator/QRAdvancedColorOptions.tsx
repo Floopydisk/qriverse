@@ -1,6 +1,7 @@
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 
 interface QRAdvancedColorOptionsProps {
   eyeColor: string;
@@ -9,6 +10,8 @@ interface QRAdvancedColorOptionsProps {
   setPatternColor: (color: string) => void;
   backgroundColor: string;
   setBackgroundColor: (color: string) => void;
+  eyeRadius?: number;
+  setEyeRadius?: (radius: number) => void;
 }
 
 export function QRAdvancedColorOptions({ 
@@ -17,7 +20,9 @@ export function QRAdvancedColorOptions({
   patternColor, 
   setPatternColor,
   backgroundColor,
-  setBackgroundColor
+  setBackgroundColor,
+  eyeRadius = 0,
+  setEyeRadius
 }: QRAdvancedColorOptionsProps) {
   return (
     <div className="space-y-4">
@@ -80,6 +85,21 @@ export function QRAdvancedColorOptions({
             />
           </div>
         </div>
+
+        {setEyeRadius && (
+          <div className="space-y-2">
+            <Label htmlFor="eyeRadius">Eye Radius: {eyeRadius}</Label>
+            <Slider
+              id="eyeRadius"
+              min={0}
+              max={50}
+              step={1}
+              value={[eyeRadius]}
+              onValueChange={(value) => setEyeRadius(value[0])}
+              className="w-full"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

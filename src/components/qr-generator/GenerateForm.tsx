@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { QrCode, Scan } from "lucide-react";
 import { QRNameInput } from "@/components/qr-generator/QRNameInput";
@@ -133,6 +132,8 @@ export function GenerateForm({
         setPatternColor={qrGenerator.setPatternColor}
         backgroundColor={qrGenerator.backgroundColor}
         setBackgroundColor={qrGenerator.setBackgroundColor}
+        eyeRadius={qrGenerator.eyeRadius}
+        setEyeRadius={qrGenerator.setEyeRadius}
       />
       
       <QRTemplateSelector

@@ -1,5 +1,5 @@
 
-import QRCode from "qrcode";
+import { QRCodeCanvas } from "react-qrcode-logo";
 
 export interface QRStyleOptions {
   width?: number;
@@ -7,9 +7,12 @@ export interface QRStyleOptions {
   darkColor: string;
   lightColor: string;
   eyeColor?: string;
-  pattern?: 'square' | 'circle' | 'rounded' | 'diamond' | 'hexagon' | 'star';
+  pattern?: 'square' | 'circle' | 'rounded' | 'diamond' | 'hexagon' | 'star' | 'dots' | 'fluid';
   template?: 'square' | 'circle' | 'rounded' | 'hexagon' | 'diamond' | 'scan-me';
   cornerRadius?: number;
+  eyeRadius?: number;
+  qrStyle?: 'squares' | 'dots' | 'fluid';
+  eyeStyle?: 'square' | 'circle';
 }
 
 export const generateStyledQR = async (
@@ -24,182 +27,145 @@ export const generateStyledQR = async (
     eyeColor = darkColor,
     pattern = 'square',
     template = 'square', 
-    cornerRadius = 20 
+    cornerRadius = 20,
+    eyeRadius = 0,
+    qrStyle = 'squares',
+    eyeStyle = 'square'
   } = options;
   
   if (template === 'scan-me') {
     return createScanMeTemplate(content, options);
   }
 
-  // Generate base QR code
-  const qrDataUrl = await QRCode.toDataURL(content, {
-    width,
-    margin,
-    color: {
-      dark: darkColor,
-      light: lightColor,
-    },
-    errorCorrectionLevel: 'H' // Higher error correction for better logo integration
-  });
-
-  // Apply pattern and eye color customizations
-  const styledQR = await applyPatternAndEyeColors(qrDataUrl, {
-    eyeColor,
-    patternColor: darkColor,
-    backgroundColor: lightColor,
-    pattern
-  });
-
-  if (template === 'square') {
-    return styledQR;
-  }
-
   return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+    document.body.appendChild(container);
+
+    // Map pattern to qrStyle for react-qrcode-logo
+    let mappedQrStyle: 'squares' | 'dots' | 'fluid' = 'squares';
+    let mappedEyeStyle: 'square' | 'circle' = 'square';
     
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      if (ctx) {
-        // Create clipping path based on shape
-        ctx.save();
-        
-        switch (template) {
-          case 'circle':
-            ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2, 0, 2 * Math.PI);
-            ctx.clip();
-            break;
-            
-          case 'rounded':
-            drawRoundedRect(ctx, 0, 0, canvas.width, canvas.height, cornerRadius);
-            ctx.clip();
-            break;
-            
-          case 'hexagon':
-            drawHexagon(ctx, canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2.2);
-            ctx.clip();
-            break;
-            
-          case 'diamond':
-            drawDiamond(ctx, canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2.2);
-            ctx.clip();
-            break;
-        }
-        
-        ctx.drawImage(img, 0, 0);
-        ctx.restore();
-      }
-      
-      resolve(canvas.toDataURL("image/png"));
+    switch (pattern) {
+      case 'circle':
+      case 'dots':
+        mappedQrStyle = 'dots';
+        mappedEyeStyle = 'circle';
+        break;
+      case 'fluid':
+        mappedQrStyle = 'fluid';
+        break;
+      case 'rounded':
+        mappedEyeStyle = 'square';
+        break;
+      default:
+        mappedQrStyle = 'squares';
+        mappedEyeStyle = 'square';
+    }
+
+    const qrProps = {
+      value: content,
+      size: width,
+      bgColor: lightColor,
+      fgColor: darkColor,
+      eyeColor: eyeColor,
+      eyeRadius: eyeRadius,
+      qrStyle: mappedQrStyle,
+      eyeStyle: mappedEyeStyle,
+      quietZone: margin * 4,
+      ecLevel: 'H' as const,
+      enableCORS: true
     };
-    
-    img.src = styledQR;
+
+    // Create a temporary React component to render the QR code
+    const tempDiv = document.createElement("div");
+    container.appendChild(tempDiv);
+
+    // Use the QRCodeCanvas component directly
+    import('react').then(React => {
+      import('react-dom/client').then(ReactDOM => {
+        const root = ReactDOM.createRoot(tempDiv);
+        
+        root.render(
+          React.createElement(QRCodeCanvas, {
+            ...qrProps,
+            ref: (canvas: HTMLCanvasElement) => {
+              if (canvas) {
+                setTimeout(() => {
+                  try {
+                    let finalCanvas = canvas;
+                    
+                    // Apply template shapes if needed
+                    if (template !== 'square') {
+                      finalCanvas = applyTemplateShape(canvas, template, cornerRadius);
+                    }
+                    
+                    const dataUrl = finalCanvas.toDataURL("image/png");
+                    document.body.removeChild(container);
+                    resolve(dataUrl);
+                  } catch (error) {
+                    console.error("Error generating QR code:", error);
+                    document.body.removeChild(container);
+                    resolve("");
+                  }
+                }, 100);
+              }
+            }
+          })
+        );
+      });
+    });
   });
 };
 
-const applyPatternAndEyeColors = async (
-  qrDataUrl: string,
-  options: {
-    eyeColor: string;
-    patternColor: string;
-    backgroundColor: string;
-    pattern: string;
+const applyTemplateShape = (
+  sourceCanvas: HTMLCanvasElement,
+  template: string,
+  cornerRadius: number
+): HTMLCanvasElement => {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  
+  canvas.width = sourceCanvas.width;
+  canvas.height = sourceCanvas.height;
+  
+  if (ctx) {
+    ctx.save();
+    
+    switch (template) {
+      case 'circle':
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2, 0, 2 * Math.PI);
+        ctx.clip();
+        break;
+        
+      case 'rounded':
+        drawRoundedRect(ctx, 0, 0, canvas.width, canvas.height, cornerRadius);
+        ctx.clip();
+        break;
+        
+      case 'hexagon':
+        drawHexagon(ctx, canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2.2);
+        ctx.clip();
+        break;
+        
+      case 'diamond':
+        drawDiamond(ctx, canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2.2);
+        ctx.clip();
+        break;
+    }
+    
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.restore();
   }
-): Promise<string> => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      if (ctx) {
-        // Draw the base QR code
-        ctx.drawImage(img, 0, 0);
-        
-        // Get image data to analyze pixels
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        
-        // Apply pattern styling (this is a simplified approach)
-        // In a real implementation, you would need to detect QR modules and apply patterns
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          
-          // If pixel is dark (QR module), apply pattern color
-          if (r < 128 && g < 128 && b < 128) {
-            const hex = options.patternColor;
-            const rgb = hexToRgb(hex);
-            if (rgb) {
-              data[i] = rgb.r;
-              data[i + 1] = rgb.g;
-              data[i + 2] = rgb.b;
-            }
-          }
-          // If pixel is light (background), apply background color
-          else {
-            const hex = options.backgroundColor;
-            const rgb = hexToRgb(hex);
-            if (rgb) {
-              data[i] = rgb.r;
-              data[i + 1] = rgb.g;
-              data[i + 2] = rgb.b;
-            }
-          }
-        }
-        
-        ctx.putImageData(imageData, 0, 0);
-        
-        // Apply eye color (simplified - would need proper eye detection in real implementation)
-        applyEyeColors(ctx, canvas.width, canvas.height, options.eyeColor);
-      }
-      
-      resolve(canvas.toDataURL("image/png"));
-    };
-    
-    img.src = qrDataUrl;
-  });
-};
-
-const applyEyeColors = (ctx: CanvasRenderingContext2D, width: number, height: number, eyeColor: string) => {
-  const eyeSize = Math.floor(width * 0.15); // Approximate eye size
-  const eyePositions = [
-    { x: eyeSize / 2, y: eyeSize / 2 }, // Top-left
-    { x: width - eyeSize / 2, y: eyeSize / 2 }, // Top-right
-    { x: eyeSize / 2, y: height - eyeSize / 2 }, // Bottom-left
-  ];
   
-  ctx.fillStyle = eyeColor;
-  
-  eyePositions.forEach(pos => {
-    // Draw a simplified eye pattern (in reality, you'd need proper QR eye detection)
-    const centerX = pos.x;
-    const centerY = pos.y;
-    const size = eyeSize * 0.3;
-    
-    ctx.fillRect(centerX - size/2, centerY - size/2, size, size);
-  });
-};
-
-const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
+  return canvas;
 };
 
 const createScanMeTemplate = async (content: string, options: QRStyleOptions): Promise<string> => {
-  const { darkColor, lightColor } = options;
+  const { darkColor, lightColor, eyeColor, pattern } = options;
   const qrSize = 400;
   const bannerHeight = 80;
   const totalWidth = qrSize;
@@ -222,16 +188,19 @@ const createScanMeTemplate = async (content: string, options: QRStyleOptions): P
   drawRoundedRect(ctx, padding, padding, totalWidth - padding * 2, totalWidth - padding * 2, cornerRadius / 2);
   ctx.fill();
 
-  // Generate and draw QR code
-  const qrDataUrl = await QRCode.toDataURL(content, {
-    width: qrSize - padding * 4, // smaller qr code
-    margin: 1,
-    color: { dark: darkColor, light: "rgba(0,0,0,0)" }, // transparent light color
-    errorCorrectionLevel: 'H'
+  // Generate QR code using react-qrcode-logo
+  const qrDataUrl = await generateStyledQR(content, {
+    width: qrSize - padding * 4,
+    darkColor,
+    lightColor: "rgba(0,0,0,0)",
+    eyeColor,
+    pattern,
+    template: 'square'
   });
 
+  // Draw the QR code on the canvas
+  const qrImg = new Image();
   await new Promise<void>(resolve => {
-    const qrImg = new Image();
     qrImg.onload = () => {
       ctx.drawImage(qrImg, padding * 2, padding * 2);
       resolve();
@@ -248,7 +217,6 @@ const createScanMeTemplate = async (content: string, options: QRStyleOptions): P
   
   return canvas.toDataURL("image/png");
 };
-
 
 const drawRoundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) => {
   ctx.beginPath();

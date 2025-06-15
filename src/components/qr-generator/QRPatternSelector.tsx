@@ -1,13 +1,13 @@
 
 import { Label } from "@/components/ui/label";
-import { Square, Circle, Diamond, Hexagon, Star, Triangle } from "lucide-react";
+import { Square, Circle, Diamond, Hexagon, Star, Triangle, Dot } from "lucide-react";
 
 const PATTERN_OPTIONS = [
   { key: "square", name: "Square", icon: <Square size={16} /> },
   { key: "circle", name: "Circle", icon: <Circle size={16} /> },
   { key: "rounded", name: "Rounded", icon: <Square size={16} /> },
-  { key: "diamond", name: "Diamond", icon: <Diamond size={16} /> },
-  { key: "hexagon", name: "Hexagon", icon: <Hexagon size={16} /> },
+  { key: "dots", name: "Dots", icon: <Dot size={16} /> },
+  { key: "fluid", name: "Fluid", icon: <Diamond size={16} /> },
   { key: "star", name: "Star", icon: <Star size={16} /> },
 ];
 
