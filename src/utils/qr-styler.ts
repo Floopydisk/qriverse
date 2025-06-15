@@ -1,5 +1,6 @@
 
-import { QRCodeCanvas } from "react-qrcode-logo";
+import React from 'react';
+import { QRCode } from 'react-qrcode-logo';
 
 export interface QRStyleOptions {
   width?: number;
@@ -38,7 +39,6 @@ export const generateStyledQR = async (
   }
 
   return new Promise((resolve) => {
-    const canvas = document.createElement("canvas");
     const container = document.createElement("div");
     container.style.position = "absolute";
     container.style.left = "-9999px";
@@ -83,39 +83,37 @@ export const generateStyledQR = async (
     const tempDiv = document.createElement("div");
     container.appendChild(tempDiv);
 
-    // Use the QRCodeCanvas component directly
-    import('react').then(React => {
-      import('react-dom/client').then(ReactDOM => {
-        const root = ReactDOM.createRoot(tempDiv);
-        
-        root.render(
-          React.createElement(QRCodeCanvas, {
-            ...qrProps,
-            ref: (canvas: HTMLCanvasElement) => {
-              if (canvas) {
-                setTimeout(() => {
-                  try {
-                    let finalCanvas = canvas;
-                    
-                    // Apply template shapes if needed
-                    if (template !== 'square') {
-                      finalCanvas = applyTemplateShape(canvas, template, cornerRadius);
-                    }
-                    
-                    const dataUrl = finalCanvas.toDataURL("image/png");
-                    document.body.removeChild(container);
-                    resolve(dataUrl);
-                  } catch (error) {
-                    console.error("Error generating QR code:", error);
-                    document.body.removeChild(container);
-                    resolve("");
+    // Use the QRCode component directly
+    import('react-dom/client').then(ReactDOM => {
+      const root = ReactDOM.createRoot(tempDiv);
+      
+      root.render(
+        React.createElement(QRCode, {
+          ...qrProps,
+          ref: (canvas: HTMLCanvasElement) => {
+            if (canvas) {
+              setTimeout(() => {
+                try {
+                  let finalCanvas = canvas;
+                  
+                  // Apply template shapes if needed
+                  if (template !== 'square') {
+                    finalCanvas = applyTemplateShape(canvas, template, cornerRadius);
                   }
-                }, 100);
-              }
+                  
+                  const dataUrl = finalCanvas.toDataURL("image/png");
+                  document.body.removeChild(container);
+                  resolve(dataUrl);
+                } catch (error) {
+                  console.error("Error generating QR code:", error);
+                  document.body.removeChild(container);
+                  resolve("");
+                }
+              }, 100);
             }
-          })
-        );
-      });
+          }
+        })
+      );
     });
   });
 };
