@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 
 interface SearchFilters {
   query: string;
@@ -36,7 +37,11 @@ interface AdvancedSearchProps {
 
 const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSearchProps) => {
   const [showFilters, setShowFilters] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+    filters.dateRange.from || filters.dateRange.to 
+      ? { from: filters.dateRange.from, to: filters.dateRange.to }
+      : undefined
+  );
 
   const updateFilter = (key: keyof SearchFilters, value: any) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -51,7 +56,7 @@ const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSear
       sortOrder: 'desc',
       scanCount: 'all'
     });
-    setDateRange({});
+    setDateRange(undefined);
   };
 
   const activeFiltersCount = [
@@ -186,7 +191,7 @@ const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSear
                   className="w-full h-8 justify-start text-left font-normal"
                 >
                   <Calendar className="mr-2 h-3.5 w-3.5" />
-                  {dateRange.from ? (
+                  {dateRange?.from ? (
                     dateRange.to ? (
                       <>
                         {format(dateRange.from, "LLL dd, y")} -{" "}
@@ -204,11 +209,11 @@ const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSear
                 <CalendarComponent
                   initialFocus
                   mode="range"
-                  defaultMonth={dateRange.from}
+                  defaultMonth={dateRange?.from}
                   selected={dateRange}
                   onSelect={(range) => {
-                    setDateRange(range || {});
-                    updateFilter('dateRange', range || {});
+                    setDateRange(range);
+                    updateFilter('dateRange', range ? { from: range.from, to: range.to } : {});
                   }}
                   numberOfMonths={2}
                 />
