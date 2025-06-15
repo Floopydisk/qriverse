@@ -100,18 +100,29 @@ export const handleQRCodeStorage = async (
   userId: string,
   qrCodeId: string,
   qrDataUrl: string
-) => {
+): Promise<string> => {
   try {
-    const filename = `${qrCodeId}.png`;
-    const { error: folderError } = await supabase.storage.from('qrcodes').list(`user_${userId}`);
+    // Generate unique filename with timestamp to avoid conflicts
+    const timestamp = Date.now();
+    const filename = `${qrCodeId}_${timestamp}.png`;
+    
+    // Check if user folder exists, create if it doesn't
+    const { error: folderError } = await supabase.storage
+      .from('qrcodes')
+      .list(`user_${userId}`);
     
     if (folderError && folderError.message.includes('Not found')) {
-      await supabase.storage.from('qrcodes').upload(`user_${userId}/.folder_metadata`, '');
+      // Create user folder by uploading a metadata file
+      await supabase.storage
+        .from('qrcodes')
+        .upload(`user_${userId}/.folder_metadata`, '');
     }
     
+    // Convert data URL to blob
     const response = await fetch(qrDataUrl);
     const blob = await response.blob();
     
+    // Upload to storage
     const { error } = await supabase.storage
       .from('qrcodes')
       .upload(`user_${userId}/${filename}`, blob, {
@@ -119,7 +130,10 @@ export const handleQRCodeStorage = async (
         upsert: true
       });
       
-    if (error) throw error;
+    if (error) {
+      console.error("Storage upload error:", error);
+      throw error;
+    }
     
     return `user_${userId}/${filename}`;
   } catch (error) {

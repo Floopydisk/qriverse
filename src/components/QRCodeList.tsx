@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -41,6 +40,7 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
         if (qrCode.options && typeof qrCode.options === 'object') {
           const options = qrCode.options as Record<string, any>;
           
+          // Try to get image from storage first
           if (options.storagePath) {
             try {
               const { data, error } = await supabase.storage
@@ -50,10 +50,16 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
               if (data && !error) {
                 const url = URL.createObjectURL(data);
                 urls[qrCode.id] = url;
+                continue; // Skip to next QR code if storage image found
               }
             } catch (err) {
-              console.error(`Error fetching QR code image for ${qrCode.id}:`, err);
+              console.error(`Error fetching QR code image from storage for ${qrCode.id}:`, err);
             }
+          }
+          
+          // Fallback to dataUrl if storage image not available
+          if (options.dataUrl) {
+            urls[qrCode.id] = options.dataUrl;
           }
         }
       }
@@ -66,8 +72,11 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
     }
     
     return () => {
+      // Only revoke blob URLs, not data URLs
       Object.values(qrImageUrls).forEach(url => {
-        URL.revokeObjectURL(url);
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
       });
     };
   }, [qrCodes]);
@@ -93,7 +102,9 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
       await deleteQRCode(id);
       
       if (qrImageUrls[id]) {
-        URL.revokeObjectURL(qrImageUrls[id]);
+        if (qrImageUrls[id].startsWith('blob:')) {
+          URL.revokeObjectURL(qrImageUrls[id]);
+        }
         const newUrls = { ...qrImageUrls };
         delete newUrls[id];
         setQrImageUrls(newUrls);

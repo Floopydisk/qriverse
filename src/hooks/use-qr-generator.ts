@@ -2,29 +2,32 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createQRCode, updateQRCode } from "@/lib/api";
-import { generateQRCode, addLogoToQR } from "@/utils/qr-generator";
+import { useAuth } from "@/hooks/use-auth";
+import { generateQRCode, addLogoToQR, handleQRCodeStorage } from "@/utils/qr-generator";
 
-const useQrGenerator = (initialData = {}) => {
+const useQrGenerator = () => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Form state
   const [name, setName] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [darkColor, setDarkColor] = useState("#10B981");
   const [lightColor, setLightColor] = useState("#FFFFFF");
-  const [logo, setLogo] = useState("");
   const [addLogo, setAddLogo] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [logo, setLogo] = useState("");
   const [frameStyle, setFrameStyle] = useState("none");
+  const [isGenerating, setIsGenerating] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  // Real-time preview generation
   const generatePreview = useCallback(async (content: string) => {
-    if (!content) {
+    if (!content.trim()) {
       setQrDataUrl("");
       return;
     }
 
     try {
-      const dataUrl = await generateQRCode(content, {
+      const qrCode = await generateQRCode(content, {
         darkColor,
         lightColor,
         width: 400,
@@ -32,93 +35,69 @@ const useQrGenerator = (initialData = {}) => {
       });
 
       if (addLogo && logo) {
-        addLogoToQR(dataUrl, content, logo, (finalQR) => {
+        addLogoToQR(qrCode, content, logo, (finalQR) => {
           setQrDataUrl(finalQR);
         });
       } else {
-        setQrDataUrl(dataUrl);
+        setQrDataUrl(qrCode);
       }
     } catch (error) {
-      console.error("Preview generation error:", error);
-      setQrDataUrl("");
+      console.error("Error generating QR preview:", error);
     }
   }, [darkColor, lightColor, addLogo, logo]);
 
-  const validateAndGenerate = async (content, errorMessage) => {
-    if (!content) {
+  const saveQRCode = useCallback(async (content: string, type: string) => {
+    if (!user) {
       toast({
         title: "Error",
-        description: errorMessage || "Please enter some content to generate a QR code",
+        description: "You must be logged in to save QR codes",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (!name.trim()) {
+      toast({
+        title: "Error", 
+        description: "Please enter a name for your QR code",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (!qrDataUrl) {
+      toast({
+        title: "Error",
+        description: "Please generate a QR code first", 
         variant: "destructive",
       });
       return null;
     }
 
     setIsGenerating(true);
-    try {
-      const dataUrl = await generateQRCode(content, {
-        darkColor,
-        lightColor,
-        width: 400,
-        margin: 2
-      });
 
-      let finalDataUrl = dataUrl;
-      
-      if (addLogo && logo) {
-        await new Promise((resolve) => {
-          addLogoToQR(dataUrl, content, logo, (finalQR) => {
-            finalDataUrl = finalQR;
-            resolve(finalQR);
-          });
-        });
+    try {
+      // Upload QR code image to storage
+      let storagePath = "";
+      try {
+        storagePath = await handleQRCodeStorage(user.id, editId || 'temp', qrDataUrl);
+      } catch (storageError) {
+        console.error("Storage upload failed:", storageError);
+        // Continue without storage path - fallback to data URL
       }
 
-      setQrDataUrl(finalDataUrl);
-
-      return {
-        dataUrl: finalDataUrl,
-        content,
-        type: determineContentType(content),
-      };
-    } catch (error) {
-      console.error("QR generation error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate QR code",
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const saveQRCodeToDatabase = async (dataUrl, content, type) => {
-    if (!name) {
-      toast({
-        title: "Error",
-        description: "Please give your QR code a name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
       const qrCodeData = {
-        name,
+        name: name.trim(),
         type,
         content,
         options: {
-          dataUrl,
           darkColor,
           lightColor,
           hasLogo: addLogo,
           frameStyle,
-        },
-        folder_id: null,
-        scan_count: 0,
-        active: true
+          dataUrl: qrDataUrl, // Keep as fallback
+          storagePath: storagePath || undefined // Only set if upload succeeded
+        }
       };
 
       let result;
@@ -133,56 +112,48 @@ const useQrGenerator = (initialData = {}) => {
           title: "Success",
           description: editId ? "QR code updated successfully" : "QR code saved successfully",
         });
-        
-        if (!editId) {
-          // Reset the form only for new QR codes
-          setName("");
-          setQrDataUrl("");
-          setLogo("");
-        }
+        return result;
+      } else {
+        throw new Error("Failed to save QR code");
       }
     } catch (error) {
       console.error("Error saving QR code:", error);
       toast({
         title: "Error",
-        description: editId ? "Failed to update QR code" : "Failed to save QR code",
+        description: error instanceof Error ? error.message : "Failed to save QR code",
         variant: "destructive",
       });
+      return null;
+    } finally {
+      setIsGenerating(false);
     }
-  };
-
-  const determineContentType = (content) => {
-    if (content.startsWith("WIFI:")) return "wifi";
-    if (content.startsWith("BEGIN:VCARD")) return "contact";
-    if (content.startsWith("SMSTO:")) return "sms";
-    if (content.startsWith("MAILTO:")) return "email";
-    if (content.includes("twitter.com/intent/tweet")) return "twitter";
-    if (content.startsWith("bitcoin:")) return "bitcoin";
-    if (content.startsWith("http")) return "url";
-    return "text";
-  };
+  }, [user, name, qrDataUrl, darkColor, lightColor, addLogo, frameStyle, editId, toast]);
 
   return {
+    // State
     name,
-    setName,
     qrDataUrl,
-    setQrDataUrl,
     darkColor,
-    setDarkColor,
     lightColor,
-    setLightColor,
-    logo,
-    setLogo,
     addLogo,
-    setAddLogo,
-    isGenerating,
-    validateAndGenerate,
-    saveQRCodeToDatabase,
+    logo,
     frameStyle,
-    setFrameStyle,
-    generatePreview,
+    isGenerating,
     editId,
-    setEditId
+
+    // Setters
+    setName,
+    setQrDataUrl,
+    setDarkColor,
+    setLightColor,
+    setAddLogo,
+    setLogo,
+    setFrameStyle,
+    setEditId,
+
+    // Actions
+    generatePreview,
+    saveQRCode
   };
 };
 
