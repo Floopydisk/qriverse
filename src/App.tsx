@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +26,8 @@ import DynamicQRStats from "./pages/DynamicQRStats";
 import EditDynamicQR from "./pages/EditDynamicQR";
 import Teams from "./pages/Teams";
 import TeamDetail from "./pages/TeamDetail";
+import ApiManagement from "./pages/ApiManagement";
+import WebhookManagement from "./pages/WebhookManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,6 +105,16 @@ const App = () => (
                 <Route path="/dynamic-qr/edit/:id" element={
                   <AuthGuard>
                     <EditDynamicQR />
+                  </AuthGuard>
+                } />
+                <Route path="/api-management" element={
+                  <AuthGuard>
+                    <ApiManagement />
+                  </AuthGuard>
+                } />
+                <Route path="/webhooks" element={
+                  <AuthGuard>
+                    <WebhookManagement />
                   </AuthGuard>
                 } />
                 <Route path="*" element={<NotFound />} />
