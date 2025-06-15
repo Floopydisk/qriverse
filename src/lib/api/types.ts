@@ -19,6 +19,7 @@ export interface QRCode {
   user_id: string;
   options: Record<string, any> | null;
   folder_id: string | null;
+  team_id: string | null; // Add team_id
   scan_count: number;
   active: boolean;
   updated_at?: string;
@@ -29,6 +30,7 @@ export interface Folder {
   created_at: string;
   name: string;
   user_id: string;
+  team_id: string | null; // Add team_id
 }
 
 export interface ScanStat {
@@ -52,6 +54,7 @@ export interface DynamicQRCode {
   active: boolean;
   scan_count?: number;
   qr_image_path?: string;
+  team_id: string | null; // Add team_id
 }
 
 export interface DynamicQRScan {
@@ -75,4 +78,37 @@ export interface BarcodeData {
   name: string;
   value: string;
   type: string;
+}
+
+// Add team-related interfaces
+export interface Team {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
+export interface TeamMembership {
+  id: string;
+  team_id: string;
+  user_id: string;
+  role: 'owner' | 'admin' | 'manager' | 'member';
+  invited_by: string | null;
+  invited_at: string | null;
+  joined_at: string | null;
+  created_at: string;
+}
+
+export interface TeamInvitation {
+  id: string;
+  team_id: string;
+  email: string;
+  role: 'owner' | 'admin' | 'manager' | 'member';
+  invited_by: string;
+  token: string;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
 }

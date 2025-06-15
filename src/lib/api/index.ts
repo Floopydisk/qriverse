@@ -4,6 +4,7 @@ export * from './qr-codes';
 export * from './folders';
 export * from './profile';
 export * from './dynamic-qr';
+export * from './teams'; // Add teams export
 export { 
   fetchUserBarcodes,
   createBarcode,
