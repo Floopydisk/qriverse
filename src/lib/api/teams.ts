@@ -15,9 +15,20 @@ export interface TeamWithMemberships extends Team {
 
 // Team CRUD operations
 export const createTeam = async (name: string, description?: string): Promise<Team> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
   const { data, error } = await supabase
     .from('teams')
-    .insert({ name, description })
+    .insert({ 
+      name, 
+      description: description || null,
+      created_by: user.id 
+    })
     .select()
     .single();
 
@@ -30,10 +41,7 @@ export const fetchUserTeams = async (): Promise<TeamWithMemberships[]> => {
     .from('teams')
     .select(`
       *,
-      memberships:team_memberships(
-        *,
-        profiles(full_name)
-      )
+      memberships:team_memberships(*)
     `)
     .order('created_at', { ascending: false });
 
@@ -66,10 +74,7 @@ export const deleteTeam = async (id: string): Promise<void> => {
 export const fetchTeamMembers = async (teamId: string): Promise<TeamMembership[]> => {
   const { data, error } = await supabase
     .from('team_memberships')
-    .select(`
-      *,
-      profiles(full_name)
-    `)
+    .select('*')
     .eq('team_id', teamId)
     .not('joined_at', 'is', null)
     .order('created_at', { ascending: false });
@@ -98,9 +103,21 @@ export const removeMember = async (membershipId: string): Promise<void> => {
 
 // Team invitation operations
 export const inviteToTeam = async (teamId: string, email: string, role: UserRole = 'member'): Promise<TeamInvitation> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
   const { data, error } = await supabase
     .from('team_invitations')
-    .insert({ team_id: teamId, email, role })
+    .insert({ 
+      team_id: teamId, 
+      email, 
+      role,
+      invited_by: user.id 
+    })
     .select()
     .single();
 

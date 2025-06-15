@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createQRCode, updateQRCode } from "@/lib/api";
@@ -171,8 +170,10 @@ const useQrGenerator = () => {
           foregroundOpacity
         },
         folder_id: null,
+        team_id: null, // Add team_id property
         active: true,
-        scan_count: 0
+        scan_count: 0,
+        updated_at: new Date().toISOString()
       };
 
       let result;
