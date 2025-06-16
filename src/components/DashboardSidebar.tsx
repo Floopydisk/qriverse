@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -90,10 +89,10 @@ const DashboardSidebar = ({
 
   const handleCreateFolder = () => {
     if (setShowFolderDialog) {
-      // Handle both possible types of setShowFolderDialog
-      if (typeof setShowFolderDialog === 'function' && setShowFolderDialog.length === 0) {
+      // Check if it's a setState function (has length property) or a simple callback
+      if ('length' in setShowFolderDialog) {
         // It's a () => void function
-        setShowFolderDialog();
+        (setShowFolderDialog as () => void)();
       } else {
         // It's a Dispatch<SetStateAction<boolean>> function
         (setShowFolderDialog as Dispatch<SetStateAction<boolean>>)(true);
