@@ -31,29 +31,36 @@ export const PasswordStrengthIndicator = ({
 
   if (!password) return null;
 
+  const getProgressColor = () => {
+    if (validation.score >= 75) return 'bg-green-500';
+    if (validation.score >= 50) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
   return (
     <div className="space-y-3">
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span>Password Strength</span>
+          <span className="text-gray-300">Password Strength</span>
           <span className={`font-medium ${strengthLabel.color}`}>
             {strengthLabel.label}
           </span>
         </div>
-        <Progress 
-          value={validation.score} 
-          className="h-2"
-          indicatorClassName={`transition-colors ${
-            validation.score >= 75 ? 'bg-green-500' :
-            validation.score >= 50 ? 'bg-yellow-500' :
-            'bg-red-500'
-          }`}
-        />
+        <div className="relative">
+          <Progress 
+            value={validation.score} 
+            className="h-2 bg-gray-700"
+          />
+          <div 
+            className={`absolute top-0 left-0 h-2 rounded-full transition-all duration-300 ${getProgressColor()}`}
+            style={{ width: `${validation.score}%` }}
+          />
+        </div>
       </div>
 
       {showRequirements && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-700">Password Requirements</h4>
+          <h4 className="text-sm font-medium text-gray-300">Password Requirements</h4>
           <div className="space-y-1">
             <RequirementItem 
               met={password.length >= 12} 
@@ -82,7 +89,7 @@ export const PasswordStrengthIndicator = ({
       {validation.errors.length > 0 && (
         <div className="space-y-1">
           {validation.errors.map((error, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm text-red-600">
+            <div key={index} className="flex items-center gap-2 text-sm text-red-400">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               {error}
             </div>
@@ -99,8 +106,8 @@ interface RequirementItemProps {
 }
 
 const RequirementItem = ({ met, text }: RequirementItemProps) => (
-  <div className={`flex items-center gap-2 text-sm ${met ? 'text-green-600' : 'text-gray-500'}`}>
-    <CheckCircle className={`h-4 w-4 flex-shrink-0 ${met ? 'text-green-500' : 'text-gray-300'}`} />
+  <div className={`flex items-center gap-2 text-sm ${met ? 'text-green-400' : 'text-gray-500'}`}>
+    <CheckCircle className={`h-4 w-4 flex-shrink-0 ${met ? 'text-green-400' : 'text-gray-600'}`} />
     {text}
   </div>
 );
