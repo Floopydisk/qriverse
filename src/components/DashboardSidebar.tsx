@@ -88,6 +88,19 @@ const DashboardSidebar = ({
     }
   };
 
+  const handleCreateFolder = () => {
+    if (setShowFolderDialog) {
+      // Handle both possible types of setShowFolderDialog
+      if (typeof setShowFolderDialog === 'function' && setShowFolderDialog.length === 0) {
+        // It's a () => void function
+        setShowFolderDialog();
+      } else {
+        // It's a Dispatch<SetStateAction<boolean>> function
+        (setShowFolderDialog as Dispatch<SetStateAction<boolean>>)(true);
+      }
+    }
+  };
+
   const menuItems = [
     { icon: QrCode, label: "QR Codes", path: "/dashboard" },
     { icon: Link, label: "Dynamic QR", path: "/dynamic-qr" },
@@ -294,13 +307,7 @@ const DashboardSidebar = ({
                   variant="ghost" 
                   size="icon" 
                   className="h-6 w-6" 
-                  onClick={() => {
-                    if (typeof setShowFolderDialog === 'function') {
-                      setShowFolderDialog(true);
-                    } else {
-                      setShowFolderDialog(true);
-                    }
-                  }}
+                  onClick={handleCreateFolder}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
