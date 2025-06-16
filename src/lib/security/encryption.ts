@@ -93,8 +93,8 @@ class EncryptionManager {
     return decoder.decode(decryptedBuffer);
   }
 
-  // Convert ArrayBuffer to Base64
-  private arrayBufferToBase64(buffer: ArrayBuffer): string {
+  // Convert ArrayBuffer to Base64 - made public
+  arrayBufferToBase64(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
@@ -103,8 +103,8 @@ class EncryptionManager {
     return btoa(binary);
   }
 
-  // Convert Base64 to ArrayBuffer
-  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+  // Convert Base64 to ArrayBuffer - made public
+  base64ToArrayBuffer(base64: string): ArrayBuffer {
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
