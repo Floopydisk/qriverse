@@ -1,4 +1,3 @@
-
 // Security Headers and CSP Implementation
 export interface CSPDirectives {
   'default-src'?: string[];
@@ -206,9 +205,25 @@ class SecurityHeadersManager {
   // Validate CSP compliance
   validateCSPCompliance(elementType: string, source: string): boolean {
     const directive = this.getDirectiveForElement(elementType);
-    const allowedSources = this.config.csp[directive] || [];
+    const allowedSources = this.config.csp[directive];
 
-    return this.isSourceAllowed(source, allowedSources);
+    // Handle boolean directives (like upgrade-insecure-requests)
+    if (typeof allowedSources === 'boolean') {
+      return allowedSources;
+    }
+
+    // Handle array directives
+    if (Array.isArray(allowedSources)) {
+      return this.isSourceAllowed(source, allowedSources);
+    }
+
+    // If no directive is set, fall back to default-src
+    const defaultSrc = this.config.csp['default-src'];
+    if (Array.isArray(defaultSrc)) {
+      return this.isSourceAllowed(source, defaultSrc);
+    }
+
+    return false;
   }
 
   private getDirectiveForElement(elementType: string): keyof CSPDirectives {
