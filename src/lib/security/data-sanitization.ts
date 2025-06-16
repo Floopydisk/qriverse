@@ -241,6 +241,41 @@ export class DataSanitizer {
     return pattern.test(input);
   }
 
+  // Validate input against XSS patterns
+  static validateInput(input: string): { isValid: boolean; risk: 'low' | 'medium' | 'high' } {
+    const highRiskPatterns = [
+      /<script\b/gi,
+      /javascript:/gi,
+      /vbscript:/gi,
+      /on\w+\s*=/gi,
+      /<iframe\b/gi,
+      /<object\b/gi,
+      /<embed\b/gi,
+    ];
+
+    const mediumRiskPatterns = [
+      /<[^>]*>/g,
+      /&\w+;/g,
+      /%[0-9a-f]{2}/gi,
+    ];
+
+    // Check for high-risk patterns
+    for (const pattern of highRiskPatterns) {
+      if (pattern.test(input)) {
+        return { isValid: false, risk: 'high' };
+      }
+    }
+
+    // Check for medium-risk patterns
+    for (const pattern of mediumRiskPatterns) {
+      if (pattern.test(input)) {
+        return { isValid: true, risk: 'medium' };
+      }
+    }
+
+    return { isValid: true, risk: 'low' };
+  }
+
   // Common validation patterns
   static readonly PATTERNS = {
     email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
