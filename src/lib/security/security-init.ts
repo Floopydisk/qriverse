@@ -1,3 +1,4 @@
+
 import { securityHeadersManager } from './security-headers';
 import { CSPReporter } from './security-headers';
 import { CSRFProtection } from './xss-csrf-protection';
@@ -180,7 +181,16 @@ export class SecurityManager {
     
     window.fetch = function(...args: Parameters<typeof fetch>): Promise<Response> {
       const [resource] = args;
-      const url = typeof resource === 'string' ? resource : resource.url;
+      
+      // Handle different resource types properly
+      let url: string;
+      if (typeof resource === 'string') {
+        url = resource;
+      } else if (resource instanceof Request) {
+        url = resource.url;
+      } else {
+        url = resource.href; // URL object
+      }
       
       // Log external requests
       if (!url.startsWith(window.location.origin)) {

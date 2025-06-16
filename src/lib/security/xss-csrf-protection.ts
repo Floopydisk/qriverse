@@ -1,4 +1,3 @@
-
 import { secureAPIClient } from './secure-api';
 
 // XSS Protection utilities
@@ -239,8 +238,17 @@ export class CSRFProtection {
     window.fetch = function(...args: Parameters<typeof fetch>): Promise<Response> {
       const [resource, config = {}] = args;
       
+      // Handle different resource types properly
+      let url: string;
+      if (typeof resource === 'string') {
+        url = resource;
+      } else if (resource instanceof Request) {
+        url = resource.url;
+      } else {
+        url = resource.href; // URL object
+      }
+      
       // Only add CSRF token to same-origin requests
-      const url = typeof resource === 'string' ? resource : resource.url;
       const isSameOrigin = !url.includes('://') || url.startsWith(window.location.origin);
       
       if (isSameOrigin && config.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method.toUpperCase())) {
