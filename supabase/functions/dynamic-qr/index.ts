@@ -1,112 +1,146 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Create Supabase client
-const supabaseUrl = 'https://kienjbeckgfsajjxjqhs.supabase.co';
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+// Create Supabase client with service role
+const supabaseUrl = "https://kienjbeckgfsajjxjqhs.supabase.co";
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Set up CORS headers for browser requests
+// CORS headers for browser requests
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Function to get location data from IP
+async function getLocationFromIP(ip: string) {
+  try {
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city,lat,lon`);
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+      return {
+        country: data.country,
+        city: data.city,
+        latitude: data.lat,
+        longitude: data.lon
+      };
+    }
+  } catch (error) {
+    console.log("Location lookup failed:", error);
+  }
+  return null;
+}
 
 serve(async (req: Request) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const url = new URL(req.url);
-    // Get short code from query parameter instead of pathname
-    const shortCode = url.searchParams.get('code');
+    const shortCode = url.searchParams.get("code");
 
-    console.log('Received request for short code:', shortCode);
+    console.log("=== DYNAMIC QR SCAN START ===");
+    console.log("Short code:", shortCode);
 
     if (!shortCode) {
-      return new Response(
-        JSON.stringify({ error: 'No short code provided' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: "No short code provided" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    // Retrieve the dynamic QR code by short code
+    // Find the dynamic QR code
     const { data: qrCode, error: qrCodeError } = await supabase
-      .from('dynamic_qr_codes')
-      .select('*')
-      .eq('short_code', shortCode)
-      .eq('active', true)
+      .from("dynamic_qr_codes")
+      .select("*")
+      .eq("short_code", shortCode)
+      .eq("active", true)
       .single();
 
     if (qrCodeError || !qrCode) {
-      console.error('Error retrieving QR code:', qrCodeError);
-      return new Response(
-        JSON.stringify({ error: 'QR code not found or inactive' }),
-        { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
+      console.log("QR code not found or inactive:", shortCode);
+      return new Response(JSON.stringify({ error: "QR code not found or inactive" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    console.log('Found QR code:', qrCode.id, 'redirecting to:', qrCode.target_url);
+    console.log("Found QR code:", qrCode.name);
 
-    // Record scan statistics (non-blocking)
-    const scanData = {
+    // Prepare scan data
+    const scanData: any = {
       dynamic_qr_code_id: qrCode.id,
-      user_agent: req.headers.get('user-agent') || null,
-      referrer: req.headers.get('referer') || null,
+      scanned_at: new Date().toISOString(),
     };
 
-    // Try to get IP and location info
-    try {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || null;
-      if (ip) {
-        scanData.ip_address = ip;
-        
-        // Only try to get geolocation if we have an IP
-        const geoResponse = await fetch(`https://ipinfo.io/${ip}/json`);
-        if (geoResponse.ok) {
-          const geoData = await geoResponse.json();
-          scanData.country = geoData.country || null;
-          scanData.city = geoData.city || null;
-          
-          // Parse loc string (lat,lng) if available
-          if (geoData.loc) {
-            const [lat, lng] = geoData.loc.split(',');
-            scanData.latitude = parseFloat(lat);
-            scanData.longitude = parseFloat(lng);
-          }
-        }
-      }
-    } catch (geoError) {
-      // Log but don't fail if geolocation fails
-      console.error('Error getting geolocation:', geoError);
+    // Get user agent
+    const userAgent = req.headers.get("user-agent");
+    if (userAgent) {
+      scanData.user_agent = userAgent;
     }
+
+    // Get referrer
+    const referrer = req.headers.get("referer") || req.headers.get("referrer");
+    if (referrer) {
+      scanData.referrer = referrer;
+    }
+
+    // Get IP address and location
+    const forwarded = req.headers.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(',')[0] : req.headers.get("x-real-ip");
+    
+    if (ip) {
+      scanData.ip_address = ip;
+      
+      // Get location data from IP
+      const locationData = await getLocationFromIP(ip);
+      if (locationData) {
+        scanData.country = locationData.country;
+        scanData.city = locationData.city;
+        scanData.latitude = locationData.latitude;
+        scanData.longitude = locationData.longitude;
+      }
+    }
+
+    console.log("Scan data:", scanData);
 
     // Insert scan record
-    const { error: scanError } = await supabase
-      .from('dynamic_qr_scans')
-      .insert([scanData]);
+    const { data: insertedScan, error: scanError } = await supabase
+      .from("dynamic_qr_scans")
+      .insert([scanData])
+      .select()
+      .single();
 
     if (scanError) {
-      console.error('Error recording scan:', scanError);
-      // Continue with redirect even if scan recording fails
+      console.error("Failed to record scan:", scanError);
+    } else {
+      console.log("Scan recorded successfully:", insertedScan?.id);
     }
 
-    // Redirect to the target URL
+    console.log("Redirecting to:", qrCode.target_url);
+
+    // Redirect to target URL
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': qrCode.target_url,
-        ...corsHeaders
-      }
+        Location: qrCode.target_url,
+        ...corsHeaders,
+      },
     });
+
   } catch (error) {
-    console.error('Error processing request:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-    );
+    console.error("Error in dynamic QR function:", error);
+    
+    return new Response(JSON.stringify({
+      error: "Internal server error",
+      details: error.message,
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 });
