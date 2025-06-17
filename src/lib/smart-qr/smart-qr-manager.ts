@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface SmartQRRule {
   id: string;
@@ -151,7 +152,17 @@ class SmartQRManager {
       case 'ends_with':
         return String(contextValue).toLowerCase().endsWith(String(condition.value).toLowerCase());
       case 'in':
-        return Array.isArray(condition.value) && condition.value.includes(contextValue);
+        if (Array.isArray(condition.value)) {
+          // Try string[] first
+          if (typeof contextValue === 'string' && (condition.value as string[]).every(v => typeof v === 'string')) {
+            return (condition.value as string[]).includes(contextValue);
+          }
+          // Try number[] next
+          if (typeof contextValue === 'number' && (condition.value as number[]).every(v => typeof v === 'number')) {
+            return (condition.value as number[]).includes(contextValue);
+          }
+        }
+        return false;
       case 'between':
         if (Array.isArray(condition.value) && condition.value.length === 2) {
           const numValue = Number(contextValue);

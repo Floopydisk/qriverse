@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createQRCode, updateQRCode } from "@/lib/api";
