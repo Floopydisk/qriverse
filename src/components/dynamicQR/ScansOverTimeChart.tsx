@@ -13,26 +13,42 @@ interface ScansOverTimeChartProps {
 const ScansOverTimeChart = ({ scansData }: ScansOverTimeChartProps) => {
   return (
     <Card className="shadow-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Calendar className="h-5 w-5 mr-2 text-primary" />
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center text-base lg:text-lg">
+          <Calendar className="h-4 w-4 lg:h-5 lg:w-5 mr-2 text-primary" />
           Scans Over Time
         </CardTitle>
       </CardHeader>
       <CardContent>
         {scansData.length > 0 ? (
-          <div className="h-64">
+          <div className="h-48 lg:h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={scansData}>
-                <XAxis dataKey="date" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="scans" fill="#10B981" />
+              <BarChart data={scansData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <XAxis 
+                  dataKey="date" 
+                  fontSize={12}
+                  tick={{ fontSize: 11 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis 
+                  allowDecimals={false} 
+                  fontSize={12}
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    fontSize: '12px',
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px'
+                  }}
+                />
+                <Bar dataKey="scans" fill="#10B981" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
+          <div className="h-48 lg:h-64 flex items-center justify-center text-muted-foreground text-sm">
             No scan data available yet
           </div>
         )}
