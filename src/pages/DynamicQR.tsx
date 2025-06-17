@@ -14,7 +14,18 @@ import { QrCode, Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchUserDynamicQRCodes, createDynamicQRCode } from '@/lib/api';
 import DynamicQRCodeList from '@/components/DynamicQRCodeList';
+import AdvancedSearch from '@/components/AdvancedSearch';
+import BulkOperations from '@/components/BulkOperations';
 import { useSidebar } from '@/components/ui/sidebar';
+
+interface SearchFilters {
+  query: string;
+  type: string;
+  dateRange: { from?: Date; to?: Date };
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  scanCount: string;
+}
 
 const DynamicQR = () => {
   const navigate = useNavigate();
@@ -27,6 +38,15 @@ const DynamicQR = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedView, setSelectedView] = useState("dynamic");
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [filters, setFilters] = useState<SearchFilters>({
+    query: '',
+    type: 'all',
+    dateRange: {},
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+    scanCount: 'all'
+  });
 
   // Handle the data from static QR conversion
   useEffect(() => {
@@ -54,8 +74,68 @@ const DynamicQR = () => {
     refetch,
   } = useQuery({
     queryKey: ['dynamicQRCodes'],
-    queryFn: fetchUserDynamicQRCodes,
+    queryFn: async () => {
+      const data = await fetchUserDynamicQRCodes();
+      console.log('Fetched dynamic QR codes:', data);
+      return data;
+    },
   });
+
+  // Filter and sort dynamic QR codes based on filters
+  const filteredAndSortedQRCodes = dynamicQRCodes
+    .filter(code => {
+      // Search query filter
+      if (filters.query && !code.name.toLowerCase().includes(filters.query.toLowerCase()) && 
+          !code.target_url.toLowerCase().includes(filters.query.toLowerCase())) {
+        return false;
+      }
+
+      // Status filter for dynamic QR codes
+      if (selectedView === "dynamic-active" && code.active !== true) return false;
+      if (selectedView === "dynamic-paused" && code.active !== false) return false;
+
+      // Scan count filter
+      if (filters.scanCount !== 'all') {
+        const scanCount = code.scan_count || 0;
+        switch (filters.scanCount) {
+          case 'none': return scanCount === 0;
+          case 'low': return scanCount >= 1 && scanCount <= 10;
+          case 'medium': return scanCount >= 11 && scanCount <= 100;
+          case 'high': return scanCount > 100;
+        }
+      }
+
+      // Date range filter
+      if (filters.dateRange.from || filters.dateRange.to) {
+        const codeDate = new Date(code.created_at);
+        if (filters.dateRange.from && codeDate < filters.dateRange.from) return false;
+        if (filters.dateRange.to && codeDate > filters.dateRange.to) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      
+      switch (filters.sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'scan_count':
+          comparison = (a.scan_count || 0) - (b.scan_count || 0);
+          break;
+        case 'created_at':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'updated_at':
+          comparison = new Date(a.updated_at || a.created_at).getTime() - new Date(b.updated_at || b.created_at).getTime();
+          break;
+        default:
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+      
+      return filters.sortOrder === 'asc' ? comparison : -comparison;
+    });
 
   const handleCreateQRCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +191,6 @@ const DynamicQR = () => {
     }
   };
 
-  // New function to switch to create tab
   const switchToCreateTab = () => {
     setActiveTab('create');
   };
@@ -120,12 +199,41 @@ const DynamicQR = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
-  // Filter dynamic QR codes based on active/paused status if selected
-  const filteredDynamicQRCodes = dynamicQRCodes.filter(code => {
-    if (selectedView === "dynamic-active") return code.active === true;
-    if (selectedView === "dynamic-paused") return code.active === false;
-    return true; // Show all for "dynamic" view
-  });
+  // Bulk operations handlers
+  const handleSelectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedItems(filteredAndSortedQRCodes.map(code => code.id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    // TODO: Implement bulk delete for dynamic QR codes
+    toast({
+      title: 'Feature Coming Soon',
+      description: 'Bulk delete for dynamic QR codes will be available soon',
+    });
+    setSelectedItems([]);
+  };
+
+  const handleMoveSelected = () => {
+    // TODO: Implement bulk move for dynamic QR codes
+    toast({
+      title: 'Feature Coming Soon',
+      description: 'Bulk move for dynamic QR codes will be available soon',
+    });
+  };
+
+  const handleDownloadSelected = () => {
+    // TODO: Implement bulk download for dynamic QR codes
+    toast({
+      title: 'Feature Coming Soon',
+      description: 'Bulk download for dynamic QR codes will be available soon',
+    });
+  };
+
+  const isAllSelected = selectedItems.length > 0 && selectedItems.length === filteredAndSortedQRCodes.length;
 
   return (
     <div className="min-h-screen flex flex-col w-full">
@@ -173,11 +281,32 @@ const DynamicQR = () => {
                   <TabsTrigger value="create" className="flex-1">Create New Code</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="view" className="mt-6">
+                <TabsContent value="view" className="mt-6 space-y-6">
+                  {/* Advanced Search */}
+                  <AdvancedSearch
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    totalResults={filteredAndSortedQRCodes.length}
+                  />
+
+                  {/* Bulk Operations */}
+                  <BulkOperations
+                    selectedItems={selectedItems}
+                    onSelectAll={handleSelectAll}
+                    onDeleteSelected={handleDeleteSelected}
+                    onMoveSelected={handleMoveSelected}
+                    onDownloadSelected={handleDownloadSelected}
+                    totalItems={filteredAndSortedQRCodes.length}
+                    isAllSelected={isAllSelected}
+                  />
+
+                  {/* Dynamic QR Code List */}
                   <DynamicQRCodeList
-                    dynamicQRCodes={filteredDynamicQRCodes}
+                    dynamicQRCodes={filteredAndSortedQRCodes}
                     isLoading={isLoading}
                     onCreateNew={switchToCreateTab}
+                    selectedItems={selectedItems}
+                    onSelectionChange={setSelectedItems}
                   />
                 </TabsContent>
                 
