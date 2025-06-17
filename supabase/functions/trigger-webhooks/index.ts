@@ -1,4 +1,8 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// If running in Deno, ensure your editor supports Deno and has Deno types enabled.
+// If running in Node.js, replace with a Node.js HTTP server, e.g.:
+// import { createServer } from "http";
+// Otherwise, for Deno:
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
