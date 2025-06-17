@@ -128,6 +128,9 @@ importers:
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
+      deno:
+        specifier: ^2.3.6
+        version: 2.3.6
       embla-carousel-react:
         specifier: ^8.3.0
         version: 8.6.0(react@18.3.1)
@@ -282,6 +285,36 @@ packages:
   '@babel/types@7.27.1':
     resolution: {integrity: sha512-+EzkxvLNfiUeKMgy/3luqfsCWFRXLb7U6wNQTk60tovuckwB15B191tJWvpp4HjiQWdJkCxO3Wbvc6jlk3Xb2Q==}
     engines: {node: '>=6.9.0'}
+
+  '@deno/darwin-arm64@2.3.6':
+    resolution: {integrity: sha512-9G4TrwKeQWUxfGSVnlizSMfGuU4Oc7eku7swv7ol6kVpNGuFoSunYcULMpLSve9/0HACFJdNy3Pf7GWlW0oWOQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@deno/darwin-x64@2.3.6':
+    resolution: {integrity: sha512-TLntEJ1r7mxlv5p6J4xR6xiLEmjV20cnkc+6GOCG1E9sLcL8qrMa5lyXP25tY1WWFie6SX7iJlDtW8BFGXtztg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@deno/linux-arm64-glibc@2.3.6':
+    resolution: {integrity: sha512-XRKA2QfhGINAqPBHo2SZIVTGyjVQVonB1tkiaeWYFrQPaljnZrG1qddb4NJYYBpQA34BVV6DqHtIw82UyfXuDw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@deno/linux-x64-glibc@2.3.6':
+    resolution: {integrity: sha512-gpRWNxl9xbGV3PdFnSQAguAbLnFnc8E0akVoSazXHAf+gd7J8kdlx0EIA1Zd28fCaxAkSbBlrZQvoRrixLUyAg==}
+    cpu: [x64]
+    os: [linux]
+
+  '@deno/win32-arm64@2.3.6':
+    resolution: {integrity: sha512-NL8qR/NFNPGb9c0a/d4V5rzPDkLEvbBsTC4dbd30/wIv5teEpvL3fk9BdsgBlfAwVv2pwph3MpG2LTGFfZnPRA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@deno/win32-x64@2.3.6':
+    resolution: {integrity: sha512-7gtv7CTRciCkVope6q7AgRZlGF4gqqKgzDdZoyM7bIg/SLJ6iW2CInS5zoFhrL+dmImw58LQOXe0xp3lb/yzGQ==}
+    cpu: [x64]
+    os: [win32]
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -1929,6 +1962,10 @@ packages:
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
+  deno@2.3.6:
+    resolution: {integrity: sha512-jf7fIT42W/MTphxxqJgcJKbVvciWFfQxZ8Kl/14aPMZs6du2eWjyS51ZIJvhEh+E4STnngH5XNI3bbCrgBMdGg==}
+    hasBin: true
+
   detect-node-es@1.1.0:
     resolution: {integrity: sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ==}
 
@@ -2963,6 +3000,24 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
+
+  '@deno/darwin-arm64@2.3.6':
+    optional: true
+
+  '@deno/darwin-x64@2.3.6':
+    optional: true
+
+  '@deno/linux-arm64-glibc@2.3.6':
+    optional: true
+
+  '@deno/linux-x64-glibc@2.3.6':
+    optional: true
+
+  '@deno/win32-arm64@2.3.6':
+    optional: true
+
+  '@deno/win32-x64@2.3.6':
+    optional: true
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
@@ -4471,6 +4526,15 @@ snapshots:
   decimal.js-light@2.5.1: {}
 
   deep-is@0.1.4: {}
+
+  deno@2.3.6:
+    optionalDependencies:
+      '@deno/darwin-arm64': 2.3.6
+      '@deno/darwin-x64': 2.3.6
+      '@deno/linux-arm64-glibc': 2.3.6
+      '@deno/linux-x64-glibc': 2.3.6
+      '@deno/win32-arm64': 2.3.6
+      '@deno/win32-x64': 2.3.6
 
   detect-node-es@1.1.0: {}
 
