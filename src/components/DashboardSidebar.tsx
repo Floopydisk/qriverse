@@ -1,63 +1,84 @@
-
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Search, List, QrCode, Barcode, CheckCircle2, PauseCircle, Folder, FolderPlus, ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { 
+  QrCode, 
+  FolderOpen, 
+  BarChart3, 
+  Settings, 
+  Users, 
+  Link,
+  Key,
+  Webhook,
+  Zap,
+  Search,
+  List,
+  Barcode,
+  CheckCircle2,
+  PauseCircle,
+  Plus,
+  Menu,
+  X
+} from "lucide-react";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUserQRCodes, fetchUserFolders } from "@/lib/api";
-import FolderList from "@/components/FolderList";
+import { fetchUserQRCodes, fetchUserDynamicQRCodes, fetchUserFolders } from "@/lib/api";
+import { Dispatch, SetStateAction } from "react";
 
 interface DashboardSidebarProps {
-  sidebarCollapsed: boolean;
-  toggleSidebar: () => void;
-  selectedView: string;
-  setSelectedView: (view: string) => void;
-  setShowFolderDialog: (show: boolean) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  selectedView?: string;
+  setSelectedView?: Dispatch<SetStateAction<string>>;
+  setShowFolderDialog?: Dispatch<SetStateAction<boolean>> | (() => void);
+  sidebarCollapsed?: boolean;
+  toggleSidebar?: () => void;
+  searchQuery?: string;
+  setSearchQuery?: Dispatch<SetStateAction<string>>;
 }
 
-const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
-  sidebarCollapsed,
-  toggleSidebar,
-  selectedView,
+const DashboardSidebar = ({
+  selectedView = "all",
   setSelectedView,
   setShowFolderDialog,
-  searchQuery,
+  sidebarCollapsed = false,
+  toggleSidebar,
+  searchQuery = "",
   setSearchQuery
-}) => {
+}: DashboardSidebarProps) => {
+  const location = useLocation();
   const navigate = useNavigate();
   
-  // Fetch QR codes to count them
   const { data: qrCodes = [] } = useQuery({
     queryKey: ['qrCodes'],
     queryFn: fetchUserQRCodes
+  });
+
+  const { data: dynamicQRCodes = [] } = useQuery({
+    queryKey: ['dynamicQRCodes'],
+    queryFn: fetchUserDynamicQRCodes
+  });
+
+  const { data: folders = [] } = useQuery({
+    queryKey: ['folders'],
+    queryFn: fetchUserFolders
   });
 
   // Get counts for different types of QR codes
   const allCodesCount = qrCodes.length;
   const barcodeCount = qrCodes.filter(code => code.type === "barcode").length;
   const staticQrCount = qrCodes.filter(code => code.type !== "dynamic" && code.type !== "barcode").length;
-  const dynamicQrCount = qrCodes.filter(code => code.type === "dynamic").length;
-  const activeQrCount = qrCodes.filter(code => code.type === "dynamic" && code.active !== false).length;
-  const pausedQrCount = qrCodes.filter(code => code.type === "dynamic" && code.active === false).length;
+  const dynamicQrCount = dynamicQRCodes.length;
+  const activeQrCount = dynamicQRCodes.filter(code => code.active !== false).length;
+  const pausedQrCount = dynamicQRCodes.filter(code => code.active === false).length;
 
-  // State to manage dynamic submenu visibility
-  const [dynamicSubmenuOpen, setDynamicSubmenuOpen] = useState(
-    selectedView === "dynamic" || selectedView === "dynamic-active" || selectedView === "dynamic-paused"
-  );
-
-  // Handler for menu item clicks
   const handleViewSelect = (view: string) => {
-    setSelectedView(view);
+    if (setSelectedView) {
+      setSelectedView(view);
+    }
     
-    // For dynamic QR categories
     if (view === "dynamic") {
-      setDynamicSubmenuOpen(true);
       navigate("/dynamic-qr");
     } else if (view === "dynamic-active" || view === "dynamic-paused") {
-      setDynamicSubmenuOpen(true);
       navigate("/dynamic-qr");
     } else if (view === "barcode") {
       navigate("/barcode");
@@ -66,150 +87,256 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     }
   };
 
-  return (
-    <div className="flex flex-col h-full max-h-screen overflow-hidden">
-      {/* Search Bar */}
-      <div className="px-4 py-6 mt-24">
-        {!sidebarCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search QR Codes..." 
-                className="h-9 pl-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+  const handleCreateFolder = () => {
+    if (setShowFolderDialog) {
+      // Check if it's a setState function (has length property) or a simple callback
+      if ('length' in setShowFolderDialog) {
+        // It's a () => void function
+        (setShowFolderDialog as () => void)();
+      } else {
+        // It's a Dispatch<SetStateAction<boolean>> function
+        (setShowFolderDialog as Dispatch<SetStateAction<boolean>>)(true);
+      }
+    }
+  };
 
-      {/* Main Menu Content */}
-      <div className="flex-1 overflow-auto px-2">
-        {/* MY CODES Section */}
-        <div className="mb-4">
-          <h3 className="px-2 text-xs font-medium text-muted-foreground mb-2">
-            {!sidebarCollapsed && "MY CODES"}
-          </h3>
-          <ul className="space-y-1">
-            {/* All Codes */}
-            <li>
-              <Button
-                variant={selectedView === "all" ? "default" : "ghost"}
-                className="w-full justify-start text-sm h-9"
-                onClick={() => handleViewSelect("all")}
-              >
-                <List className="h-4 w-4 mr-2" />
-                {!sidebarCollapsed && <span>All ({allCodesCount})</span>}
-              </Button>
-            </li>
+  const menuItems = [
+    { icon: QrCode, label: "QR Codes", path: "/dashboard" },
+    { icon: Link, label: "Dynamic QR", path: "/dynamic-qr" },
+    { icon: Barcode, label: "Barcodes", path: "/barcode" },
+    { icon: Users, label: "Teams", path: "/teams" },
+    { icon: Key, label: "API Management", path: "/api-management" },
+    { icon: Webhook, label: "Webhooks", path: "/webhooks" },
+    { icon: Settings, label: "Profile", path: "/profile" },
+  ];
 
-            {/* Barcodes */}
-            <li>
-              <Button
-                variant={selectedView === "barcode" ? "default" : "ghost"}
-                className="w-full justify-start text-sm h-9"
-                onClick={() => handleViewSelect("barcode")}
-              >
-                <Barcode className="h-4 w-4 mr-2" />
-                {!sidebarCollapsed && <span>Barcodes ({barcodeCount})</span>}
-              </Button>
-            </li>
+  const filterItems = [
+    { 
+      id: "all", 
+      label: `All (${allCodesCount})`, 
+      icon: List,
+      description: "All your QR codes and barcodes"
+    },
+    { 
+      id: "static", 
+      label: `Static QR (${staticQrCount})`, 
+      icon: QrCode,
+      description: "Fixed content QR codes"
+    },
+    { 
+      id: "dynamic", 
+      label: `Dynamic QR (${dynamicQrCount})`, 
+      icon: BarChart3,
+      description: "Editable and trackable QR codes"
+    },
+    { 
+      id: "barcode", 
+      label: `Barcodes (${barcodeCount})`, 
+      icon: Barcode,
+      description: "Various barcode formats"
+    },
+  ];
 
-            {/* Static QR Codes */}
-            <li>
-              <Button
-                variant={selectedView === "static" ? "default" : "ghost"}
-                className="w-full justify-start text-sm h-9"
-                onClick={() => handleViewSelect("static")}
-              >
-                <QrCode className="h-4 w-4 mr-2" />
-                {!sidebarCollapsed && <span>Static QR Codes ({staticQrCount})</span>}
-              </Button>
-            </li>
+  const dynamicSubItems = [
+    { 
+      id: "dynamic-active", 
+      label: `Active (${activeQrCount})`, 
+      icon: CheckCircle2,
+      color: "text-green-600"
+    },
+    { 
+      id: "dynamic-paused", 
+      label: `Paused (${pausedQrCount})`, 
+      icon: PauseCircle,
+      color: "text-red-600"
+    },
+  ];
 
-            {/* Dynamic QR Codes */}
-            <li className="space-y-1">
-              <Button
-                variant={
-                  selectedView === "dynamic" || 
-                  selectedView === "dynamic-active" || 
-                  selectedView === "dynamic-paused" ? "default" : "ghost"
-                }
-                className="w-full justify-start text-sm h-9"
-                onClick={() => {
-                  handleViewSelect("dynamic");
-                  setDynamicSubmenuOpen(!dynamicSubmenuOpen);
-                }}
-              >
-                <QrCode className="h-4 w-4 mr-2" />
-                {!sidebarCollapsed && <span>Dynamic QR Codes ({dynamicQrCount})</span>}
-              </Button>
-
-              {/* This nested submenu is always visible when parent is selected */}
-              {!sidebarCollapsed && dynamicSubmenuOpen && (
-                <div className="pl-6 space-y-1">
-                  <Button
-                    variant={selectedView === "dynamic-active" ? "default" : "ghost"}
-                    className="w-full justify-start text-xs h-8"
-                    onClick={() => handleViewSelect("dynamic-active")}
-                  >
-                    <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
-                    <span>Active ({activeQrCount})</span>
-                  </Button>
-
-                  <Button
-                    variant={selectedView === "dynamic-paused" ? "default" : "ghost"}
-                    className="w-full justify-start text-xs h-8"
-                    onClick={() => handleViewSelect("dynamic-paused")}
-                  >
-                    <PauseCircle className="h-3.5 w-3.5 mr-2" />
-                    <span>Paused ({pausedQrCount})</span>
-                  </Button>
-                </div>
-              )}
-            </li>
-          </ul>
+  if (sidebarCollapsed) {
+    return (
+      <div className="w-16 bg-white border-r border-gray-200 h-screen flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="w-8 h-8"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
         </div>
+        
+        <ScrollArea className="flex-1 px-2 py-4">
+          <nav className="space-y-2">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  variant={isActive ? "default" : "ghost"}
+                  size="icon"
+                  className={cn(
+                    "w-10 h-10",
+                    isActive && "bg-green-600 text-white hover:bg-green-700"
+                  )}
+                  asChild
+                >
+                  <RouterLink to={item.path}>
+                    <item.icon className="h-4 w-4" />
+                  </RouterLink>
+                </Button>
+              );
+            })}
+          </nav>
+        </ScrollArea>
+      </div>
+    );
+  }
 
-        {/* MY FOLDERS Section */}
-        <div className="mb-4">
-          <div className="flex justify-between items-center px-2 mb-2">
-            <h3 className="text-xs font-medium text-muted-foreground">
-              {!sidebarCollapsed && "MY FOLDERS"}
-            </h3>
-            {!sidebarCollapsed && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-5 w-5" 
-                onClick={() => setShowFolderDialog(true)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-          
-          {!sidebarCollapsed && (
-            <ul className="space-y-1">
-              <FolderList />
-            </ul>
+  return (
+    <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <RouterLink to="/" className="flex items-center space-x-2">
+            <QrCode className="h-8 w-8 text-green-600" />
+            <span className="text-xl font-bold">QrLabs</span>
+          </RouterLink>
+          {toggleSidebar && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="w-8 h-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Sidebar Footer - Collapse/Expand Button */}
-      <div className="p-4 mt-auto">
-        <Button 
-          onClick={toggleSidebar} 
-          variant="outline" 
-          size="icon"
-          className="mx-auto flex h-8 w-8 rounded-full bg-background shadow-md"
-        >
-          {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      </div>
+      {/* Search */}
+      {setSearchQuery && (
+        <div className="p-4 border-b border-gray-200">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search QR Codes..." 
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
+      <ScrollArea className="flex-1 px-3 py-4">
+        <nav className="space-y-6">
+          {/* Navigation Menu */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide px-3">
+              Navigation
+            </h3>
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  variant={isActive ? "default" : "ghost"}
+                  className={cn(
+                    "w-full justify-start",
+                    isActive && "bg-green-600 text-white hover:bg-green-700"
+                  )}
+                  asChild
+                >
+                  <RouterLink to={item.path}>
+                    <item.icon className="mr-3 h-4 w-4" />
+                    {item.label}
+                  </RouterLink>
+                </Button>
+              );
+            })}
+          </div>
+
+          {/* Filter Section - only show if we have filter functionality */}
+          {setSelectedView && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide px-3">
+                Filter Codes
+              </h3>
+              {filterItems.map((item) => (
+                <div key={item.id} className="space-y-1">
+                  <Button
+                    variant={selectedView === item.id ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    onClick={() => handleViewSelect(item.id)}
+                  >
+                    <item.icon className="h-4 w-4 mr-3" />
+                    {item.label}
+                  </Button>
+                  
+                  {/* Dynamic QR submenu */}
+                  {item.id === "dynamic" && (selectedView.startsWith("dynamic")) && (
+                    <div className="pl-7 space-y-1">
+                      {dynamicSubItems.map((subItem) => (
+                        <Button
+                          key={subItem.id}
+                          variant={selectedView === subItem.id ? "default" : "ghost"}
+                          className="w-full justify-start text-sm"
+                          onClick={() => handleViewSelect(subItem.id)}
+                        >
+                          <subItem.icon className={`h-4 w-4 mr-2 ${subItem.color}`} />
+                          {subItem.label}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Folders Section */}
+          {setShowFolderDialog && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Folders
+                </h3>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6" 
+                  onClick={handleCreateFolder}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {folders.length === 0 ? (
+                <div className="text-sm text-muted-foreground text-center py-4 px-3">
+                  No folders yet
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {folders.map((folder) => (
+                    <Button
+                      key={folder.id}
+                      variant="ghost"
+                      className="w-full justify-start"
+                      asChild
+                    >
+                      <RouterLink to={`/dashboard/folder/${folder.id}`}>
+                        <FolderOpen className="mr-3 h-4 w-4" />
+                        {folder.name}
+                      </RouterLink>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </nav>
+      </ScrollArea>
     </div>
   );
 };
