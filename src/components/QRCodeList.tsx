@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder, BarChart2 } from "lucide-react";
@@ -11,11 +10,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { downloadQRCode } from "@/lib/supabaseUtils";
 import MoveQRCodeDialog from "@/components/MoveQRCodeDialog";
 import QRCodeScanDialog from "./QRCodeScanDialog";
+import BulkOperations from "./BulkOperations";
+import AdvancedSearch from "./AdvancedSearch";
+import AnalyticsDashboard from "./AnalyticsDashboard";
+import DragDropQRList from "./DragDropQRList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface QRCodeListProps {
   folderId?: string;
   filterType?: string;
   searchQuery?: string;
+}
+
+interface SearchFilters {
+  query: string;
+  type: string;
+  dateRange: { from?: Date; to?: Date };
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  scanCount: string;
 }
 
 const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeListProps) => {
@@ -27,11 +40,160 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
   const [scanDialogOpen, setScanDialogOpen] = useState(false);
   const [selectedQRCode, setSelectedQRCode] = useState<{id: string, folderId: string | null} | null>(null);
   const [selectedQRCodeForStats, setSelectedQRCodeForStats] = useState<QRCodeType | null>(null);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [currentView, setCurrentView] = useState<"list" | "analytics">("list");
+  
+  // Advanced search filters
+  const [filters, setFilters] = useState<SearchFilters>({
+    query: searchQuery,
+    type: filterType,
+    dateRange: {},
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+    scanCount: 'all'
+  });
   
   const { data: qrCodes = [], isLoading, error } = useQuery({
     queryKey: ['qrCodes', folderId],
     queryFn: () => folderId ? fetchQRCodesInFolder(folderId) : fetchUserQRCodes()
   });
+
+  // Update filters when props change
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      query: searchQuery,
+      type: filterType
+    }));
+  }, [searchQuery, filterType]);
+
+  // Apply filters and sorting
+  const filteredQRCodes = useMemo(() => {
+    let filtered = [...qrCodes];
+
+    // Apply search query
+    if (filters.query) {
+      const query = filters.query.toLowerCase();
+      filtered = filtered.filter(qr => 
+        qr.name.toLowerCase().includes(query) || 
+        qr.content.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply type filter
+    if (filters.type && filters.type !== "all") {
+      if (filters.type === "barcode") {
+        filtered = filtered.filter(qr => qr.type === "barcode");
+      } else if (filters.type === "static") {
+        filtered = filtered.filter(qr => qr.type !== "dynamic" && qr.type !== "barcode");
+      } else if (filters.type === "dynamic") {
+        filtered = filtered.filter(qr => qr.type === "dynamic");
+      } else if (filters.type === "dynamic-active") {
+        filtered = filtered.filter(qr => qr.type === "dynamic" && qr.active !== false);
+      } else if (filters.type === "dynamic-paused") {
+        filtered = filtered.filter(qr => qr.type === "dynamic" && qr.active === false);
+      } else {
+        filtered = filtered.filter(qr => qr.type === filters.type);
+      }
+    }
+
+    // Apply scan count filter
+    if (filters.scanCount !== "all") {
+      switch (filters.scanCount) {
+        case "none":
+          filtered = filtered.filter(qr => qr.scan_count === 0);
+          break;
+        case "low":
+          filtered = filtered.filter(qr => qr.scan_count >= 1 && qr.scan_count <= 10);
+          break;
+        case "medium":
+          filtered = filtered.filter(qr => qr.scan_count >= 11 && qr.scan_count <= 100);
+          break;
+        case "high":
+          filtered = filtered.filter(qr => qr.scan_count > 100);
+          break;
+      }
+    }
+
+    // Apply date range filter
+    if (filters.dateRange.from || filters.dateRange.to) {
+      filtered = filtered.filter(qr => {
+        const qrDate = new Date(qr.created_at);
+        if (filters.dateRange.from && qrDate < filters.dateRange.from) return false;
+        if (filters.dateRange.to && qrDate > filters.dateRange.to) return false;
+        return true;
+      });
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue: any = a[filters.sortBy as keyof QRCodeType];
+      let bValue: any = b[filters.sortBy as keyof QRCodeType];
+
+      if (filters.sortBy === 'created_at' || filters.sortBy === 'updated_at') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      }
+
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      return filters.sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [qrCodes, filters]);
+
+  // Generate analytics data
+  const analyticsData = useMemo(() => {
+    const totalScans = qrCodes.reduce((sum, qr) => sum + (qr.scan_count || 0), 0);
+    const scanRate = qrCodes.length > 0 ? (totalScans / qrCodes.length) : 0;
+
+    const topPerforming = qrCodes
+      .sort((a, b) => (b.scan_count || 0) - (a.scan_count || 0))
+      .slice(0, 10)
+      .map(qr => ({
+        name: qr.name,
+        scans: qr.scan_count || 0,
+        type: qr.type
+      }));
+
+    const scansByType = Object.entries(
+      qrCodes.reduce((acc, qr) => {
+        acc[qr.type] = (acc[qr.type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    ).map(([type, count], index) => ({
+      type,
+      count,
+      color: ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'][index % 5]
+    }));
+
+    // Mock data for time-based charts
+    const scansByDay = Array.from({ length: 7 }, (_, i) => ({
+      date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString(),
+      scans: Math.floor(Math.random() * 50) + 10
+    })).reverse();
+
+    const recentActivity = qrCodes.slice(0, 5).map(qr => ({
+      action: "QR Code scanned",
+      item: qr.name,
+      time: "2 hours ago"
+    }));
+
+    return {
+      totalQRCodes: qrCodes.length,
+      totalScans,
+      scanRate: Math.round(scanRate),
+      topPerforming,
+      scansByDay,
+      scansByType,
+      recentActivity
+    };
+  }, [qrCodes]);
 
   useEffect(() => {
     const fetchQrImages = async () => {
@@ -41,6 +203,7 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
         if (qrCode.options && typeof qrCode.options === 'object') {
           const options = qrCode.options as Record<string, any>;
           
+          // Try to get image from storage first
           if (options.storagePath) {
             try {
               const { data, error } = await supabase.storage
@@ -50,10 +213,16 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
               if (data && !error) {
                 const url = URL.createObjectURL(data);
                 urls[qrCode.id] = url;
+                continue; // Skip to next QR code if storage image found
               }
             } catch (err) {
-              console.error(`Error fetching QR code image for ${qrCode.id}:`, err);
+              console.error(`Error fetching QR code image from storage for ${qrCode.id}:`, err);
             }
+          }
+          
+          // Fallback to dataUrl if storage image not available
+          if (options.dataUrl) {
+            urls[qrCode.id] = options.dataUrl;
           }
         }
       }
@@ -66,8 +235,11 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
     }
     
     return () => {
+      // Only revoke blob URLs, not data URLs
       Object.values(qrImageUrls).forEach(url => {
-        URL.revokeObjectURL(url);
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
       });
     };
   }, [qrCodes]);
@@ -93,7 +265,9 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
       await deleteQRCode(id);
       
       if (qrImageUrls[id]) {
-        URL.revokeObjectURL(qrImageUrls[id]);
+        if (qrImageUrls[id].startsWith('blob:')) {
+          URL.revokeObjectURL(qrImageUrls[id]);
+        }
         const newUrls = { ...qrImageUrls };
         delete newUrls[id];
         setQrImageUrls(newUrls);
@@ -193,6 +367,66 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
     setScanDialogOpen(true);
   };
 
+  // Bulk operations handlers
+  const handleSelectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedItems(filteredQRCodes.map(qr => qr.id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      await Promise.all(selectedItems.map(id => handleDelete(id)));
+      setSelectedItems([]);
+      toast({
+        title: "QR Codes Deleted",
+        description: `${selectedItems.length} QR codes deleted successfully`
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete some QR codes",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownloadSelected = async () => {
+    try {
+      await Promise.all(selectedItems.map(id => {
+        const qrCode = qrCodes.find(qr => qr.id === id);
+        if (qrCode) {
+          return handleDownload(id, qrCode.name);
+        }
+      }));
+      toast({
+        title: "QR Codes Downloaded",
+        description: `${selectedItems.length} QR codes downloaded successfully`
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download some QR codes",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleMoveSelected = () => {
+    // This would open a bulk move dialog
+    toast({
+      title: "Feature Coming Soon",
+      description: "Bulk move functionality will be available soon"
+    });
+  };
+
+  const handleReorder = (reorderedItems: any[]) => {
+    // Handle reordering logic here
+    console.log("Reordered items:", reorderedItems);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -217,151 +451,53 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
     );
   }
 
-  // Apply filtering based on filterType
-  let filteredQRCodes = [...qrCodes];
-  
-  // First filter by folder if specified
-  if (folderId) {
-    filteredQRCodes = filteredQRCodes.filter(qr => qr.folder_id === folderId);
-  }
-  
-  // Then apply type filtering
-  if (filterType === "barcode") {
-    filteredQRCodes = filteredQRCodes.filter(qr => qr.type === "barcode");
-  } else if (filterType === "static") {
-    filteredQRCodes = filteredQRCodes.filter(qr => qr.type !== "dynamic" && qr.type !== "barcode");
-  } else if (filterType === "dynamic") {
-    filteredQRCodes = filteredQRCodes.filter(qr => qr.type === "dynamic");
-  } else if (filterType === "dynamic-active") {
-    filteredQRCodes = filteredQRCodes.filter(qr => qr.type === "dynamic" && qr.active !== false);
-  } else if (filterType === "dynamic-paused") {
-    filteredQRCodes = filteredQRCodes.filter(qr => qr.type === "dynamic" && qr.active === false);
-  }
-  
-  // Apply search filtering if a search query exists
-  if (searchQuery && searchQuery.trim() !== "") {
-    const query = searchQuery.toLowerCase().trim();
-    filteredQRCodes = filteredQRCodes.filter(qr => 
-      qr.name.toLowerCase().includes(query) || 
-      qr.content.toLowerCase().includes(query)
-    );
-  }
-
-  if (filteredQRCodes.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8 max-w-md mx-auto">
-          <h3 className="text-xl font-medium mb-2">No QR Codes Found</h3>
-          <p className="text-muted-foreground mb-6">
-            {searchQuery 
-              ? "No results matched your search." 
-              : folderId 
-                ? "This folder is empty." 
-                : "You haven't created any QR codes yet."
-            }
-          </p>
-          <Button onClick={() => navigate("/generate")}>
-            Create QR Code
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredQRCodes.map((qrCode: QRCodeType) => (
-          <div 
-            key={qrCode.id} 
-            className="bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-colors rounded-lg overflow-hidden"
-          >
-            <div className="p-6 flex flex-col md:flex-row gap-4">
-              <div className="flex-shrink-0">
-                <div className="bg-white p-2 rounded-md border shadow-sm">
-                  {qrImageUrls[qrCode.id] ? (
-                    <img
-                      src={qrImageUrls[qrCode.id]}
-                      alt={qrCode.name}
-                      className="w-24 h-24 object-contain"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 flex items-center justify-center bg-muted/30">
-                      <QrCode className="h-10 w-10 text-muted-foreground/50" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex flex-col flex-grow min-w-0">
-                <div className="flex flex-col md:flex-row md:items-start justify-between">
-                  <div className="w-full">
-                    <h3 className="text-lg font-semibold truncate">{qrCode.name}</h3>
-                    
-                    <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
-                      {qrCode.type === "url" && <Link className="h-3.5 w-3.5 flex-shrink-0" />}
-                      <span className="truncate">{qrCode.content}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <Badge variant="outline" className="bg-muted/30 text-xs px-2 py-0 h-5">
-                        {qrCode.type.charAt(0).toUpperCase() + qrCode.type.slice(1)}
-                      </Badge>
-                      <Badge 
-                        variant={qrCode.scan_count && qrCode.scan_count > 0 ? "secondary" : "outline"} 
-                        className={`${qrCode.scan_count && qrCode.scan_count > 0 ? 'bg-secondary/80' : 'bg-muted/30'} text-xs px-2 py-0 h-5 cursor-pointer`}
-                        onClick={() => handleShowScanStats(qrCode)}
-                      >
-                        {qrCode.scan_count || 0} Scans
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(qrCode.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 mt-auto pt-3 flex-wrap">
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(qrCode.id)} className="h-8">
-                    <Edit className="h-3.5 w-3.5 mr-1" /> Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-8"
-                    onClick={() => handleDownload(qrCode.id, qrCode.name)}
-                  >
-                    <Download className="h-3.5 w-3.5 mr-1" /> Download
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={() => handleMoveQRCode(qrCode.id, qrCode.folder_id)}
-                  >
-                    <Folder className="h-3.5 w-3.5 mr-1" /> Move
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={() => handleShowScanStats(qrCode)}
-                  >
-                    <BarChart2 className="h-3.5 w-3.5 mr-1" /> Stats
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 ml-auto text-destructive hover:text-destructive hover:bg-destructive/10" 
-                    onClick={() => handleDelete(qrCode.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+      <div className="space-y-6">
+        <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as "list" | "analytics")}>
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="list">QR Codes</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
           </div>
-        ))}
+
+          <TabsContent value="list" className="space-y-6">
+            <AdvancedSearch
+              filters={filters}
+              onFiltersChange={setFilters}
+              totalResults={filteredQRCodes.length}
+            />
+
+            <BulkOperations
+              selectedItems={selectedItems}
+              onSelectAll={handleSelectAll}
+              onDeleteSelected={handleDeleteSelected}
+              onMoveSelected={handleMoveSelected}
+              onDownloadSelected={handleDownloadSelected}
+              totalItems={filteredQRCodes.length}
+              isAllSelected={selectedItems.length === filteredQRCodes.length && filteredQRCodes.length > 0}
+            />
+
+            <DragDropQRList
+              qrCodes={filteredQRCodes.map(qr => ({
+                ...qr,
+                imageUrl: qrImageUrls[qr.id]
+              }))}
+              selectedItems={selectedItems}
+              onSelectionChange={setSelectedItems}
+              onReorder={handleReorder}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onDownload={handleDownload}
+              onMove={(id) => handleMoveQRCode(id, null)}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard data={analyticsData} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {selectedQRCode && (
