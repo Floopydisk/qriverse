@@ -1,10 +1,11 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { authRateLimiter } from '@/lib/security/rate-limiter';
 import { sessionManager } from '@/lib/security/session-manager';
 import { validatePassword } from '@/lib/security/password-policy';
 import { useToast } from '@/hooks/use-toast';
+import { loginMonitor } from '@/lib/security/login-monitor';
+import { auditLogger } from '@/lib/security/audit-logger';
 
 interface SecureAuthState {
   isRateLimited: boolean;
@@ -84,19 +85,30 @@ export const useSecureAuth = () => {
   const secureSignIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const identifier = getClientIdentifier();
     
+    // Check if IP is blocked by login monitor
+    if (loginMonitor.isIPBlocked(identifier)) {
+      const error = 'IP address is blocked due to suspicious activity';
+      loginMonitor.trackLoginAttempt(email, false, 'ip_blocked');
+      return { success: false, error };
+    }
+    
     // Check rate limiting
     if (authRateLimiter.isRateLimited(identifier, 'login')) {
       const status = authRateLimiter.getStatus(identifier, 'login');
-      return {
-        success: false,
-        error: `Too many failed attempts. Please try again in ${Math.ceil((status.retryAfter || 0) / 1000 / 60)} minutes.`
-      };
+      const error = `Too many failed attempts. Please try again in ${Math.ceil((status.retryAfter || 0) / 1000 / 60)} minutes.`;
+      loginMonitor.trackLoginAttempt(email, false, 'rate_limited');
+      return { success: false, error };
     }
 
     // Validate password strength for new passwords (optional check)
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid && passwordValidation.score < 40) {
       console.warn('Weak password detected during login');
+      auditLogger.log('suspicious_activity_detected', {
+        type: 'weak_password_login_attempt',
+        email,
+        passwordScore: passwordValidation.score
+      }, 'low');
     }
 
     try {
@@ -109,9 +121,22 @@ export const useSecureAuth = () => {
       authRateLimiter.reset(identifier, 'login');
       updateRateLimitState();
       
+      // Track successful login
+      loginMonitor.trackLoginAttempt(email, true);
+      auditLogger.logAuthEvent('login', true, { email }, auth.user?.id);
+      
       return { success: true };
     } catch (error: any) {
       updateRateLimitState();
+      
+      // Track failed login with detailed reason
+      const failureReason = error.message || 'unknown_error';
+      loginMonitor.trackLoginAttempt(email, false, failureReason);
+      auditLogger.logAuthEvent('login', false, { 
+        email, 
+        error: failureReason,
+        identifier 
+      });
       
       return {
         success: false,
@@ -125,6 +150,7 @@ export const useSecureAuth = () => {
     
     // Check rate limiting for signup
     if (authRateLimiter.isRateLimited(identifier, 'signup')) {
+      loginMonitor.trackLoginAttempt(email, false, 'signup_rate_limited');
       return {
         success: false,
         error: 'Too many signup attempts. Please try again later.'
@@ -134,6 +160,11 @@ export const useSecureAuth = () => {
     // Validate password strength
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
+      auditLogger.logAuthEvent('signup', false, {
+        email,
+        error: 'password_validation_failed',
+        passwordErrors: passwordValidation.errors
+      });
       return {
         success: false,
         error: passwordValidation.errors.join(', ')
@@ -145,8 +176,20 @@ export const useSecureAuth = () => {
       await auth.signUp(email, password);
       authRateLimiter.reset(identifier, 'signup');
       
+      // Track successful signup
+      auditLogger.logAuthEvent('signup', true, { 
+        email,
+        passwordScore: passwordValidation.score 
+      }, auth.user?.id);
+      
       return { success: true };
     } catch (error: any) {
+      // Track failed signup
+      auditLogger.logAuthEvent('signup', false, {
+        email,
+        error: error.message || 'unknown_error'
+      });
+      
       return {
         success: false,
         error: error.message || 'Sign up failed'
