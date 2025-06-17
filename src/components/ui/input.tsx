@@ -3,7 +3,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  security?: {
+  securityOptions?: {
     enableSanitization?: boolean;
     enableValidation?: boolean;
     enableXSSProtection?: boolean;
@@ -11,9 +11,9 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, security, onChange, ...props }, ref) => {
+  ({ className, type, securityOptions, onChange, ...props }, ref) => {
     const handleChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-      if (security?.enableSanitization && typeof e.target.value === 'string') {
+      if (securityOptions?.enableSanitization && typeof e.target.value === 'string') {
         // Basic sanitization for regular input component
         const sanitized = e.target.value
           .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
@@ -26,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       }
       
       onChange?.(e);
-    }, [onChange, security]);
+    }, [onChange, securityOptions]);
 
     return (
       <input

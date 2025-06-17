@@ -79,7 +79,8 @@ export class FileUploadSecurity {
       const metadata = await this.generateFileMetadata(file);
 
       // Validate file content against MIME type
-      if (!this.validateFileContent(file, metadata)) {
+      const contentValid = await this.validateFileContent(file, metadata);
+      if (!contentValid) {
         errors.push('File content does not match its declared type');
       }
 
@@ -166,10 +167,10 @@ export class FileUploadSecurity {
   }
 
   // Validate file content matches declared MIME type
-  private static validateFileContent(file: File, metadata: FileMetadata): boolean {
+  private static async validateFileContent(file: File, metadata: FileMetadata): Promise<boolean> {
     // For images, we can validate by trying to load them
     if (metadata.isImage) {
-      return this.validateImageContent(file);
+      return await this.validateImageContent(file);
     }
 
     // For other files, basic validation
@@ -177,7 +178,7 @@ export class FileUploadSecurity {
   }
 
   // Validate image content
-  private static validateImageContent(file: File): boolean {
+  private static async validateImageContent(file: File): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
