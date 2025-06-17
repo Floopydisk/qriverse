@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Copy, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -61,7 +60,7 @@ export function QRCodePreview({ qrDataUrl, activeTab, text = "" }: QRCodePreview
 
   return (
     <div className="flex flex-col items-center justify-center h-full space-y-6">
-      <div className="bg-white rounded-lg p-6 shadow-lg">
+      <div className="bg-white rounded-lg p-4 shadow-lg">
         <img
           src={qrDataUrl}
           alt="Generated QR Code"
