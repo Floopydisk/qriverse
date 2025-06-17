@@ -27,7 +27,7 @@ class ApiKeySecurityManager {
   private readonly RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 
   // Generate cryptographically secure API key
-  generateSecureApiKey(): { key: string; hash: string; prefix: string } {
+  generateSecureApiKey(): { key: string; prefix: string } {
     const prefix = 'qrl_'; // QR Labs prefix
     const keyLength = 32;
     
@@ -43,10 +43,7 @@ class ApiKeySecurityManager {
     
     const key = prefix + keyBody;
     
-    // Create hash for storage (using Web Crypto API)
-    const hash = this.hashApiKey(key);
-    
-    return { key, hash, prefix };
+    return { key, prefix };
   }
 
   // Hash API key for secure storage
@@ -304,6 +301,11 @@ class ApiKeySecurityManager {
     }
 
     return recommendations;
+  }
+
+  // Helper method to get hash for storing in database (async version)
+  async getApiKeyHash(key: string): Promise<string> {
+    return await this.hashApiKey(key);
   }
 }
 
