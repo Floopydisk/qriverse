@@ -154,15 +154,15 @@ const DashboardSidebar = ({
 
   if (sidebarCollapsed) {
     return (
-      <div className="w-16 bg-white border-r border-gray-200 h-screen flex flex-col">
-        <div className="p-4 border-b border-gray-200">
+      <div className="w-16 bg-background border-r border-border h-screen flex flex-col">
+        <div className="p-4 border-b border-border">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
             className="w-8 h-8"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-4 w-4 text-foreground" />
           </Button>
         </div>
         
@@ -176,8 +176,8 @@ const DashboardSidebar = ({
                   variant={isActive ? "default" : "ghost"}
                   size="icon"
                   className={cn(
-                    "w-10 h-10",
-                    isActive && "bg-green-600 text-white hover:bg-green-700"
+                    "w-10 h-10 text-foreground",
+                    isActive && "bg-primary text-primary-foreground hover:bg-primary/80"
                   )}
                   asChild
                 >
@@ -194,12 +194,12 @@ const DashboardSidebar = ({
   }
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">
-      <div className="p-6 border-b border-gray-200">
+    <div className="w-64 bg-background border-r border-border h-screen flex flex-col">
+      <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between">
           <RouterLink to="/" className="flex items-center space-x-2">
-            <QrCode className="h-8 w-8 text-green-600" />
-            <span className="text-xl font-bold">QrLabs</span>
+            <QrCode className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold text-foreground">QrLabs</span>
           </RouterLink>
           {toggleSidebar && (
             <Button
@@ -208,7 +208,7 @@ const DashboardSidebar = ({
               onClick={toggleSidebar}
               className="w-8 h-8"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 text-foreground" />
             </Button>
           )}
         </div>
@@ -216,12 +216,12 @@ const DashboardSidebar = ({
 
       {/* Search */}
       {setSearchQuery && (
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Search QR Codes..." 
-              className="pl-9"
+              className="pl-9 bg-background text-foreground"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -243,8 +243,8 @@ const DashboardSidebar = ({
                   key={item.path}
                   variant={isActive ? "default" : "ghost"}
                   className={cn(
-                    "w-full justify-start",
-                    isActive && "bg-green-600 text-white hover:bg-green-700"
+                    "w-full justify-start text-foreground",
+                    isActive && "bg-primary text-primary-foreground hover:bg-primary/80"
                   )}
                   asChild
                 >
