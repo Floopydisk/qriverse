@@ -87,7 +87,7 @@ const ApiManagement = () => {
     <div className="flex min-h-screen bg-gray-50">
       <DashboardSidebar />
       
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 bg-black">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold">API Management</h1>
@@ -151,7 +151,7 @@ const ApiManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-2">
-                      <code className="flex-1 p-2 bg-white border rounded font-mono text-sm">
+                      <code className="flex-1 p-2 bg-black border rounded font-mono text-sm">
                         {createdKey}
                       </code>
                       <Button size="sm" onClick={() => copyToClipboard(createdKey)}>
