@@ -13,6 +13,7 @@ import { fetchUserTeams } from '@/lib/api/teams';
 import TeamsList from '@/components/teams/TeamsList';
 import CreateTeamDialog from '@/components/teams/CreateTeamDialog';
 import TeamInvitations from '@/components/teams/TeamInvitations';
+import DashboardSidebar from '@/components/DashboardSidebar';
 
 const Teams = () => {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ const Teams = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full">
+      <DashboardSidebar />
       <FloatingCircles />
       <Header />
 

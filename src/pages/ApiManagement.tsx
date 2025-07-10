@@ -12,6 +12,7 @@ import { createApiKey, fetchUserApiKeys, deleteApiKey, fetchApiUsage } from '@/l
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import FloatingCircles from '@/components/FloatingCircles';
 
 const ApiManagement = () => {
   const [newKeyName, setNewKeyName] = useState('');
@@ -84,10 +85,12 @@ const ApiManagement = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen">
       <DashboardSidebar />
       
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 ">
+      <FloatingCircles />
+
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold">API Management</h1>
@@ -151,7 +154,7 @@ const ApiManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-2">
-                      <code className="flex-1 p-2 bg-white border rounded font-mono text-sm">
+                      <code className="flex-1 p-2 bg-black border rounded font-mono text-sm">
                         {createdKey}
                       </code>
                       <Button size="sm" onClick={() => copyToClipboard(createdKey)}>

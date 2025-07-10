@@ -24,7 +24,26 @@ const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
-import { SidebarContext, useSidebar } from "@/components/ui/use-sidebar"
+type SidebarContext = {
+  state: "expanded" | "collapsed"
+  open: boolean
+  setOpen: (open: boolean) => void
+  openMobile: boolean
+  setOpenMobile: (open: boolean) => void
+  isMobile: boolean
+  toggleSidebar: () => void
+}
+
+const SidebarContext = React.createContext<SidebarContext | null>(null)
+
+function useSidebar() {
+  const context = React.useContext(SidebarContext)
+  if (!context) {
+    throw new Error("useSidebar must be used within a SidebarProvider.")
+  }
+
+  return context
+}
 
 const SidebarProvider = React.forwardRef<
   HTMLDivElement,
@@ -95,19 +114,7 @@ const SidebarProvider = React.forwardRef<
     // This makes it easier to style the sidebar with Tailwind classes.
     const state = open ? "expanded" : "collapsed"
 
-    // Define the type for your context value
-    interface SidebarContextType {
-      state: "expanded" | "collapsed";
-      open: boolean;
-      setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-      isMobile: boolean;
-      openMobile: boolean;
-      setOpenMobile: React.Dispatch<React.SetStateAction<boolean>>;
-      toggleSidebar: () => void;
-    }
-
-    // Create the context with the correct type
-    const contextValue = React.useMemo<SidebarContextType>(
+    const contextValue = React.useMemo<SidebarContext>(
       () => ({
         state,
         open,
