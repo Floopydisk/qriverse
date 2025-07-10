@@ -25,6 +25,7 @@ import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserQRCodes, fetchUserDynamicQRCodes, fetchUserFolders } from "@/lib/api";
 import { Dispatch, SetStateAction } from "react";
+import FloatingCircles from "@/components/FloatingCircles";
 
 interface DashboardSidebarProps {
   selectedView?: string;
@@ -154,8 +155,9 @@ const DashboardSidebar = ({
 
   if (sidebarCollapsed) {
     return (
-      <div className="w-16 bg-white border-r border-gray-200 h-screen flex flex-col">
-        <div className="p-4 border-b border-gray-200">
+      <div className="w-16  border-r  h-screen flex flex-col">
+        <FloatingCircles />
+        <div className="p-4 border-b ">
           <Button
             variant="ghost"
             size="icon"
@@ -194,8 +196,11 @@ const DashboardSidebar = ({
   }
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">
-      <div className="p-6 border-b border-gray-200">
+    <div className="w-64 border-r  h-screen flex flex-col">
+      <FloatingCircles />
+      
+      {/* Header */}
+      <div className="p-6 border-b ">
         <div className="flex items-center justify-between">
           <RouterLink to="/" className="flex items-center space-x-2">
             <QrCode className="h-8 w-8 text-green-600" />
@@ -216,7 +221,7 @@ const DashboardSidebar = ({
 
       {/* Search */}
       {setSearchQuery && (
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b ">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
