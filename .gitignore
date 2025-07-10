@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 
-
+auth.txt
 test.tsx
 # Editor directories and files
 .vscode/*
@@ -25,3 +25,4 @@ test.tsx
 *.sln
 *.sw?
 package-lock.json
+*.env
