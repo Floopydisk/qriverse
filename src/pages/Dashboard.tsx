@@ -87,7 +87,7 @@ const Dashboard = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
-  let pageTitle = "All QR Codes";
+  let pageTitle = "Static QR Codes";
   if (selectedView === "barcode") pageTitle = "Barcodes";
   if (selectedView === "static") pageTitle = "Static QR Codes";
   if (selectedView === "dynamic" || selectedView === "dynamic-active" || selectedView === "dynamic-paused") pageTitle = "Dynamic QR Codes";
