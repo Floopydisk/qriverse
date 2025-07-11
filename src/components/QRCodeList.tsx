@@ -1,20 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder, BarChart2 } from "lucide-react";
+import { Download, Trash2, Edit, Link, ExternalLink, QrCode, Folder } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType, fetchQRCodeScanStats, fetchQRCodesInFolder } from "@/lib/api";
+import { fetchUserQRCodes, deleteQRCode, QRCode as QRCodeType, fetchQRCodesInFolder } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadQRCode } from "@/lib/supabaseUtils";
 import MoveQRCodeDialog from "@/components/MoveQRCodeDialog";
-import QRCodeScanDialog from "./QRCodeScanDialog";
 import BulkOperations from "./BulkOperations";
 import AdvancedSearch from "./AdvancedSearch";
-import AnalyticsDashboard from "./AnalyticsDashboard";
+
 import DragDropQRList from "./DragDropQRList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 interface QRCodeListProps {
   folderId?: string;
@@ -28,7 +27,7 @@ interface SearchFilters {
   dateRange: { from?: Date; to?: Date };
   sortBy: string;
   sortOrder: 'asc' | 'desc';
-  scanCount: string;
+  
 }
 
 const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeListProps) => {
@@ -37,11 +36,8 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
   const queryClient = useQueryClient();
   const [qrImageUrls, setQrImageUrls] = useState<Record<string, string>>({});
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
-  const [scanDialogOpen, setScanDialogOpen] = useState(false);
   const [selectedQRCode, setSelectedQRCode] = useState<{id: string, folderId: string | null} | null>(null);
-  const [selectedQRCodeForStats, setSelectedQRCodeForStats] = useState<QRCodeType | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [currentView, setCurrentView] = useState<"list" | "analytics">("list");
   
   // Advanced search filters
   const [filters, setFilters] = useState<SearchFilters>({
@@ -50,7 +46,7 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
     dateRange: {},
     sortBy: 'created_at',
     sortOrder: 'desc',
-    scanCount: 'all'
+    
   });
   
   const { data: qrCodes = [], isLoading, error } = useQuery({
@@ -97,23 +93,6 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
       }
     }
 
-    // Apply scan count filter
-    if (filters.scanCount !== "all") {
-      switch (filters.scanCount) {
-        case "none":
-          filtered = filtered.filter(qr => qr.scan_count === 0);
-          break;
-        case "low":
-          filtered = filtered.filter(qr => qr.scan_count >= 1 && qr.scan_count <= 10);
-          break;
-        case "medium":
-          filtered = filtered.filter(qr => qr.scan_count >= 11 && qr.scan_count <= 100);
-          break;
-        case "high":
-          filtered = filtered.filter(qr => qr.scan_count > 100);
-          break;
-      }
-    }
 
     // Apply date range filter
     if (filters.dateRange.from || filters.dateRange.to) {
@@ -147,53 +126,6 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
     return filtered;
   }, [qrCodes, filters]);
 
-  // Generate analytics data
-  const analyticsData = useMemo(() => {
-    const totalScans = qrCodes.reduce((sum, qr) => sum + (qr.scan_count || 0), 0);
-    const scanRate = qrCodes.length > 0 ? (totalScans / qrCodes.length) : 0;
-
-    const topPerforming = qrCodes
-      .sort((a, b) => (b.scan_count || 0) - (a.scan_count || 0))
-      .slice(0, 10)
-      .map(qr => ({
-        name: qr.name,
-        scans: qr.scan_count || 0,
-        type: qr.type
-      }));
-
-    const scansByType = Object.entries(
-      qrCodes.reduce((acc, qr) => {
-        acc[qr.type] = (acc[qr.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>)
-    ).map(([type, count], index) => ({
-      type,
-      count,
-      color: ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'][index % 5]
-    }));
-
-    // Mock data for time-based charts
-    const scansByDay = Array.from({ length: 7 }, (_, i) => ({
-      date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString(),
-      scans: Math.floor(Math.random() * 50) + 10
-    })).reverse();
-
-    const recentActivity = qrCodes.slice(0, 5).map(qr => ({
-      action: "QR Code scanned",
-      item: qr.name,
-      time: "2 hours ago"
-    }));
-
-    return {
-      totalQRCodes: qrCodes.length,
-      totalScans,
-      scanRate: Math.round(scanRate),
-      topPerforming,
-      scansByDay,
-      scansByType,
-      recentActivity
-    };
-  }, [qrCodes]);
 
   useEffect(() => {
     const fetchQrImages = async () => {
@@ -362,10 +294,6 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
     setMoveDialogOpen(true);
   };
 
-  const handleShowScanStats = (qrCode: QRCodeType) => {
-    setSelectedQRCodeForStats(qrCode);
-    setScanDialogOpen(true);
-  };
 
   // Bulk operations handlers
   const handleSelectAll = (selected: boolean) => {
@@ -454,50 +382,35 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
   return (
     <>
       <div className="space-y-6">
-        <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as "list" | "analytics")}>
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="list">QR Codes</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            </TabsList>
-          </div>
+        <AdvancedSearch
+          filters={filters}
+          onFiltersChange={setFilters}
+          totalResults={filteredQRCodes.length}
+        />
 
-          <TabsContent value="list" className="space-y-6">
-            <AdvancedSearch
-              filters={filters}
-              onFiltersChange={setFilters}
-              totalResults={filteredQRCodes.length}
-            />
+        <BulkOperations
+          selectedItems={selectedItems}
+          onSelectAll={handleSelectAll}
+          onDeleteSelected={handleDeleteSelected}
+          onMoveSelected={handleMoveSelected}
+          onDownloadSelected={handleDownloadSelected}
+          totalItems={filteredQRCodes.length}
+          isAllSelected={selectedItems.length === filteredQRCodes.length && filteredQRCodes.length > 0}
+        />
 
-            <BulkOperations
-              selectedItems={selectedItems}
-              onSelectAll={handleSelectAll}
-              onDeleteSelected={handleDeleteSelected}
-              onMoveSelected={handleMoveSelected}
-              onDownloadSelected={handleDownloadSelected}
-              totalItems={filteredQRCodes.length}
-              isAllSelected={selectedItems.length === filteredQRCodes.length && filteredQRCodes.length > 0}
-            />
-
-            <DragDropQRList
-              qrCodes={filteredQRCodes.map(qr => ({
-                ...qr,
-                imageUrl: qrImageUrls[qr.id]
-              }))}
-              selectedItems={selectedItems}
-              onSelectionChange={setSelectedItems}
-              onReorder={handleReorder}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onDownload={handleDownload}
-              onMove={(id) => handleMoveQRCode(id, null)}
-            />
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <AnalyticsDashboard data={analyticsData} />
-          </TabsContent>
-        </Tabs>
+        <DragDropQRList
+          qrCodes={filteredQRCodes.map(qr => ({
+            ...qr,
+            imageUrl: qrImageUrls[qr.id]
+          }))}
+          selectedItems={selectedItems}
+          onSelectionChange={setSelectedItems}
+          onReorder={handleReorder}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onDownload={handleDownload}
+          onMove={(id) => handleMoveQRCode(id, null)}
+        />
       </div>
 
       {selectedQRCode && (
@@ -506,14 +419,6 @@ const QRCodeList = ({ folderId, filterType = "all", searchQuery = "" }: QRCodeLi
           onClose={() => setMoveDialogOpen(false)}
           qrCodeId={selectedQRCode.id}
           currentFolderId={selectedQRCode.folderId}
-        />
-      )}
-
-      {selectedQRCodeForStats && (
-        <QRCodeScanDialog
-          isOpen={scanDialogOpen}
-          onClose={() => setScanDialogOpen(false)}
-          qrCode={selectedQRCodeForStats}
         />
       )}
     </>

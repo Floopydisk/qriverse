@@ -26,7 +26,7 @@ interface SearchFilters {
   dateRange: { from?: Date; to?: Date };
   sortBy: string;
   sortOrder: 'asc' | 'desc';
-  scanCount: string;
+  
 }
 
 interface AdvancedSearchProps {
@@ -54,14 +54,13 @@ const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSear
       dateRange: {},
       sortBy: 'created_at',
       sortOrder: 'desc',
-      scanCount: 'all'
+      
     });
     setDateRange(undefined);
   };
 
   const activeFiltersCount = [
     filters.type !== 'all',
-    filters.scanCount !== 'all',
     filters.dateRange.from || filters.dateRange.to,
   ].filter(Boolean).length;
 
@@ -104,7 +103,7 @@ const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSear
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Type Filter */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground">Type</label>
@@ -128,22 +127,6 @@ const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSear
               </Select>
             </div>
 
-            {/* Scan Count Filter */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Scan Count</label>
-              <Select value={filters.scanCount} onValueChange={(value) => updateFilter('scanCount', value)}>
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="none">No scans</SelectItem>
-                  <SelectItem value="low">1-10 scans</SelectItem>
-                  <SelectItem value="medium">11-100 scans</SelectItem>
-                  <SelectItem value="high">100+ scans</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Sort By */}
             <div className="space-y-2">
@@ -156,7 +139,6 @@ const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSear
                   <SelectItem value="created_at">Date Created</SelectItem>
                   <SelectItem value="updated_at">Date Updated</SelectItem>
                   <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="scan_count">Scan Count</SelectItem>
                   <SelectItem value="type">Type</SelectItem>
                 </SelectContent>
               </Select>

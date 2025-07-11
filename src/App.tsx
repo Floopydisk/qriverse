@@ -58,7 +58,7 @@ const App = () => {
                 <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
                 <Route path="/dynamic-qr" element={<AuthGuard><DynamicQR /></AuthGuard>} />
                 <Route path="/dynamic-qr/:id/edit" element={<AuthGuard><EditDynamicQR /></AuthGuard>} />
-                <Route path="/dynamic-qr/:id/stats" element={<AuthGuard><DynamicQRStats /></AuthGuard>} />
+                <Route path="/dynamic-qr/stats/:id" element={<AuthGuard><DynamicQRStats /></AuthGuard>} />
                 <Route path="/teams" element={<AuthGuard><Teams /></AuthGuard>} />
                 <Route path="/teams/:teamId" element={<AuthGuard><TeamDetail /></AuthGuard>} />
                 <Route path="/folder/:folderId" element={<AuthGuard><FolderView /></AuthGuard>} />

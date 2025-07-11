@@ -24,7 +24,6 @@ interface SearchFilters {
   dateRange: { from?: Date; to?: Date };
   sortBy: string;
   sortOrder: 'asc' | 'desc';
-  scanCount: string;
 }
 
 const DynamicQR = () => {
@@ -44,8 +43,7 @@ const DynamicQR = () => {
     type: 'all',
     dateRange: {},
     sortBy: 'created_at',
-    sortOrder: 'desc',
-    scanCount: 'all'
+    sortOrder: 'desc'
   });
 
   // Handle the data from static QR conversion
@@ -94,16 +92,6 @@ const DynamicQR = () => {
       if (selectedView === "dynamic-active" && code.active !== true) return false;
       if (selectedView === "dynamic-paused" && code.active !== false) return false;
 
-      // Scan count filter
-      if (filters.scanCount !== 'all') {
-        const scanCount = code.scan_count || 0;
-        switch (filters.scanCount) {
-          case 'none': return scanCount === 0;
-          case 'low': return scanCount >= 1 && scanCount <= 10;
-          case 'medium': return scanCount >= 11 && scanCount <= 100;
-          case 'high': return scanCount > 100;
-        }
-      }
 
       // Date range filter
       if (filters.dateRange.from || filters.dateRange.to) {
