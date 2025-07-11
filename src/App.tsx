@@ -65,7 +65,7 @@ const App = () => {
                 <Route path="/barcode" element={<AuthGuard><Barcode /></AuthGuard>} />
                 <Route path="/wifi" element={<AuthGuard><Wifi /></AuthGuard>} />
                 <Route path="/api-management" element={<AuthGuard><ApiManagement /></AuthGuard>} />
-                <Route path="/webhook-management" element={<AuthGuard><WebhookManagement /></AuthGuard>} />
+                <Route path="/webhooks" element={<AuthGuard><WebhookManagement /></AuthGuard>} />
                 
                 {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
