@@ -84,12 +84,25 @@ const ApiManagement = () => {
     });
   };
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
   return (
     <div className="flex min-h-screen">
-      <DashboardSidebar />
-      
-      <div className="flex-1 p-8 ">
       <FloatingCircles />
+      
+      {/* Sidebar */}
+      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-background border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>
+        <DashboardSidebar 
+          sidebarCollapsed={sidebarCollapsed}
+          toggleSidebar={toggleSidebar}
+        />
+      </div>
+      
+      <div className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} p-8`}>
 
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
