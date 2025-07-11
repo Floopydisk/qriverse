@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import FooterAuth from "@/components/FooterAuth";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,7 +95,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-      <Header />
+      {/* <Header /> */}
 
       <SidebarProvider>
         <div className="flex-1 flex w-full">
@@ -123,7 +123,7 @@ const Dashboard = () => {
                         {pageTitle}
                       </h1>
                     </div>
-                    <p className="text-muted-foreground">Manage your QR codes and folders</p>
+                    <p className="text-muted-foreground">Manage your static QR codes</p>
                   </div>
                   
                   <div className="flex gap-2">
@@ -131,21 +131,21 @@ const Dashboard = () => {
                       <DropdownMenuTrigger asChild>
                         <Button>
                           <Plus className="mr-2 h-4 w-4" />
-                          CREATE QR CODE
+                          CREATE
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem onClick={() => navigate("/generate")}>
                           <QrCode className="mr-2 h-4 w-4" />
-                          Create QR Code
+                          QR Code
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate("/dynamic-qr")}>
                           <QrCode className="mr-2 h-4 w-4" />
-                          Create Dynamic QR
+                          Dynamic QR Code
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setShowFolderDialog(true)}>
                           <FolderPlus className="mr-2 h-4 w-4" />
-                          Create Folder
+                          Folder
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -186,7 +186,7 @@ const Dashboard = () => {
         </div>
       </SidebarProvider>
 
-      <Footer />
+      <FooterAuth />
     </div>
   );
 };

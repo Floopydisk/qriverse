@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import FooterAuth from '@/components/FooterAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -109,7 +109,7 @@ const EditDynamicQR = () => {
         <main className="flex-1 container mx-auto px-4 pt-24 pb-12 flex items-center justify-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </main>
-        <Footer />
+        <FooterAuth />
       </div>
     );
   }
@@ -129,7 +129,7 @@ const EditDynamicQR = () => {
             </Button>
           </div>
         </main>
-        <Footer />
+        <FooterAuth />
       </div>
     );
   }
@@ -214,7 +214,7 @@ const EditDynamicQR = () => {
         </div>
       </main>
 
-      <Footer />
+      <FooterAuth />
     </div>
   );
 };

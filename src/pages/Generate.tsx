@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import FooterAuth from "@/components/FooterAuth";
 import FloatingCircles from "@/components/FloatingCircles";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchQRCode } from "@/lib/api";
@@ -348,7 +348,7 @@ const Generate = () => {
         <main className="container mx-auto px-4 pt-20 pb-12 flex items-center justify-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </main>
-        <Footer />
+        <FooterAuth />
       </div>
     );
   }
@@ -436,7 +436,7 @@ const Generate = () => {
           </div>
         </div>
       </main>
-      <Footer />
+      <FooterAuth />
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { ChevronLeft, Loader2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchQRCodesInFolder, fetchUserFolders, Folder } from "@/lib/api";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import FooterAuth from "@/components/FooterAuth";
 import FloatingCircles from "@/components/FloatingCircles";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import QRCodeList from "@/components/QRCodeList";
@@ -129,7 +129,7 @@ const FolderView = () => {
             </div>
           </div>
           
-          <Footer />
+          <FooterAuth />
         </div>
       </div>
     </div>

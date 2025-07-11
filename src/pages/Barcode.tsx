@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import FooterAuth from "@/components/FooterAuth";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Input } from "@/components/ui/input";
@@ -352,7 +352,7 @@ const BarcodeGenerator = () => {
         </main>
       </div>
 
-      <Footer />
+      <FooterAuth />
     </div>
   );
 };

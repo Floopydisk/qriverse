@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import FooterAuth from '@/components/FooterAuth';
 import DashboardSidebar from "@/components/DashboardSidebar";
 import FloatingCircles from '@/components/FloatingCircles';
 import { Button } from '@/components/ui/button';
@@ -355,7 +355,7 @@ const DynamicQR = () => {
         </main>
       </div>
 
-      <Footer />
+      <FooterAuth />
     </div>
   );
 };

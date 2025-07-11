@@ -55,7 +55,7 @@ const WebhookManagement = () => {
   });
 
   const updateWebhookMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: any }) => updateWebhook(id, updates),
+    mutationFn: ({ id, updates }: { id: string; updates: unknown }) => updateWebhook(id, updates),
     onSuccess: () => {
       toast({
         title: 'Success',

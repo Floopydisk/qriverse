@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import FooterAuth from '@/components/FooterAuth';
 import FloatingCircles from '@/components/FloatingCircles';
 import { fetchDynamicQRCode, fetchDynamicQRCodeScanStats } from '@/lib/api';
 
@@ -79,7 +79,7 @@ const DynamicQRStats = () => {
             </Button>
           </div>
         </main>
-        <Footer />
+        <FooterAuth />
       </div>
     );
   }
@@ -100,7 +100,7 @@ const DynamicQRStats = () => {
             </Button>
           </div>
         </main>
-        <Footer />
+        <FooterAuth />
       </div>
     );
   }
@@ -226,7 +226,7 @@ const DynamicQRStats = () => {
         </div>
       </main>
 
-      <Footer />
+      <FooterAuth />
     </div>
   );
 };

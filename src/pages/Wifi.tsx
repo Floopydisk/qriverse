@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import FooterAuth from "@/components/FooterAuth";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -172,7 +172,7 @@ const Wifi = () => {
         </div>
       </main>
 
-      <Footer />
+      <FooterAuth />
     </div>
   );
 };

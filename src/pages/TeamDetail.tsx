@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import FooterAuth from '@/components/FooterAuth';
 import FloatingCircles from '@/components/FloatingCircles';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -117,7 +117,7 @@ const TeamDetail = () => {
             </Button>
           </div>
         </main>
-        <Footer />
+        <FooterAuth />
       </div>
     );
   }
@@ -290,7 +290,7 @@ const TeamDetail = () => {
         </div>
       </main>
 
-      <Footer />
+      <FooterAuth />
 
       <TeamInviteDialog
         open={showInviteDialog}
