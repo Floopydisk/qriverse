@@ -43,7 +43,7 @@ const AdvancedSearch = ({ filters, onFiltersChange, totalResults }: AdvancedSear
       : undefined
   );
 
-  const updateFilter = (key: keyof SearchFilters, value: any) => {
+  const updateFilter = (key: keyof SearchFilters, value: unknown) => {
     onFiltersChange({ ...filters, [key]: value });
   };
 

@@ -9,7 +9,7 @@ import { FileUploadSecurity, FileValidationOptions, FileValidationResult } from 
 import { cn } from '@/lib/utils';
 
 interface SecureFileUploadProps {
-  onFileSelect?: (file: File, metadata: any) => void;
+  onFileSelect?: (file: File, metadata: unknown) => void;
   onFileRemove?: (file: File) => void;
   onValidationResult?: (result: FileValidationResult) => void;
   validationOptions?: FileValidationOptions;
