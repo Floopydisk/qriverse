@@ -13,6 +13,7 @@ import { createWebhook, fetchUserWebhooks, updateWebhook, deleteWebhook, fetchWe
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import FloatingCircles from '@/components/FloatingCircles';
 
 const WebhookManagement = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -132,7 +133,8 @@ const WebhookManagement = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen">
+      <FloatingCircles />
       <DashboardSidebar />
       
       <div className="flex-1 p-8">
