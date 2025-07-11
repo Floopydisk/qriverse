@@ -102,55 +102,45 @@ const DashboardSidebar = ({
   };
 
   const menuItems = [
-    { icon: QrCode, label: "QR Codes", path: "/dashboard" },
-    { icon: Link, label: "Dynamic QR", path: "/dynamic-qr" },
-    { icon: Barcode, label: "Barcodes", path: "/barcode" },
-    { icon: Users, label: "Teams", path: "/teams" },
-    { icon: Key, label: "API Management", path: "/api-management" },
-    { icon: Webhook, label: "Webhooks", path: "/webhooks" },
-    { icon: Settings, label: "Profile", path: "/profile" },
-  ];
-
-  const filterItems = [
     { 
-      id: "all", 
-      label: `All (${allCodesCount})`, 
-      icon: List,
-      description: "All your QR codes and barcodes"
+      icon: QrCode, 
+      label: `QR Codes (${staticQrCount})`, 
+      path: "/dashboard",
+      action: "static",
+      hasDropdown: false
     },
     { 
-      id: "static", 
-      label: `Static QR (${staticQrCount})`, 
-      icon: QrCode,
-      description: "Fixed content QR codes"
-    },
-    { 
-      id: "dynamic", 
+      icon: Link, 
       label: `Dynamic QR (${dynamicQrCount})`, 
-      icon: BarChart3,
-      description: "Editable and trackable QR codes"
+      path: "/dynamic-qr",
+      action: "dynamic",
+      hasDropdown: true,
+      subItems: [
+        { 
+          id: "dynamic-active", 
+          label: `Active (${activeQrCount})`, 
+          icon: CheckCircle2,
+          color: "text-green-600"
+        },
+        { 
+          id: "dynamic-paused", 
+          label: `Paused (${pausedQrCount})`, 
+          icon: PauseCircle,
+          color: "text-red-600"
+        },
+      ]
     },
     { 
-      id: "barcode", 
+      icon: Barcode, 
       label: `Barcodes (${barcodeCount})`, 
-      icon: Barcode,
-      description: "Various barcode formats"
+      path: "/barcode",
+      action: "barcode",
+      hasDropdown: false
     },
-  ];
-
-  const dynamicSubItems = [
-    { 
-      id: "dynamic-active", 
-      label: `Active (${activeQrCount})`, 
-      icon: CheckCircle2,
-      color: "text-green-600"
-    },
-    { 
-      id: "dynamic-paused", 
-      label: `Paused (${pausedQrCount})`, 
-      icon: PauseCircle,
-      color: "text-red-600"
-    },
+    { icon: Users, label: "Teams", path: "/teams", hasDropdown: false },
+    { icon: Key, label: "API Management", path: "/api-management", hasDropdown: false },
+    { icon: Webhook, label: "Webhooks", path: "/webhooks", hasDropdown: false },
+    { icon: Settings, label: "Profile", path: "/profile", hasDropdown: false },
   ];
 
   if (sidebarCollapsed) {
@@ -240,46 +230,32 @@ const DashboardSidebar = ({
             </h3>
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
+              const isSelected = item.action && selectedView === item.action;
+              const isExpanded = item.hasDropdown && selectedView?.startsWith("dynamic");
+              
               return (
-                <Button
-                  key={item.path}
-                  variant={isActive ? "default" : "ghost"}
-                  className={cn(
-                    "w-full justify-start",
-                    isActive && "bg-green-600 text-white hover:bg-green-700"
-                  )}
-                  asChild
-                >
-                  <RouterLink to={item.path}>
-                    <item.icon className="mr-3 h-4 w-4" />
-                    {item.label}
-                  </RouterLink>
-                </Button>
-              );
-            })}
-          </div>
-
-          {/* Filter Section - only show if we have filter functionality */}
-          {setSelectedView && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide px-3">
-                Filter Codes
-              </h3>
-              {filterItems.map((item) => (
-                <div key={item.id} className="space-y-1">
+                <div key={item.path} className="space-y-1">
                   <Button
-                    variant={selectedView === item.id ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => handleViewSelect(item.id)}
+                    variant={isActive || isSelected ? "default" : "ghost"}
+                    className={cn(
+                      "w-full justify-start",
+                      (isActive || isSelected) && "bg-green-600 text-white hover:bg-green-700"
+                    )}
+                    onClick={() => {
+                      if (item.action && setSelectedView) {
+                        setSelectedView(item.action);
+                      }
+                      navigate(item.path);
+                    }}
                   >
-                    <item.icon className="h-4 w-4 mr-3" />
+                    <item.icon className="mr-3 h-4 w-4" />
                     {item.label}
                   </Button>
                   
                   {/* Dynamic QR submenu */}
-                  {item.id === "dynamic" && (selectedView.startsWith("dynamic")) && (
+                  {item.hasDropdown && item.subItems && isExpanded && (
                     <div className="pl-7 space-y-1">
-                      {dynamicSubItems.map((subItem) => (
+                      {item.subItems.map((subItem) => (
                         <Button
                           key={subItem.id}
                           variant={selectedView === subItem.id ? "default" : "ghost"}
@@ -293,9 +269,9 @@ const DashboardSidebar = ({
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
 
           {/* Folders Section */}
           {setShowFolderDialog && (
