@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Header from '@/components/Header';
+// import Header from '@/components/Header';
 import FooterAuth from '@/components/FooterAuth';
 import DashboardSidebar from "@/components/DashboardSidebar";
 import FloatingCircles from '@/components/FloatingCircles';
@@ -226,7 +226,7 @@ const DynamicQR = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-      <Header />
+      {/* <Header /> */}
 
       <div className="flex-1 flex w-full">
         {/* Sidebar */}

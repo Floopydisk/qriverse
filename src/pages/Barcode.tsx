@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
+// import Header from "@/components/Header";
 import FooterAuth from "@/components/FooterAuth";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import FloatingCircles from "@/components/FloatingCircles";
@@ -198,7 +199,7 @@ const BarcodeGenerator = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-      <Header />
+      {/* <Header /> */}
       
       <div className="flex-1 flex w-full">
         {/* Sidebar */}
@@ -216,7 +217,7 @@ const BarcodeGenerator = () => {
         
         {/* Main Content */}
         <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} pb-24`}>
-          <div className="container mx-auto px-4 pt-8">
+          <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto mt-24">
               <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-8">
                 <div className="space-y-4">

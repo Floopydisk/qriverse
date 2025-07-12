@@ -100,7 +100,7 @@ const Dashboard = () => {
       <SidebarProvider>
         <div className="flex-1 flex w-full">
           {/* Sidebar */}
-          <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-background border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>
+          <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>
             <DashboardSidebar 
               selectedView={selectedView}
               setSelectedView={setSelectedView}
@@ -114,7 +114,7 @@ const Dashboard = () => {
 
           {/* Main Content */}
           <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
-            <div className="container mx-auto px-4 pt-8 pb-12">
+            <div className="container mx-auto px-4 pt-0 pb-12">
               <div className="max-w-7xl mx-auto space-y-8 mt-24">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
