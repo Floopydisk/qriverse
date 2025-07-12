@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 
-auth.txt
+*.txt
 test.tsx
 # Editor directories and files
 .vscode/*

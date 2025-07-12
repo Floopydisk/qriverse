@@ -46,7 +46,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -56,6 +56,8 @@ const Dashboard = () => {
   const [selectedView, setSelectedView] = useState("all");
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
 
   // Set sidebar collapsed by default on mobile
   useEffect(() => {
@@ -102,15 +104,12 @@ const Dashboard = () => {
   };
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign out",
-        variant: "destructive",
-      });
-    } else {
+    try {
+      await signOut();
       navigate("/");
+      setMobileMenuOpen(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
   };
 
@@ -160,7 +159,7 @@ const Dashboard = () => {
             isMobile && 'ml-0'
           )}>
             {/* Profile Header */}
-            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
+            <div className="sticky top-0 z-10 backdrop-blur-sm ">
               <div className="flex justify-end p-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
