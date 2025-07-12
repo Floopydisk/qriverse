@@ -317,30 +317,91 @@ const BarcodeGenerator = () => {
                       {filteredBarcodes.map((barcode) => (
                         <div 
                           key={barcode.id} 
-                          className="bg-card border border-border p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                          className="bg-card border border-border p-4 rounded-lg"
                         >
-                          <div className="flex-1 overflow-hidden">
-                            <h3 className="font-medium truncate">{barcode.name}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{barcode.value}</p>
-                            <p className="text-xs text-muted-foreground">Type: {barcode.type}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => loadBarcode(barcode)}
-                              title="Edit"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleDeleteBarcode(barcode.id)}
-                              title="Delete"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start mb-2">
+                                <h3 className="font-medium truncate">{barcode.name}</h3>
+                                <div className="flex items-center gap-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => loadBarcode(barcode)}
+                                    title="Edit"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => handleDeleteBarcode(barcode.id)}
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="text-sm text-muted-foreground truncate mb-1">{barcode.value}</p>
+                              <p className="text-xs text-muted-foreground mb-3">Type: {barcode.type}</p>
+                              
+                              {/* Barcode Preview */}
+                              <div className="bg-white p-2 rounded border w-fit mb-3">
+                                <Barcode
+                                  value={barcode.value}
+                                  format={barcode.type as any}
+                                  width={1}
+                                  height={40}
+                                  displayValue={true}
+                                  background="#FFFFFF"
+                                  lineColor="#000000"
+                                />
+                              </div>
+                              
+                              {/* Action Buttons */}
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.clipboard.writeText(barcode.value);
+                                      toast({
+                                        title: "Success",
+                                        description: "Barcode value copied to clipboard",
+                                      });
+                                    } catch (err) {
+                                      toast({
+                                        title: "Error",
+                                        description: "Failed to copy text",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <Copy className="mr-1 h-3 w-3" />
+                                  Copy
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    // Load this barcode for potential download
+                                    setName(barcode.name);
+                                    setText(barcode.value);
+                                    setType(barcode.type);
+                                    
+                                    // Trigger download after a short delay to allow state update
+                                    setTimeout(() => {
+                                      downloadBarcode();
+                                    }, 100);
+                                  }}
+                                >
+                                  <Download className="mr-1 h-3 w-3" />
+                                  Download
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))}

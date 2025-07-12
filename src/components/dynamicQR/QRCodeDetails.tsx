@@ -9,7 +9,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import QRCode from 'qrcode';
 import { Pencil, Link2, Play, Pause } from 'lucide-react';
+import React from 'react';
 import { DynamicQRCode, getDynamicQRRedirectUrl, updateDynamicQRCode } from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +25,28 @@ const QRCodeDetails = ({ qrCode, onEdit }: QRCodeDetailsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const redirectUrl = getDynamicQRRedirectUrl(qrCode.short_code);
+  const [qrDataUrl, setQrDataUrl] = React.useState<string>('');
+
+  // Generate QR code data URL
+  React.useEffect(() => {
+    const generateQR = async () => {
+      try {
+        const dataUrl = await QRCode.toDataURL(redirectUrl, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF',
+          },
+        });
+        setQrDataUrl(dataUrl);
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
+    };
+    
+    generateQR();
+  }, [redirectUrl]);
   
   const toggleActiveMutation = useMutation({
     mutationFn: ({ id, active }: { id: string, active: boolean }) => 
@@ -77,11 +101,17 @@ const QRCodeDetails = ({ qrCode, onEdit }: QRCodeDetailsProps) => {
       
       <CardContent className="flex-1 flex flex-col items-center space-y-4">
         <div className="bg-white p-4 rounded-md border shadow-sm">
-          <img 
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(redirectUrl)}`}
-            alt={`QR code for ${qrCode.name}`}
-            className="w-44 h-44"
-          />
+          {qrDataUrl ? (
+            <img 
+              src={qrDataUrl}
+              alt={`QR code for ${qrCode.name}`}
+              className="w-44 h-44"
+            />
+          ) : (
+            <div className="w-44 h-44 bg-gray-200 rounded animate-pulse flex items-center justify-center text-sm text-gray-500">
+              Generating QR...
+            </div>
+          )}
         </div>
         
         <div className="w-full space-y-4">

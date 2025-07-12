@@ -65,6 +65,32 @@ const DynamicQRCodeList = ({
   const [qrToDelete, setQrToDelete] = useState<string | null>(null);
   const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
 
+  // Generate QR code data URLs for all dynamic QR codes
+  React.useEffect(() => {
+    dynamicQRCodes.forEach(async (qrCode) => {
+      if (!qrDataUrls[qrCode.id]) {
+        try {
+          const redirectUrl = getDynamicQRRedirectUrl(qrCode.short_code);
+          const dataUrl = await QRCode.toDataURL(redirectUrl, {
+            width: 150,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF',
+            },
+          });
+          
+          setQrDataUrls(prev => ({
+            ...prev,
+            [qrCode.id]: dataUrl
+          }));
+        } catch (error) {
+          console.error('Error generating QR code:', error);
+        }
+      }
+    });
+  }, [dynamicQRCodes, qrDataUrls]);
+
   console.log('DynamicQRCodeList received data:', { dynamicQRCodes, isLoading });
 
   const deleteMutation = useMutation({
@@ -314,11 +340,17 @@ const DynamicQRCodeList = ({
                             className="bg-white p-2 rounded-md mb-4 w-36 h-36 flex items-center justify-center cursor-pointer"
                             onClick={() => navigate(`/dynamic-qr/stats/${qrCode.id}`)}
                           >
-                            <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(redirectUrl)}`}
-                              alt={`QR code for ${qrCode.name}`}
-                              className="w-full h-full"
-                            />
+                            {qrDataUrls[qrCode.id] ? (
+                              <img 
+                                src={qrDataUrls[qrCode.id]}
+                                alt={`QR code for ${qrCode.name}`}
+                                className="w-full h-full"
+                              />
+                            ) : (
+                              <div className="w-32 h-32 bg-gray-200 rounded animate-pulse flex items-center justify-center text-xs text-gray-500">
+                                Generating QR...
+                              </div>
+                            )}
                           </div>
                           <div className="w-full text-center">
                             <p className="text-xs text-muted-foreground mb-1">Target URL:</p>
