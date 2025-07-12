@@ -1,14 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
 import FooterAuth from "@/components/FooterAuth";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   QrCode,
   Plus,
   FolderPlus,
+  LogOut,
+  User,
 } from "lucide-react";
 import {
   Card,
@@ -30,6 +32,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import QRCodeList from "@/components/QRCodeList";
@@ -38,17 +41,28 @@ import { createFolder } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedView, setSelectedView] = useState("all");
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Set sidebar collapsed by default on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarCollapsed(true);
+    }
+  }, [isMobile]);
 
   const createFolderMutation = useMutation({
     mutationFn: createFolder,
@@ -87,6 +101,19 @@ const Dashboard = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    } else {
+      navigate("/");
+    }
+  };
+
   let pageTitle = "Static QR Codes";
   if (selectedView === "barcode") pageTitle = "Barcodes";
   if (selectedView === "static") pageTitle = "Static QR Codes";
@@ -95,12 +122,16 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-      {/* <Header /> */}
 
       <SidebarProvider>
-        <div className="flex-1 flex w-full">
+        <div className="flex-1 flex w-full relative">
           {/* Sidebar */}
-          <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>
+          <div className={cn(
+            "border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-20 bg-background",
+            sidebarCollapsed ? 'w-16' : 'w-64',
+            // On mobile, overlay the content when expanded
+            isMobile && !sidebarCollapsed && "shadow-lg"
+          )}>
             <DashboardSidebar 
               selectedView={selectedView}
               setSelectedView={setSelectedView}
@@ -112,24 +143,67 @@ const Dashboard = () => {
             />
           </div>
 
+          {/* Overlay for mobile when sidebar is open */}
+          {isMobile && !sidebarCollapsed && (
+            <div 
+              className="fixed inset-0 bg-black/20 z-10" 
+              onClick={() => setSidebarCollapsed(true)}
+            />
+          )}
+
           {/* Main Content */}
-          <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+          <main className={cn(
+            "flex-1 transition-all duration-200",
+            // On desktop, push content when sidebar is open
+            !isMobile && (sidebarCollapsed ? 'ml-16' : 'ml-64'),
+            // On mobile, don't push content (overlay instead)
+            isMobile && 'ml-0'
+          )}>
+            {/* Profile Header */}
+            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
+              <div className="flex justify-end p-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={user?.user_metadata?.avatar_url} />
+                        <AvatarFallback>
+                          {user?.email?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
             <div className="container mx-auto px-4 pt-0 pb-12">
-              <div className="max-w-7xl mx-auto space-y-8 mt-24">
+              <div className="max-w-7xl mx-auto space-y-8 mt-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h1 className="text-2xl font-bold">
+                      <h1 className="text-xl md:text-2xl font-bold">
                         {pageTitle}
                       </h1>
                     </div>
-                    <p className="text-muted-foreground">Manage your static QR codes</p>
+                    <p className="text-muted-foreground text-sm md:text-base">Manage your static QR codes</p>
                   </div>
                   
                   <div className="flex gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button>
+                        <Button className="w-full md:w-auto">
                           <Plus className="mr-2 h-4 w-4" />
                           CREATE
                         </Button>

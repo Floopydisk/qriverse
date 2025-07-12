@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
-// import Header from '@/components/Header';
 import FooterAuth from '@/components/FooterAuth';
 import DashboardSidebar from "@/components/DashboardSidebar";
 import FloatingCircles from '@/components/FloatingCircles';
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,7 @@ const DynamicQR = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('view');
   const [name, setName] = useState('');
   const [targetUrl, setTargetUrl] = useState('');
@@ -37,6 +39,13 @@ const DynamicQR = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedView, setSelectedView] = useState("dynamic");
+
+  // Set sidebar collapsed by default on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarCollapsed(true);
+    }
+  }, [isMobile]);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [filters, setFilters] = useState<SearchFilters>({
     query: '',
@@ -226,11 +235,15 @@ const DynamicQR = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-      {/* <Header /> */}
 
-      <div className="flex-1 flex w-full">
+      <div className="flex-1 flex w-full relative">
         {/* Sidebar */}
-        <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-background border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>
+        <div className={cn(
+          "bg-background border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-20",
+          sidebarCollapsed ? 'w-16' : 'w-64',
+          // On mobile, overlay the content when expanded
+          isMobile && !sidebarCollapsed && "shadow-lg"
+        )}>
           <DashboardSidebar 
             selectedView={selectedView}
             setSelectedView={setSelectedView}
@@ -241,11 +254,25 @@ const DynamicQR = () => {
             setSearchQuery={setSearchQuery}
           />
         </div>
+
+        {/* Overlay for mobile when sidebar is open */}
+        {isMobile && !sidebarCollapsed && (
+          <div 
+            className="fixed inset-0 bg-black/20 z-10" 
+            onClick={() => setSidebarCollapsed(true)}
+          />
+        )}
         
         {/* Main Content */}
-        <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+        <main className={cn(
+          "flex-1 transition-all duration-200",
+          // On desktop, push content when sidebar is open
+          !isMobile && (sidebarCollapsed ? 'ml-16' : 'ml-64'),
+          // On mobile, don't push content (overlay instead)
+          isMobile && 'ml-0'
+        )}>
           <div className="container mx-auto px-4 pt-8 pb-12">
-            <div className="max-w-6xl mx-auto space-y-8 mt-24">
+            <div className="max-w-6xl mx-auto space-y-8 mt-8">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
                   <h1 className="text-3xl font-bold">
