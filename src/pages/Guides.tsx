@@ -21,10 +21,10 @@ const Guides = () => {
         <div className="container mx-auto px-4 max-w-5xl">
           {/* How to create a QR code section */}
           <section className="mb-20">
-            <h1 className="text-3xl md:text-4xl font-bold text-center mb-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-left mb-3">
               How do I create a free QR Code?
             </h1>
-            <p className="text-center text-muted-foreground mb-16">
+            <p className="text-left text-muted-foreground mb-16">
               We'll show you how in just three simple steps
             </p>
 
@@ -176,10 +176,10 @@ const Guides = () => {
 
           {/* FAQ Section */}
           <section className="mb-16">
-            <h1 className="text-3xl md:text-4xl font-bold text-center mb-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-left mb-3">
               I'm new to QR Codes. What should I know?
             </h1>
-            <p className="text-center text-muted-foreground mb-12">
+            <p className="text-left text-muted-foreground mb-12">
               Glad you asked! Here's a few basics to get you started.
             </p>
 

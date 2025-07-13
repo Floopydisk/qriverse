@@ -87,7 +87,7 @@ const Wifi = () => {
         <div className="max-w-2xl mx-auto">
           <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-8">
             <div className="space-y-4">
-              <h1 className="text-2xl font-bold text-foreground text-center">
+              <h1 className="text-2xl font-bold text-foreground text-left">
                 WiFi <span className="text-primary">QR Code</span>
               </h1>
 

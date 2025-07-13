@@ -250,7 +250,7 @@ const BarcodeGenerator = () => {
             <div className="max-w-2xl mx-auto mt-8">
               <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-8">
                 <div className="space-y-4">
-                  <h1 className="text-2xl font-bold text-foreground text-center">
+                  <h1 className="text-2xl font-bold text-foreground text-left">
                     Generate <span className="text-primary">Barcode</span>
                   </h1>
 

@@ -28,6 +28,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import GdprPolicy from "./pages/GdprPolicy";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -45,6 +46,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/signin" element={<SignIn />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
@@ -57,7 +59,7 @@ const App = () => {
                 <Route path="/generate" element={<AuthGuard><Generate /></AuthGuard>} />
                 <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
                 <Route path="/dynamic-qr" element={<AuthGuard><DynamicQR /></AuthGuard>} />
-                <Route path="/dynamic-qr/:id/edit" element={<AuthGuard><EditDynamicQR /></AuthGuard>} />
+                <Route path="/dynamic-qr/edit/:id" element={<AuthGuard><EditDynamicQR /></AuthGuard>} />
                 <Route path="/dynamic-qr/stats/:id" element={<AuthGuard><DynamicQRStats /></AuthGuard>} />
                 <Route path="/teams" element={<AuthGuard><Teams /></AuthGuard>} />
                 <Route path="/teams/:teamId" element={<AuthGuard><TeamDetail /></AuthGuard>} />
