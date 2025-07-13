@@ -1,140 +1,199 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// If running in Deno, ensure your editor supports Deno and has Deno types enabled.
-// If running in Node.js, replace with a Node.js HTTP server, e.g.:
-// import { createServer } from "http";
-// Otherwise, for Deno:
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
+import { createHmac } from 'https://deno.land/std@0.177.0/crypto/mod.ts'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-interface WebhookEvent {
-  eventType: string;
-  payload: any;
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
+interface WebhookEvent {
+  event_type: string;
+  data: any;
+  user_id?: string;
+  team_id?: string;
+}
+
+interface Webhook {
+  id: string;
+  user_id: string;
+  team_id?: string;
+  url: string;
+  events: string[];
+  secret: string;
+  active: boolean;
+  retry_count: number;
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { eventType, payload }: WebhookEvent = await req.json();
-
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get all active webhooks that listen to this event type
-    const { data: webhooks, error } = await supabase
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const body: WebhookEvent = await req.json();
+    const { event_type, data, user_id, team_id } = body;
+
+    if (!event_type || !data) {
+      return new Response(JSON.stringify({ error: 'Missing event_type or data' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Find relevant webhooks
+    let webhooksQuery = supabase
       .from('webhooks')
       .select('*')
       .eq('active', true)
-      .contains('events', [eventType]);
+      .contains('events', [event_type]);
 
-    if (error) {
-      console.error("Error fetching webhooks:", error);
-      throw error;
+    if (user_id) {
+      webhooksQuery = webhooksQuery.eq('user_id', user_id);
     }
 
-    // Trigger each webhook
-    const deliveryPromises = webhooks?.map(async (webhook) => {
-      try {
-        const webhookPayload = {
-          event: eventType,
-          timestamp: new Date().toISOString(),
-          data: payload,
-        };
+    if (team_id) {
+      webhooksQuery = webhooksQuery.or(`team_id.eq.${team_id},user_id.eq.${user_id}`);
+    }
 
-        // Create signature for webhook verification
-        const signature = await createSignature(JSON.stringify(webhookPayload), webhook.secret);
+    const { data: webhooks, error: webhooksError } = await webhooksQuery;
 
-        const response = await fetch(webhook.url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-QR-Labs-Signature': signature,
-            'X-QR-Labs-Event': eventType,
-          },
-          body: JSON.stringify(webhookPayload),
-        });
+    if (webhooksError) {
+      console.error('Error fetching webhooks:', webhooksError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch webhooks' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-        // Log the delivery
-        await supabase
-          .from('webhook_deliveries')
-          .insert([{
-            webhook_id: webhook.id,
-            event_type: eventType,
-            payload: webhookPayload,
-            status_code: response.status,
-            response_body: await response.text(),
-            delivered_at: new Date().toISOString(),
-            retry_count: 0,
-          }]);
+    if (!webhooks || webhooks.length === 0) {
+      return new Response(JSON.stringify({ message: 'No webhooks found for this event' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-        return { webhookId: webhook.id, success: true, status: response.status };
-      } catch (error) {
-        console.error(`Error delivering webhook ${webhook.id}:`, error);
-        
-        // Log failed delivery
-        await supabase
-          .from('webhook_deliveries')
-          .insert([{
-            webhook_id: webhook.id,
-            event_type: eventType,
-            payload: { event: eventType, data: payload },
-            status_code: null,
-            response_body: error.message,
-            delivered_at: null,
-            retry_count: 0,
-          }]);
+    // Trigger webhooks in parallel
+    const webhookPromises = webhooks.map(webhook => triggerWebhook(supabase, webhook, event_type, data));
+    const results = await Promise.allSettled(webhookPromises);
 
-        return { webhookId: webhook.id, success: false, error: error.message };
-      }
-    }) || [];
+    const deliveryResults = results.map((result, index) => ({
+      webhook_id: webhooks[index].id,
+      webhook_url: webhooks[index].url,
+      success: result.status === 'fulfilled',
+      error: result.status === 'rejected' ? result.reason : null
+    }));
 
-    const results = await Promise.all(deliveryPromises);
-
-    return new Response(JSON.stringify({
-      message: "Webhooks triggered",
-      results,
-      total: webhooks?.length || 0,
+    return new Response(JSON.stringify({ 
+      message: 'Webhooks triggered',
+      results: deliveryResults
     }), {
       status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
-  } catch (error: any) {
-    console.error("Error in trigger-webhooks function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+  } catch (error) {
+    console.error('Error in webhook trigger:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
-};
+});
 
-async function createSignature(payload: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(secret);
-  const payloadData = encoder.encode(payload);
+async function triggerWebhook(
+  supabase: any,
+  webhook: Webhook,
+  eventType: string,
+  eventData: any
+): Promise<void> {
+  const payload = {
+    event_type: eventType,
+    data: eventData,
+    timestamp: new Date().toISOString(),
+    webhook_id: webhook.id
+  };
+
+  const payloadString = JSON.stringify(payload);
   
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  
-  const signature = await crypto.subtle.sign('HMAC', key, payloadData);
-  const hashArray = Array.from(new Uint8Array(signature));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  
-  return `sha256=${hashHex}`;
+  // Generate signature
+  const signature = await generateSignature(payloadString, webhook.secret);
+
+  let statusCode = 0;
+  let responseBody = '';
+  let deliveredAt: string | null = null;
+
+  try {
+    const response = await fetch(webhook.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Webhook-Signature': signature,
+        'X-Webhook-Event': eventType,
+        'User-Agent': 'QRLabs-Webhooks/1.0'
+      },
+      body: payloadString
+    });
+
+    statusCode = response.status;
+    responseBody = await response.text();
+    
+    if (response.ok) {
+      deliveredAt = new Date().toISOString();
+    }
+
+  } catch (error) {
+    console.error(`Webhook delivery failed for ${webhook.url}:`, error);
+    statusCode = 0;
+    responseBody = error.message;
+  }
+
+  // Log the delivery attempt
+  try {
+    await supabase
+      .from('webhook_deliveries')
+      .insert({
+        webhook_id: webhook.id,
+        event_type: eventType,
+        payload: payload,
+        status_code: statusCode,
+        response_body: responseBody,
+        delivered_at: deliveredAt,
+        retry_count: 0
+      });
+  } catch (logError) {
+    console.error('Failed to log webhook delivery:', logError);
+  }
+
+  // If delivery failed and we have retries left, schedule retry
+  if (!deliveredAt && webhook.retry_count > 0) {
+    // In a production environment, you might want to use a queue system
+    // For now, we'll just log that a retry would be scheduled
+    console.log(`Webhook delivery failed, would schedule retry for ${webhook.url}`);
+  }
 }
 
-serve(handler);
+async function generateSignature(payload: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const secretBytes = encoder.encode(secret);
+  const payloadBytes = encoder.encode(payload);
+  
+  const hmac = await createHmac('sha256', secretBytes).update(payloadBytes).digest();
+  const signature = Array.from(new Uint8Array(hmac))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+    
+  return `sha256=${signature}`;
+}

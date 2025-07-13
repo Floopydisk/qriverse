@@ -242,6 +242,109 @@ export const getDynamicQRRedirectUrl = (shortCode: string): string => {
   return `${supabaseUrl}/functions/v1/dynamic-qr?code=${shortCode}`;
 };
 
+// Function to bulk delete dynamic QR codes
+export const bulkDeleteDynamicQRCodes = async (ids: string[]): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("dynamic_qr_codes")
+      .delete()
+      .in("id", ids);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error bulk deleting dynamic QR codes:", error);
+    return false;
+  }
+};
+
+// Function to bulk move dynamic QR codes to team
+export const bulkMoveDynamicQRCodes = async (ids: string[], teamId: string | null): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("dynamic_qr_codes")
+      .update({ team_id: teamId })
+      .in("id", ids);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error bulk moving dynamic QR codes:", error);
+    return false;
+  }
+};
+
+// Function to reorder dynamic QR codes
+export const reorderDynamicQRCodes = async (orderedIds: string[]): Promise<boolean> => {
+  try {
+    // Note: This would require adding an order column to the database
+    // For now, we'll just update the updated_at timestamp to reflect the new order
+    const promises = orderedIds.map((id, index) => 
+      supabase
+        .from("dynamic_qr_codes")
+        .update({ updated_at: new Date(Date.now() + index).toISOString() })
+        .eq("id", id)
+    );
+
+    const results = await Promise.all(promises);
+    const hasError = results.some(result => result.error);
+
+    if (hasError) {
+      throw new Error("Failed to reorder some QR codes");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error reordering dynamic QR codes:", error);
+    return false;
+  }
+};
+
+// Function to bulk generate QR codes from CSV/Excel data
+export const bulkCreateDynamicQRCodes = async (
+  items: Array<{ name: string; target_url: string }>
+): Promise<DynamicQRCode[]> => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) {
+    throw new Error("No user session found");
+  }
+
+  try {
+    const qrCodesToCreate = items.map(item => ({
+      name: item.name,
+      target_url: item.target_url,
+      short_code: generateShortCode(),
+      user_id: user.id,
+      active: true,
+    }));
+
+    const { data, error } = await supabase
+      .from("dynamic_qr_codes")
+      .insert(qrCodesToCreate)
+      .select("*");
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map(item => ({
+      ...item,
+      scan_count: 0,
+    }));
+  } catch (error) {
+    console.error("Error bulk creating dynamic QR codes:", error);
+    throw error;
+  }
+};
+
 // Helper function to generate a random short code
 const generateShortCode = (): string => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

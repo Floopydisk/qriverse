@@ -1,112 +1,74 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
 
-// Create a storage bucket for avatars with proper RLS policies
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-serve(async (req) => {
   try {
-    // Create a Supabase client with the admin key
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    // Initialize Supabase client with service role key
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Check if avatars bucket already exists
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Check if the avatars bucket exists
-    const { data: buckets, error: bucketError } = await supabase
-      .storage
-      .listBuckets();
-      
-    if (bucketError) {
-      throw bucketError;
-    }
-    
-    const avatarBucketExists = buckets.some(bucket => bucket.name === 'avatars');
-    
-    if (!avatarBucketExists) {
-      // Create the avatars bucket
-      const { error: createError } = await supabase
-        .storage
-        .createBucket('avatars', {
-          public: true,
-        });
-        
-      if (createError) {
-        throw createError;
-      }
-      
-      // Create RLS policies for the avatars bucket
-      // Anyone can read avatars (public read access)
-      const { error: readPolicyError } = await supabase
-        .rpc('create_storage_policy', {
-          bucket_name: 'avatars',
-          policy_name: 'Avatar Read Policy',
-          definition: 'true', // Public read access
-          operation: 'SELECT'
-        });
-        
-      if (readPolicyError) {
-        throw readPolicyError;
-      }
-      
-      // Only authenticated users can upload avatars to their own folder
-      const { error: insertPolicyError } = await supabase
-        .rpc('create_storage_policy', {
-          bucket_name: 'avatars',
-          policy_name: 'Avatar Insert Policy',
-          definition: '(storage.foldername(name))[1] = auth.uid()::text', 
-          operation: 'INSERT'
-        });
-        
-      if (insertPolicyError) {
-        throw insertPolicyError;
-      }
-      
-      // Only owners can update their avatars
-      const { error: updatePolicyError } = await supabase
-        .rpc('create_storage_policy', {
-          bucket_name: 'avatars',
-          policy_name: 'Avatar Update Policy',
-          definition: '(storage.foldername(name))[1] = auth.uid()::text',
-          operation: 'UPDATE'
-        });
-        
-      if (updatePolicyError) {
-        throw updatePolicyError;
-      }
-      
-      // Only owners can delete their avatars
-      const { error: deletePolicyError } = await supabase
-        .rpc('create_storage_policy', {
-          bucket_name: 'avatars',
-          policy_name: 'Avatar Delete Policy',
-          definition: '(storage.foldername(name))[1] = auth.uid()::text',
-          operation: 'DELETE'
-        });
-        
-      if (deletePolicyError) {
-        throw deletePolicyError;
-      }
-    }
-    
-    return new Response(
-      JSON.stringify({ 
-        message: avatarBucketExists 
-          ? "Avatars bucket already exists" 
-          : "Avatars bucket created with policies" 
-      }),
-      {
-        headers: { "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { "Content-Type": "application/json" },
+    if (bucketsError) {
+      console.error('Error listing buckets:', bucketsError);
+      return new Response(JSON.stringify({ error: 'Failed to check existing buckets' }), {
         status: 500,
-      }
-    );
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const avatarsBucketExists = buckets?.some(bucket => bucket.name === 'avatars');
+
+    if (avatarsBucketExists) {
+      return new Response(JSON.stringify({ 
+        message: 'Avatars bucket already exists',
+        bucket_name: 'avatars'
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Create the avatars bucket
+    const { data: bucket, error: createError } = await supabase.storage.createBucket('avatars', {
+      public: true,
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+      fileSizeLimit: 5242880, // 5MB
+    });
+
+    if (createError) {
+      console.error('Error creating avatars bucket:', createError);
+      return new Response(JSON.stringify({ error: 'Failed to create avatars bucket' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({ 
+      message: 'Avatars bucket created successfully',
+      bucket_name: 'avatars',
+      bucket_data: bucket
+    }), {
+      status: 201,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Error in create-avatar-bucket function:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });

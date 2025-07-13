@@ -196,13 +196,39 @@ const DynamicQRCodeList = ({
     onSelectionChange(newSelection);
   };
 
+  const reorderMutation = useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      const { reorderDynamicQRCodes } = await import('@/lib/api');
+      return reorderDynamicQRCodes(orderedIds);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dynamicQRCodes'] });
+      toast({
+        title: 'Success',
+        description: 'QR codes reordered successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to reorder QR codes',
+        variant: 'destructive',
+      });
+    }
+  });
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) {
       return;
     }
 
-    // TODO: Implement reordering logic for dynamic QR codes
-    console.log('Reordering dynamic QR codes:', result);
+    const newItems = Array.from(dynamicQRCodes);
+    const [reorderedItem] = newItems.splice(result.source.index, 1);
+    newItems.splice(result.destination.index, 0, reorderedItem);
+
+    // Extract the new order of IDs
+    const orderedIds = newItems.map(item => item.id);
+    reorderMutation.mutate(orderedIds);
   };
 
   if (isLoading) {

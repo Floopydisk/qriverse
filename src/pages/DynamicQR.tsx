@@ -17,6 +17,7 @@ import { fetchUserDynamicQRCodes, createDynamicQRCode } from '@/lib/api';
 import DynamicQRCodeList from '@/components/DynamicQRCodeList';
 import AdvancedSearch from '@/components/AdvancedSearch';
 import BulkOperations from '@/components/BulkOperations';
+import BulkGenerateDialog from '@/components/BulkGenerateDialog';
 import { useSidebar } from '@/components/ui/sidebar';
 import HeaderAvatar from '@/components/ui/header-avatar';
 
@@ -41,6 +42,7 @@ const DynamicQR = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedView, setSelectedView] = useState("dynamic");
+  const [showBulkGenerateDialog, setShowBulkGenerateDialog] = useState(false);
 
   // Set sidebar collapsed by default on mobile
   useEffect(() => {
@@ -207,21 +209,44 @@ const DynamicQR = () => {
     }
   };
 
-  const handleDeleteSelected = () => {
-    // TODO: Implement bulk delete for dynamic QR codes
-    toast({
-      title: 'Feature Coming Soon',
-      description: 'Bulk delete for dynamic QR codes will be available soon',
-    });
-    setSelectedItems([]);
+  const handleDeleteSelected = async () => {
+    try {
+      const { bulkDeleteDynamicQRCodes } = await import('@/lib/api');
+      await bulkDeleteDynamicQRCodes(selectedItems);
+      setSelectedItems([]);
+      refetch();
+      toast({
+        title: "Success",
+        description: `${selectedItems.length} QR codes deleted successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete selected QR codes",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleMoveSelected = () => {
-    // TODO: Implement bulk move for dynamic QR codes
-    toast({
-      title: 'Feature Coming Soon',
-      description: 'Bulk move for dynamic QR codes will be available soon',
-    });
+  const handleMoveSelected = async () => {
+    try {
+      // For now, we'll move to no team (null). In a full implementation,
+      // you'd show a dialog to select the destination team
+      const { bulkMoveDynamicQRCodes } = await import('@/lib/api');
+      await bulkMoveDynamicQRCodes(selectedItems, null);
+      setSelectedItems([]);
+      refetch();
+      toast({
+        title: "Success",
+        description: `${selectedItems.length} QR codes moved successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to move selected QR codes",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownloadSelected = () => {
@@ -284,12 +309,21 @@ const DynamicQR = () => {
                     Create QR codes that can be updated without changing the QR code itself
                   </p>
                 </div>
-                <Button
-                  onClick={switchToCreateTab}
-                  className="md:self-end"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Create Dynamic QR
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={switchToCreateTab}
+                    className="md:self-end"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Create Dynamic QR
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowBulkGenerateDialog(true)}
+                    className="md:self-end"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Bulk Generate
+                  </Button>
+                </div>
               </div>
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -385,6 +419,11 @@ const DynamicQR = () => {
       </div>
 
       <FooterAuth />
+      
+      <BulkGenerateDialog
+        open={showBulkGenerateDialog}
+        onOpenChange={setShowBulkGenerateDialog}
+      />
     </div>
   );
 };

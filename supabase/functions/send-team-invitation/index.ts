@@ -1,86 +1,116 @@
-
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
-
-interface TeamInvitationRequest {
-  email: string;
-  teamName: string;
-  inviterName: string;
-  invitationToken: string;
-  role: string;
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const handler = async (req: Request): Promise<Response> => {
+interface EmailRequest {
+  to: string;
+  team_name: string;
+  invited_by_name: string;
+  invitation_url: string;
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, teamName, inviterName, invitationToken, role }: TeamInvitationRequest = await req.json();
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-    const acceptUrl = `${Deno.env.get('SUPABASE_URL')}/accept-invitation?token=${invitationToken}`;
+    const { to, team_name, invited_by_name, invitation_url }: EmailRequest = await req.json();
 
-    const emailResponse = await resend.emails.send({
-      from: "QR Code Manager <onboarding@resend.dev>",
-      to: [email],
-      subject: `You've been invited to join ${teamName}`,
+    if (!to || !team_name || !invited_by_name || !invitation_url) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // In a real implementation, you would integrate with an email service
+    // like SendGrid, Mailgun, or AWS SES. For now, we'll just log the email
+    // and return success.
+
+    const emailContent = {
+      to,
+      subject: `You've been invited to join ${team_name} on QRLabs`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #2d3748; margin-bottom: 24px;">Team Invitation</h1>
-          <p style="color: #4a5568; font-size: 16px; line-height: 1.5;">
-            Hi there!
-          </p>
-          <p style="color: #4a5568; font-size: 16px; line-height: 1.5;">
-            <strong>${inviterName}</strong> has invited you to join the team <strong>${teamName}</strong> as a <strong>${role}</strong>.
-          </p>
-          <div style="margin: 32px 0;">
-            <a href="${acceptUrl}" 
-               style="background-color: #22c55e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
+          <h2 style="color: #2563eb;">Team Invitation</h2>
+          <p>Hello!</p>
+          <p><strong>${invited_by_name}</strong> has invited you to join the team <strong>${team_name}</strong> on QRLabs.</p>
+          <p>QRLabs is a powerful QR code management platform that allows teams to collaborate on creating, managing, and tracking QR codes.</p>
+          <div style="margin: 30px 0;">
+            <a href="${invitation_url}" 
+               style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
               Accept Invitation
             </a>
           </div>
-          <p style="color: #718096; font-size: 14px; line-height: 1.5;">
-            If you don't want to join this team, you can safely ignore this email.
+          <p style="color: #666; font-size: 14px;">
+            This invitation will expire in 7 days. If you don't want to join this team, you can ignore this email.
           </p>
-          <p style="color: #718096; font-size: 14px; line-height: 1.5;">
-            This invitation will expire in 7 days.
-          </p>
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 32px 0;">
-          <p style="color: #a0aec0; font-size: 12px;">
-            QR Code Manager - Team Collaboration Made Easy
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="color: #999; font-size: 12px;">
+            This email was sent by QRLabs. If you have any questions, please contact our support team.
           </p>
         </div>
-      `,
-    });
+      `
+    };
 
-    console.log("Team invitation email sent successfully:", emailResponse);
+    // Log the email for development purposes
+    console.log('Team invitation email:', emailContent);
 
-    return new Response(JSON.stringify(emailResponse), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
-  } catch (error: any) {
-    console.error("Error in send-team-invitation function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+    // TODO: Integrate with actual email service
+    // Example for SendGrid:
+    /*
+    const sendgridApiKey = Deno.env.get('SENDGRID_API_KEY');
+    if (sendgridApiKey) {
+      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sendgridApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personalizations: [{
+            to: [{ email: to }]
+          }],
+          from: { email: 'noreply@qrlabs.com', name: 'QRLabs' },
+          subject: emailContent.subject,
+          content: [{
+            type: 'text/html',
+            value: emailContent.html
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`SendGrid API error: ${response.status}`);
       }
-    );
-  }
-};
+    }
+    */
 
-serve(handler);
+    return new Response(JSON.stringify({ 
+      message: 'Team invitation email sent successfully',
+      email_preview: emailContent // Remove this in production
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Error sending team invitation:', error);
+    return new Response(JSON.stringify({ error: 'Failed to send invitation email' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});

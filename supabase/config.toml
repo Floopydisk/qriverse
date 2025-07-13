@@ -1,5 +1,32 @@
 
 project_id = "kienjbeckgfsajjxjqhs"
 
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+
 [functions.dynamic-qr]
+verify_jwt = false
+
+[functions.qr-api]
+verify_jwt = false
+
+[functions.trigger-webhooks]
+verify_jwt = false
+
+[functions.send-team-invitation]
+verify_jwt = false
+
+[functions.create-avatar-bucket]
 verify_jwt = false
