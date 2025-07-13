@@ -114,7 +114,7 @@ const Profile = () => {
       
       <main className="flex-1 container mx-auto px-4 sm:px-6 pt-24 pb-12 max-w-[1400px]">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold mb-8">Account Settings</h1>
+          <h1 className="text-2xl font-bold mb-8 text-left">Account Settings</h1>
           
           <div className="space-y-8">
             {/* Avatar Upload Card */}
