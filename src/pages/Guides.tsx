@@ -21,10 +21,13 @@ const Guides = () => {
         <div className="container mx-auto px-4 max-w-5xl">
           {/* How to create a QR code section */}
           <section className="mb-20">
-            <h1 className="text-3xl md:text-4xl font-bold text-left mb-3">
+            {/* Background gradients */}
+            <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] 3xl:w-[800px] 3xl:h-[800px] 4xl:w-[1000px] 4xl:h-[1000px] rounded-full bg-green-800/20 blur-[120px] 3xl:blur-[150px] 4xl:blur-[200px] pointer-events-none"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] 3xl:w-[700px] 3xl:h-[700px] 4xl:w-[900px] 4xl:h-[900px] rounded-full bg-green-600/10 blur-[150px] 3xl:blur-[180px] 4xl:blur-[220px] pointer-events-none"></div>
+            <h1 className="text-3xl md:text-4xl font-bold text-center mb-3">
               How do I create a free QR Code?
             </h1>
-            <p className="text-left text-muted-foreground mb-16">
+            <p className="text-center text-muted-foreground mb-16">
               We'll show you how in just three simple steps
             </p>
 
@@ -176,23 +179,23 @@ const Guides = () => {
 
           {/* FAQ Section */}
           <section className="mb-16">
-            <h1 className="text-3xl md:text-4xl font-bold text-left mb-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-center mb-3">
               I'm new to QR Codes. What should I know?
             </h1>
-            <p className="text-left text-muted-foreground mb-12">
+            <p className="text-center text-muted-foreground mb-12">
               Glad you asked! Here's a few basics to get you started.
             </p>
 
             <div className="grid md:grid-cols-5 gap-8">
               <div className="md:col-span-2">
                 <img 
-                  src="/lovable-uploads/62125209-7b35-467b-8366-51c212b92878.png" 
-                  alt="Hand holding QR codes" 
+                  src="/img/accordion.png" 
+                  alt="Person Resting on a QR code" 
                   className="w-full h-auto rounded-xl"
                 />
               </div>
               <div className="md:col-span-3">
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="single" collapsible className="w-full mt-8">
                   <AccordionItem value="item-1">
                     <AccordionTrigger className="hover:no-underline">
                       What is a QR Code?
@@ -228,18 +231,38 @@ const Guides = () => {
                       </p>
                     </AccordionContent>
                   </AccordionItem>
+                  <AccordionItem value="item-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      Can I create my own QR Codes?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        Yes, you can easily create your own QR codes using various online generators. Simply enter the information you want to encode (like a URL, text, or contact info), customize the design if desired, and generate the code. Many platforms also allow you to track scans and manage your codes.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-5">
+                    <AccordionTrigger className="hover:no-underline">
+                      Are QR Codes secure?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        QR codes themselves are not inherently secure, as they can be easily generated and modified. However, the content they link to can be secured through encryption and other security measures. Always ensure you trust the source of a QR code before scanning it, as malicious codes can lead to phishing sites or malware.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
                 </Accordion>
               </div>
             </div>
           </section>
 
           {/* CTA Banner */}
-          <section className="bg-blue-500 rounded-xl p-8 text-center">
+          <section className="max-w-4xl 3xl:max-w-6xl 4xl:max-w-8xl mx-auto bg-gradient-to-r from-primary/20 to-green-900/20 p-12 3xl:p-16 4xl:p-20 rounded-2xl 3xl:rounded-3xl 4xl:rounded-4xl border border-primary/30 text-center">
             <h2 className="text-2xl font-bold text-white mb-3">When in doubt, go PRO</h2>
             <p className="text-white/90 mb-6 max-w-2xl mx-auto">
               All of our Dynamic QR Codes are mistake-proof. Made a typo? Fixed. Link no longer working? Replaced. Old images or files? Refreshed.
             </p>
-            <Button className="bg-white text-blue-600 hover:bg-white/90" onClick={() => navigate("/signin")}>
+            <Button className="bg-white text-green-700 hover:bg-white/90" onClick={() => navigate("/signin")}>
               CREATE FREE ACCOUNT
             </Button>
           </section>

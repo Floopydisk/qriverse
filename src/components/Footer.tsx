@@ -121,9 +121,6 @@ const Footer = () => {
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
               <span className="text-xs text-foreground/80">All systems operational</span>
             </div>
-            
-            <a href="#" className="text-xs text-muted-foreground hover:text-primary">Status</a>
-            <a href="#" className="text-xs text-muted-foreground hover:text-primary">Sitemap</a>
           </div>
         </div>
       </div>
