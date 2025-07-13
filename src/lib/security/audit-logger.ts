@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 export interface AuditEvent {
   id: string;
   timestamp: Date;
@@ -263,9 +264,9 @@ class AuditLogger {
   }
 
   private generateEventId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const randomBytes = crypto.randomBytes(12).toString('hex');
+    return `${Date.now()}-${randomBytes}`;
   }
-
   private getCurrentUserId(): string | undefined {
     // Try to get user ID from various sources
     try {
