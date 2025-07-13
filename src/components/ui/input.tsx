@@ -18,6 +18,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         const sanitized = e.target.value
           .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
           .replace(/javascript:/gi, '') // Remove javascript: URLs
+          .replace(/data:/gi, '') // Remove data: URLs
+          .replace(/vbscript:/gi, '') // Remove vbscript: URLs
           .replace(/on\w+\s*=/gi, ''); // Remove event handlers
         
         if (sanitized !== e.target.value) {
