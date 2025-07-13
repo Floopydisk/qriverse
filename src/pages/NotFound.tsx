@@ -55,18 +55,18 @@ const NotFound = () => {
           <Container className="mt-5">
             <div className="flex mt-6">
               <p className="text-4xl font-extrabold text-blue600 sm:text-5xl">
-                Oops!
+                Hmm...
               </p>
-              <div className="ml-6">
+              <div className="ml-6 text-left">
                 <div className="pl-6 border-l border-gray500">
                   <h2 className="text-3xl font-bold tracking-tight text-gray900 dark:text-white sm:text-4xl">
-                    Well this is quite......embarrassing!
+                    This is quite awkward!
                   </h2>
                   <p className="mt-3 text-lg text-gray500 dark:text-white">
-                    You seem to be lost......that makes both of us.
+                    You're not supposed to see this.
                   </p>
                   <p className="mt-0 text-lg text-gray500 dark:text-white">
-                    It's not your fault though. I probably broke something or haven't finished developing it.
+                    Do me a favour and click that little green button for me cause I can't focus while you're here😑
                   </p>
                 </div>
                 <div className="flex mt-10 space-x-3 sm:pl-6">
@@ -74,7 +74,7 @@ const NotFound = () => {
                     variant="default"
                     className="justify-start h-12 text-base text-white hover:bg-black"
                     onClick={() => handleNavigation("/")}>
-                      Go home
+                      Go home....please
                   </Button>
                 </div>
               </div>
