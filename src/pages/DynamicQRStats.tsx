@@ -9,7 +9,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import Header from '@/components/Header';
+// import Header from '@/components/Header';
 import FooterAuth from '@/components/FooterAuth';
 import FloatingCircles from '@/components/FloatingCircles';
 import { fetchDynamicQRCode, fetchDynamicQRCodeScanStats } from '@/lib/api';
@@ -23,6 +23,7 @@ import {
   StatsSummaryCardsSkeleton, 
   ChartSkeletons as DetailedStatsSectionSkeleton 
 } from '@/components/dynamicQR/DynamicQRStatsSkeleton';
+import HeaderAvatar from '@/components/ui/header-avatar';
 
 // Color palette for charts
 const COLORS = ['#10B981', '#0EA5E9', '#8B5CF6', '#F43F5E', '#F59E0B', '#64748B'];
@@ -67,7 +68,7 @@ const DynamicQRStats = () => {
   if (isQrCodeError || isStatsError) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <HeaderAvatar />
         <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-red-600">Error</h1>
@@ -88,7 +89,7 @@ const DynamicQRStats = () => {
   if (!qrCode && !isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <HeaderAvatar />
         <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
           <div className="text-center">
             <h1 className="text-2xl font-bold">QR Code Not Found</h1>
@@ -108,10 +109,10 @@ const DynamicQRStats = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <FloatingCircles />
-      <Header />
+      <HeaderAvatar />
       
-      <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 container mx-auto px-4 pb-12">
+        <div className="max-w-7xl ">
           {/* Mobile Navigation */}
           <div className="flex items-center justify-between mb-6 lg:hidden">
             <Button

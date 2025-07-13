@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import FloatingCircles from '@/components/FloatingCircles';
+import HeaderAvatar from '@/components/ui/header-avatar';
 
 const WebhookManagement = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -139,8 +140,9 @@ const WebhookManagement = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
+      <HeaderAvatar />
       
       {/* Sidebar */}
       <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-background border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>

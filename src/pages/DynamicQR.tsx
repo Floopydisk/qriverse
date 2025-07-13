@@ -18,6 +18,8 @@ import DynamicQRCodeList from '@/components/DynamicQRCodeList';
 import AdvancedSearch from '@/components/AdvancedSearch';
 import BulkOperations from '@/components/BulkOperations';
 import { useSidebar } from '@/components/ui/sidebar';
+import HeaderAvatar from '@/components/ui/header-avatar';
+
 
 interface SearchFilters {
   query: string;
@@ -235,7 +237,7 @@ const DynamicQR = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-
+      <HeaderAvatar />
       <div className="flex-1 flex w-full relative">
         {/* Sidebar */}
         <div className={cn(

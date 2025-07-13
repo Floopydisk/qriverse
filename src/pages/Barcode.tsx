@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Barcode from "react-barcode";
 import { fetchUserBarcodes, createBarcode, deleteBarcode, BarcodeData, updateBarcode } from "@/lib/api";
+import HeaderAvatar from "@/components/ui/header-avatar";
 
 const BarcodeGenerator = () => {
   const [text, setText] = useState("");
@@ -208,6 +209,7 @@ const BarcodeGenerator = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
+      <HeaderAvatar />
       
       <div className="flex-1 flex w-full relative">
         {/* Sidebar */}

@@ -4,22 +4,11 @@ import { useNavigate } from "react-router-dom";
 import FooterAuth from "@/components/FooterAuth";
 import FloatingCircles from "@/components/FloatingCircles";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   QrCode,
   Plus,
   FolderPlus,
-  LogOut,
-  User,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -32,7 +21,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import QRCodeList from "@/components/QRCodeList";
@@ -44,6 +32,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import HeaderAvatar from "@/components/ui/header-avatar";
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -57,6 +46,10 @@ const Dashboard = () => {
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // const { getAvatarUrl } = useAvatar();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  // const [profileData, setProfileData] = useState<any>(null);
 
 
   // Set sidebar collapsed by default on mobile
@@ -103,16 +96,6 @@ const Dashboard = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate("/");
-      setMobileMenuOpen(false);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   let pageTitle = "Static QR Codes";
   if (selectedView === "barcode") pageTitle = "Barcodes";
   if (selectedView === "static") pageTitle = "Static QR Codes";
@@ -120,6 +103,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full">
+      <HeaderAvatar />
       <FloatingCircles />
 
       <SidebarProvider>
@@ -158,34 +142,6 @@ const Dashboard = () => {
             // On mobile, don't push content (overlay instead)
             isMobile && 'ml-0'
           )}>
-            {/* Profile Header */}
-            <div className="sticky top-0 z-10 backdrop-blur-sm ">
-              <div className="flex justify-end p-4">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={user?.user_metadata?.avatar_url} />
-                        <AvatarFallback>
-                          {user?.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end">
-                    <DropdownMenuItem onClick={() => navigate("/profile")}>
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
 
             <div className="container mx-auto px-4 pt-0 pb-12">
               <div className="max-w-7xl mx-auto space-y-8 mt-8">

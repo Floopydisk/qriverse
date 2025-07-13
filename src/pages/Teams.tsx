@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
+// import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FloatingCircles from '@/components/FloatingCircles';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import TeamsList from '@/components/teams/TeamsList';
 import CreateTeamDialog from '@/components/teams/CreateTeamDialog';
 import TeamInvitations from '@/components/teams/TeamInvitations';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import HeaderAvatar from "@/components/ui/header-avatar"
 
 const Teams = () => {
   const navigate = useNavigate();
@@ -46,9 +47,9 @@ const Teams = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-      
+      <HeaderAvatar />
       {/* Sidebar */}
       <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-background border-r border-border h-screen fixed top-0 left-0 transition-all duration-200 z-10`}>
         <DashboardSidebar 

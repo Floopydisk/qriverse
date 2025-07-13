@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Header from '@/components/Header';
+// import Header from '@/components/Header';
 import FooterAuth from '@/components/FooterAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchDynamicQRCode, updateDynamicQRCode } from '@/lib/api';
 import FloatingCircles from '@/components/FloatingCircles';
+import HeaderAvatar from '@/components/ui/header-avatar';
 
 const EditDynamicQR = () => {
   const { id } = useParams<{ id: string }>();
@@ -105,7 +106,7 @@ const EditDynamicQR = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <HeaderAvatar />
         <main className="flex-1 container mx-auto px-4 pt-24 pb-12 flex items-center justify-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </main>
@@ -117,7 +118,7 @@ const EditDynamicQR = () => {
   if (!qrCode) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <HeaderAvatar />
         <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
           <div className="text-center">
             <h1 className="text-2xl font-bold">QR Code Not Found</h1>
@@ -137,7 +138,7 @@ const EditDynamicQR = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <FloatingCircles />
-      <Header />
+      <HeaderAvatar />
       
       <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
         <div className="max-w-2xl mx-auto">

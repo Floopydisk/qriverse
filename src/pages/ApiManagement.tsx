@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import FloatingCircles from '@/components/FloatingCircles';
+import HeaderAvatar from '@/components/ui/header-avatar';
 
 const ApiManagement = () => {
   const [newKeyName, setNewKeyName] = useState('');
@@ -91,7 +92,8 @@ const ApiManagement = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen flex flex-col w-full">
+      <HeaderAvatar />
       <FloatingCircles />
       
       {/* Sidebar */}
@@ -101,7 +103,6 @@ const ApiManagement = () => {
           toggleSidebar={toggleSidebar}
         />
       </div>
-      
       <div className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} p-8`}>
 
         <div className="max-w-6xl mx-auto">

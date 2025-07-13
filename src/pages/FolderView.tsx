@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchQRCodesInFolder, fetchUserFolders, Folder } from "@/lib/api";
-import Header from "@/components/Header";
+// import Header from "@/components/Header";
 import FooterAuth from "@/components/FooterAuth";
 import FloatingCircles from "@/components/FloatingCircles";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import QRCodeList from "@/components/QRCodeList";
+import HeaderAvatar from "@/components/ui/header-avatar";
 
 const FolderView = () => {
   const { folderId } = useParams<{ folderId: string }>();
@@ -65,7 +66,7 @@ const FolderView = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-      <Header />
+      <HeaderAvatar />
 
       <div className="flex flex-1 w-full">
         {/* Sidebar */}

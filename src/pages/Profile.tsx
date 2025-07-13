@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchUserProfile, updateUserProfile, UserProfile } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import Header from "@/components/Header";
+import Header from "@/components/Header_";
 import AvatarUpload from "@/components/profile/AvatarUpload";
 import { ProfileInfoForm } from "@/components/profile/ProfileInfoForm";
 import EmailForm from "@/components/profile/EmailForm";

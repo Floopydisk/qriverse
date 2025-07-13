@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Header from '@/components/Header';
+// import Header from '@/components/Header';
 import FooterAuth from '@/components/FooterAuth';
 import FloatingCircles from '@/components/FloatingCircles';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchUserTeams, fetchTeamMembers, fetchTeamInvitations, inviteToTeam, removeMember, updateMemberRole, fetchQRCodesInTeam } from '@/lib/api/teams';
 import TeamInviteDialog from '@/components/teams/TeamInviteDialog';
 import TeamQRCodes from '@/components/teams/TeamQRCodes';
+import HeaderAvatar from '@/components/ui/header-avatar';
 
 const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
@@ -107,7 +108,7 @@ const TeamDetail = () => {
     return (
       <div className="min-h-screen flex flex-col w-full">
         <FloatingCircles />
-        <Header />
+        <HeaderAvatar />
         <main className="flex-1 container mx-auto px-4 pt-32 pb-12">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Team not found</h1>
@@ -125,7 +126,7 @@ const TeamDetail = () => {
   return (
     <div className="min-h-screen flex flex-col w-full">
       <FloatingCircles />
-      <Header />
+      <HeaderAvatar />
 
       <main className="flex-1 container mx-auto px-4 pt-32 pb-12">
         <div className="max-w-6xl mx-auto space-y-8">
