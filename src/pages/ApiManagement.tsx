@@ -106,8 +106,10 @@ const ApiManagement = () => {
       <div className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} p-8`}>
 
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold">API Management</h1>
+          <div className="mb-8 text-left">
+            <h1 className="text-3xl font-bold">
+              <span className='text-primary'>API</span> Management
+              </h1>
             <p className="text-muted-foreground">Manage your API keys and monitor usage</p>
           </div>
 

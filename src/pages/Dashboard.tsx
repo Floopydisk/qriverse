@@ -148,8 +148,11 @@ const Dashboard = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h1 className="text-xl md:text-2xl font-bold">
+                      <h1 className="hidden text-xl md:text-2xl font-bold">
                         {pageTitle}
+                      </h1>
+                      <h1 className="text-x1 md:text-2xl font-bold">
+                        <span className="text-primary">Static QR</span> codes
                       </h1>
                     </div>
                     <p className="text-muted-foreground text-sm md:text-base">Manage your static QR codes</p>

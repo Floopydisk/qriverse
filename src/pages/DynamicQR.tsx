@@ -302,10 +302,10 @@ const DynamicQR = () => {
             <div className="max-w-6xl mx-auto space-y-8 mt-8">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold">
+                  <h1 className="text-3xl text-left font-bold">
                     <span className="text-primary">Dynamic QR</span> Codes
                   </h1>
-                  <p className="text-muted-foreground mt-1">
+                  <p className="text-muted-foreground text-left mt-1">
                     Create QR codes that can be updated without changing the QR code itself
                   </p>
                 </div>

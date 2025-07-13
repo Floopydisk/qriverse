@@ -77,7 +77,7 @@ const HeaderAvatar = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-3">
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-10 w-10">
                 <AvatarImage src={avatarUrl || undefined} />
                 <AvatarFallback className="bg-muted text-primary-foreground">
                   {(displayName || user.email || "U").charAt(0).toUpperCase()}

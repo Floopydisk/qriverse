@@ -61,7 +61,7 @@ const Teams = () => {
       <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} p-8`}>
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <div>
+            <div className='text-left'>
               <h1 className="text-3xl font-bold">
                 <span className="text-primary">Team</span> Management
               </h1>
