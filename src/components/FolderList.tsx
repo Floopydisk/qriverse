@@ -64,7 +64,7 @@ const FolderList = () => {
   });
 
   const handleOpenFolder = (id: string) => {
-    navigate(`/dashboard/folder/${id}`);
+    navigate(`/folder/${id}`);
     toast({
       title: "Folder Opened",
       description: "Loading folder contents..."
