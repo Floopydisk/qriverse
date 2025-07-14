@@ -99,26 +99,81 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0C0B10] text-white">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-24">
-        <div className="max-w-md mx-auto">
-          <Card className="bg-card/50 backdrop-blur-sm border border-border">
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <Shield className="h-5 w-5 text-green-500" />
-                <span className="text-sm text-green-500 font-medium">Secure Authentication</span>
+      <main className="flex-1 flex">
+        {/* Desktop Split Layout */}
+        <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-24 h-24 bg-green-500/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-secondary/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+          </div>
+          
+          {/* Content */}
+          <div className="relative z-10 max-w-lg text-center px-8">
+            <div className="mb-8">
+              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary to-green-500 rounded-2xl flex items-center justify-center shadow-2xl">
+                <Shield className="h-12 w-12 text-white" />
               </div>
-              <CardTitle className="text-2xl font-bold">
-                {isSignUp ? "Create Account" : "Welcome Back"}
-              </CardTitle>
-              <CardDescription>
-                {isSignUp 
-                  ? "Sign up with enhanced security features" 
-                  : "Sign in to your secure account"}
-              </CardDescription>
-            </CardHeader>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-green-500 bg-clip-text text-transparent mb-4">
+                QR Universe
+              </h1>
+              <p className="text-xl text-muted-foreground mb-6">
+                Advanced QR code and barcode management with enterprise-grade security
+              </p>
+            </div>
+            
+            <div className="space-y-4 text-left">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-card/30 backdrop-blur-sm border border-border/50">
+                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <Shield className="h-4 w-4 text-green-500" />
+                </div>
+                <span className="text-sm">End-to-end encryption & security</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-card/30 backdrop-blur-sm border border-border/50">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-blue-500 rounded-sm"></div>
+                </div>
+                <span className="text-sm">Dynamic QR codes with analytics</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-card/30 backdrop-blur-sm border border-border/50">
+                <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-sm"></div>
+                </div>
+                <span className="text-sm">Team collaboration & API access</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Authentication Form */}
+        <div className="flex-1 lg:max-w-md xl:max-w-lg flex items-center justify-center p-4 lg:p-8">
+          <div className="w-full max-w-md mx-auto">
+            <Card className="bg-card/80 backdrop-blur-sm border border-border shadow-2xl">
+              <CardHeader className="space-y-4">
+                {/* Mobile Logo */}
+                <div className="lg:hidden text-center mb-4">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-green-500 rounded-xl flex items-center justify-center">
+                    <Shield className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-5 w-5 text-green-500" />
+                  <span className="text-sm text-green-500 font-medium">Secure Authentication</span>
+                </div>
+                <CardTitle className="text-2xl lg:text-3xl font-bold">
+                  {isSignUp ? "Create Account" : "Welcome Back"}
+                </CardTitle>
+                <CardDescription className="text-base">
+                  {isSignUp 
+                    ? "Sign up with enhanced security features" 
+                    : "Sign in to your secure account"}
+                </CardDescription>
+              </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {/* Rate Limiting Warning */}
@@ -316,6 +371,7 @@ const SignIn = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
         </div>
       </main>
 
