@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Button } from "@/components/ui/button";
-import { QrCode, Scan } from "lucide-react";
+import { QrCode, Scan, Plus } from "lucide-react";
+import { BulkGenerateQRDialog } from "@/components/BulkGenerateQRDialog";
 import { QRNameInput } from "@/components/qr-generator/QRNameInput";
 import { QRStyleOptions } from "@/components/qr-generator/QRStyleOptions";
 import QRTabSelector from "@/components/qr-generator/QRTabSelector";
@@ -11,6 +12,8 @@ import { QRAdvancedColorOptions } from "@/components/qr-generator/QRAdvancedColo
 import { EnhancedLogoOptions } from "@/components/qr-generator/EnhancedLogoOptions";
 import { QRContentTabs } from "@/components/qr-generator/QRContentTabs";
 import useQrGenerator from "@/hooks/use-qr-generator";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface GenerateFormProps {
   qrGenerator: ReturnType<typeof useQrGenerator>;
@@ -88,6 +91,13 @@ export function GenerateForm({
   getCurrentQRData,
   ...formProps
 }: GenerateFormProps) {
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
+  const queryClient = useQueryClient();
+  
+  const handleBulkSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['qrCodes'] });
+  };
+  
   return (
     <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-2xl p-6 space-y-6 shadow-lg">
       <div className="flex items-center justify-between">
@@ -164,14 +174,33 @@ export function GenerateForm({
         setPreserveAspectRatio={qrGenerator.setPreserveAspectRatio}
       />
       
-      <Button 
-        className="w-full h-12 text-lg font-semibold"
-        onClick={onGenerate}
-        disabled={qrGenerator.isGenerating}
-      >
-        <QrCode className="mr-2 h-5 w-5" />
-        {qrGenerator.isGenerating ? "Generating..." : (editId ? "Update QR Code" : "Generate QR Code")}
-      </Button>
+      <div className="space-y-3">
+        <Button 
+          className="w-full h-12 text-lg font-semibold"
+          onClick={onGenerate}
+          disabled={qrGenerator.isGenerating}
+        >
+          <QrCode className="mr-2 h-5 w-5" />
+          {qrGenerator.isGenerating ? "Generating..." : (editId ? "Update QR Code" : "Generate QR Code")}
+        </Button>
+        
+        {!editId && (
+          <Button 
+            variant="outline"
+            className="w-full h-10"
+            onClick={() => setShowBulkDialog(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Bulk Generate
+          </Button>
+        )}
+      </div>
+      
+      <BulkGenerateQRDialog
+        open={showBulkDialog}
+        onOpenChange={setShowBulkDialog}
+        onSuccess={handleBulkSuccess}
+      />
     </div>
   );
 }

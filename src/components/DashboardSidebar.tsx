@@ -303,7 +303,7 @@ const DashboardSidebar = ({
                       className="w-full justify-start"
                       asChild
                     >
-                      <RouterLink to={`/dashboard/folder/${folder.id}`}>
+                      <RouterLink to={`/folder/${folder.id}`}>
                         <FolderOpen className="mr-3 h-4 w-4" />
                         {folder.name}
                       </RouterLink>
